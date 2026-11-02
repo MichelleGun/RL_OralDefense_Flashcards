@@ -1,0 +1,89 @@
+@card x
+Q: Give the big map of every method in the course in one answer.
+A: Start with the question "do I know the model?"
+- **Known model, small**: DP. Policy evaluation (prediction), policy iteration and value iteration (control).
+- **Known model or simulator, huge, decide from where I am**: MCTS, AlphaZero.
+- **Unknown model, small discrete**: tabular MC (episodic), TD(0), SARSA (on-policy), Q-learning (off-policy), Expected SARSA, Double Q.
+- **Unknown model, large or continuous states, discrete actions**: value function approximation, semi-gradient SARSA with tile coding, DQN for pixels.
+- **Continuous actions or stochastic policies**: policy gradient, REINFORCE, actor-critic, TRPO, PPO.
+- **Single state**: bandits ($\varepsilon$-greedy, UCB).
+- **No reward but human preferences**: RLHF.
+Everything above the bandit line is GPI with a different evaluation step.
+K: taxonomy, model-based, model-free, GPI
+
+@card x
+Q: Explain bootstrapping vs sampling, and classify DP, MC, TD.
+A: **Bootstrapping**: the target uses a current estimate (a guess), like $\gamma V(S_{t+1})$. **Sampling**: the update uses sampled experience instead of the expectation over all outcomes.
+- DP: bootstraps, does not sample (uses the model).
+- MC: samples, does not bootstrap (waits for the real $G_t$).
+- TD: samples and bootstraps.
+Your notes say MC "refers to G(t) or sth". Say it precisely: MC uses the actual complete return, which contains no estimates.
+K: bootstrapping, sampling, DP, MC, TD
+
+@card x
+Q: Is SARSA always safer than Q-learning? Is Q-learning always better?
+A: Neither. SARSA is safer **during learning** because it accounts for its own exploration, so it prefers paths that are robust to random mistakes. Q-learning learns the values of the **optimal greedy policy**, so its final greedy policy can be better, but its online performance while exploring can be worse (cliff walking).
+If $\varepsilon \to 0$ over time, SARSA also converges to the optimal policy. Q-learning also suffers maximisation bias and is the one that diverges most easily with function approximation.
+K: SARSA, Q-learning, safety, maximisation bias
+
+@card x
+Q: How would you pick gamma, alpha and epsilon, and what goes wrong if each is badly chosen?
+A: - $\gamma$: horizon of the task. Too small makes the agent short-sighted (ignores the delayed goal). Too close to 1 in long tasks slows learning and raises variance. Rule of thumb, effective horizon $\approx 1/(1-\gamma)$.
+- $\alpha$: too large and estimates oscillate or diverge. Too small and learning crawls. Constant $\alpha$ tracks non-stationary problems, decaying $\alpha$ gives convergence.
+- $\varepsilon$: too small and you get stuck, too large and you waste reward. Start high (for example 1.0) and decay towards a floor such as 0.05, which is a practical GLIE approximation.
+K: hyperparameters, discount, learning rate, epsilon decay
+
+@card x
+Q: What is the curse of dimensionality and which methods address it?
+A: The number of states grows exponentially with the number of state variables (10 variables with 10 values each is $10^{10}$ states). Tables and full DP sweeps become impossible.
+Responses: **function approximation** (linear features, neural networks) for generalisation, **sampling** (MC, TD, MCTS) so you only touch visited states, **asynchronous** and prioritised updates, and **policy search** that skips the value function.
+K: curse of dimensionality, function approximation, sampling
+
+@card x
+Q: Explain the credit assignment problem and which tools address it.
+A: When reward arrives late, which earlier actions deserve the credit? Tools: discounted returns and value functions (propagate reward backwards through Bellman backups), TD errors (local surprise signals), n-step and $\lambda$-returns and eligibility traces (spread credit over recent steps), reward-to-go in policy gradients, and hierarchical options for long horizons.
+K: credit assignment, delayed reward, TD error, eligibility traces
+
+@card x
+Q: Why is the max in Q-learning and DQN a problem, and what are the three fixes you know?
+A: The max over noisy estimates is biased upwards (maximisation bias) and with function approximation feeds that error back into the target, which can blow up.
+Fixes: **Double Q-learning / Double DQN** (separate selection and evaluation), **Expected SARSA** (average instead of max), and a **target network** that slows down the feedback loop.
+K: maximisation bias, Double Q-learning, Expected SARSA, target network
+
+@card x
+Q: The examiner asks: "Explain reinforcement learning to a 10-year-old." What do you say?
+A: Keep it to one image and the four words agent, action, reward, policy. Example: "You are learning a new video game without instructions. You press buttons (actions), the score goes up or down (reward), and over many tries you figure out which buttons to press in which situation (your policy). Sometimes you try something new to see what happens (exploration) and sometimes you do what you know works (exploitation)."
+Then offer the precise definition. Showing both levels proves understanding.
+K: explanation, intuition, agent, reward
+
+@card p
+Q: If the defense is about your own assignment or project, what questions should you expect?
+A: Expect them to drill into your code and results, not textbook definitions:
+- Why did you choose this algorithm over the alternatives? (Name one rejected alternative and why.)
+- Walk me through your update line. Which variable is the TD target?
+- Why these values of $\alpha$, $\gamma$, $\varepsilon$? Did you tune them? How?
+- What does your learning curve show? Why is it noisy? Why did it plateau?
+- How many seeds did you run? Is the result reproducible?
+- What would you change with more time?
+- What failed first and how did you debug it?
+Send me your report or notebook and I can add cards that match it line by line.
+K: project defense, implementation, hyperparameters, learning curves
+
+@card p
+Q: How do you make your RL experiments reproducible and how do you report results honestly?
+A: Fix every random source and report several seeds:
+`env.reset(seed=67)`, `env.action_space.seed(67)`, `np.random.seed(67)`, `random.seed(67)`, `torch.manual_seed(67)`.
+Then run several seeds (for example 67, 68, 69, 70, 71) and plot the **mean with a shaded standard deviation or confidence band**. RL results vary a lot between seeds, so a single lucky run proves little. Report the evaluation protocol (greedy policy, number of evaluation episodes) separately from training reward.
+K: reproducibility, seeds, evaluation, learning curves
+
+@card p
+Q: Your learning curve is flat or collapses. How do you debug an RL agent?
+A: Work from simple to complex:
+1. Check the environment with a random agent and a hand-coded policy.
+2. Check the reward sign and scale, and the terminated vs truncated handling.
+3. Check the update sign (gradient ascent for policies, plus sign for the TD error).
+4. Check exploration: is $\varepsilon$ decaying too fast?
+5. Lower the learning rate, check for exploding values or NaNs.
+6. For DQN, check the target network update frequency and replay buffer size. For PPO, check advantage normalisation and the KL between updates.
+7. Test on a tiny environment (FrozenLake, CartPole) where you know the answer.
+K: debugging, learning curve, sanity checks

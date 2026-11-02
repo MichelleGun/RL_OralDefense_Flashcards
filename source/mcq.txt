@@ -1,0 +1,311 @@
+@mcq bandit
+Q: A news site wants to choose which of 8 headlines to show. Each visitor either clicks or not, and showing a headline does not change who visits next. Which approach fits best?
+O: Policy iteration
+O*: A multi-armed bandit with UCB or epsilon-greedy
+O: DQN
+O: Monte Carlo Tree Search
+E: One state, immediate reward, and actions do not affect future situations: that is the definition of a bandit. Policy iteration needs a model and states, DQN and MCTS solve sequential problems that do not exist here.
+
+@mcq bandit
+Q: Same news site, but now you know each visitor's age group and device before choosing the headline. The choice still has no long-term effect. What is this?
+O: A POMDP
+O: A full MDP that needs Q-learning
+O*: A contextual bandit
+O: Inverse reinforcement learning
+E: An observation (context) arrives before each one-step decision, and there are no delayed consequences. That is a contextual bandit. It only becomes an MDP if today's choice changes tomorrow's state.
+
+@mcq bandit
+Q: You want exploration that focuses on actions whose value is still uncertain instead of exploring uniformly at random. Which method?
+O: Greedy selection
+O: Epsilon-greedy with a fixed epsilon
+O*: UCB
+O: Every-visit Monte Carlo
+E: UCB adds a bonus $c\sqrt{\ln t/N(a)}$ that is large for rarely tried arms, so it explores where it is uncertain. Epsilon-greedy explores blindly, greedy does not explore, and every-visit MC is a prediction method.
+
+@mcq dp
+Q: A warehouse robot moves on a 10x10 grid. You know exactly how every action changes the position and what reward each move gives. You want the optimal policy. What should you use?
+O: Q-learning
+O*: Value iteration or policy iteration
+O: REINFORCE
+O: DQN
+E: Known model plus a small discrete state space is the textbook case for dynamic programming. Model-free learning would work but wastes experience you do not need to collect.
+
+@mcq dp
+Q: You only need the value of one fixed policy in a 50-state MRP with known transitions. What is the fastest exact method?
+O: Q-learning
+O: MCTS
+O*: Solve $v = (I-\gamma P)^{-1}R$ directly, or run iterative policy evaluation
+O: PPO
+E: Prediction with a known model on a small problem: the linear Bellman equation can be solved directly in $O(n^3)$, trivial for 50 states. Iterative policy evaluation also works.
+
+@mcq dp
+Q: Policy iteration on your problem takes too long because each evaluation step needs hundreds of sweeps. What is the standard fix?
+O: Switch to Monte Carlo
+O*: Use value iteration (truncate evaluation to one sweep) or modified policy iteration
+O: Increase gamma to 1
+O: Add experience replay
+E: Value iteration is policy iteration with evaluation cut to one sweep. Fewer expensive inner loops, same optimal answer. Raising gamma would make evaluation slower, not faster.
+
+@mcq mc
+Q: You can simulate full games of Blackjack but you do not know the transition probabilities. Episodes always end. You want a good policy. Which method fits best?
+O: Value iteration
+O*: Monte Carlo control (for example with exploring starts or epsilon-soft policies)
+O: LSTD
+O: Policy evaluation with a known model
+E: Episodic, model unknown, simulation available: the classic Monte Carlo control setting from the lecture. Value iteration needs the probabilities.
+
+@mcq mc
+Q: A thermostat controller runs forever with no terminal state. Which method cannot be used directly?
+O: TD(0)
+O: SARSA
+O*: Monte Carlo
+O: Q-learning
+E: Monte Carlo needs complete episodes to compute the return. A continuing task never ends, so MC has nothing to average. TD-based methods update every step.
+
+@mcq mc
+Q: You have logged episodes from an old exploratory policy and want to evaluate a new greedy policy using only that data, with Monte Carlo returns. What do you need?
+O: Exploring starts
+O: A target network
+O*: Importance sampling, preferably weighted
+O: UCB
+E: Off-policy evaluation with MC returns needs importance sampling ratios $\prod\pi/b$. Weighted IS is preferred for its much lower variance. Coverage must hold: the old policy must have tried every action the new one would take.
+
+@mcq td
+Q: A real robot learns to walk along a ledge. Falling off breaks it, so you care about performance during training, not only the final policy. Which tabular method is the better choice?
+O: Q-learning
+O*: SARSA
+O: Value iteration
+O: Monte Carlo with exploring starts
+E: SARSA is on-policy, so its values include the risk of its own exploratory steps and it learns safer paths (cliff walking). Q-learning learns the optimal edge-hugging path but falls more often while exploring. Exploring starts would mean starting the robot in arbitrary dangerous states.
+
+@mcq td
+Q: You must learn the optimal policy while behaving with a very exploratory policy, or from transitions collected by someone else. Which algorithm?
+O: SARSA
+O*: Q-learning
+O: REINFORCE
+O: First-visit MC prediction
+E: Q-learning is off-policy: its target uses $\max_a Q(S',a)$, so it learns $q_*$ regardless of how the data was collected, as long as every pair is visited enough.
+
+@mcq td
+Q: Your Q-learning agent consistently overestimates action values in a state with many noisy, low-value actions. What do you change?
+O: Increase epsilon
+O: Use every-visit MC
+O*: Use Double Q-learning
+O: Remove the discount factor
+E: This is maximisation bias. Double Q-learning uses one table to choose the argmax and the other to evaluate it, which removes the systematic upward bias.
+
+@mcq td
+Q: SARSA becomes unstable when you raise the step size. You want SARSA's on-policy safety with less variance. Which variant?
+O: Q-learning
+O*: Expected SARSA
+O: Monte Carlo control
+O: TD(1)
+E: Expected SARSA averages over next actions with the policy probabilities instead of sampling one, removing that source of variance. It stays stable over a much wider range of alpha in the cliff walking results.
+
+@mcq td
+Q: You are predicting values on a Markov problem with limited data and want faster learning than Monte Carlo. Which family should you prefer?
+O*: TD methods
+O: Monte Carlo methods
+O: Exhaustive search
+O: Policy gradient
+E: TD's lower variance and use of Markov structure (certainty equivalence) usually means faster learning on Markov problems with the same data. MC is the safer choice when the Markov property is doubtful.
+
+@mcq fa
+Q: Mountain Car: two continuous state variables (position, velocity), three discrete actions, no model. Which is the most sensible first choice?
+O: Tabular Q-learning on raw floats
+O*: Semi-gradient SARSA with tile coding features
+O: Value iteration
+O: Multi-armed bandit
+E: Continuous low-dimensional state calls for linear function approximation with good features, and tile coding is the standard choice. A table cannot index continuous floats without discretising, which loses generalisation.
+
+@mcq fa
+Q: You want a value function for a 3D robot with 40 continuous sensor readings and no images. You have little data and need reliable convergence for policy evaluation. Which approach?
+O: Huge tabular grid
+O*: Linear function approximation (for example RBF or tile features) with gradient MC or LSTD
+O: DQN from pixels
+O: MCTS
+E: Linear methods have the strongest convergence guarantees and LSTD is the most data-efficient linear prediction method. Tables explode in 40 dimensions. Note: tile coding in 40 dimensions needs care, so many people pick RBFs or a small network here, which is a reasonable answer if you justify it.
+
+@mcq fa
+Q: Your semi-gradient Q-learning with a neural network diverges when trained off-policy. Which three ingredients are causing this, according to the course?
+O: Exploration, exploitation, discounting
+O*: Function approximation, bootstrapping, off-policy training
+O: Replay buffer, target network, epsilon decay
+O: Episodes, returns, rewards
+E: That is the deadly triad. Any two are usually fine, all three together can diverge.
+
+@mcq deep
+Q: An agent must play an Atari game from raw screen pixels with 18 discrete joystick actions. Which algorithm?
+O: Tabular Q-learning
+O: Linear SARSA with tile coding on pixels
+O*: DQN (CNN with experience replay and a target network)
+O: Value iteration
+E: Raw images need a CNN to extract features, discrete actions allow a max over Q outputs, and DQN's replay and fixed targets keep Q-learning with a network stable.
+
+@mcq deep
+Q: In your DQN, training samples are consecutive frames and the loss jumps around. Which component specifically breaks the correlation between samples?
+O: Target network
+O*: Experience replay buffer
+O: Epsilon-greedy
+O: Frame stacking
+E: Sampling random mini-batches from a replay buffer breaks temporal correlation and reuses data. The target network solves a different problem, the moving target.
+
+@mcq deep
+Q: Your DQN's targets change on every gradient step because they use the same weights being trained. Which component fixes this?
+O: Experience replay
+O*: Fixed Q-targets (a target network copied every C steps)
+O: Dropout
+O: Max pooling
+E: Computing $r + \gamma\max_{a'}\hat q(s',a',\mathbf w^-)$ with frozen weights $\mathbf w^-$ keeps the regression target still between copies. This is the carrot and donkey fix, not a "sequence".
+
+@mcq deep
+Q: Why does DQN stack the last 4 frames as input?
+O: To make the network deeper
+O: To reduce memory usage
+O*: A single frame is not Markov: it hides velocity and direction
+O: Because the action space has 4 actions
+E: From one frame you cannot tell which way the ball moves. Stacking frames approximates a Markov state.
+
+@mcq pg
+Q: A robot arm outputs continuous joint torques. Which family should you use?
+O: DQN
+O: Tabular SARSA
+O*: Policy gradient or actor-critic with a Gaussian policy (for example PPO)
+O: UCB bandit
+E: DQN needs $\max_a$ over a finite set, which is impossible over continuous actions without discretising. A Gaussian policy outputs a mean and variance, and PPO or actor-critic train it directly.
+
+@mcq pg
+Q: In rock-paper-scissors against a learning opponent, which type of policy can be optimal?
+O: Any deterministic greedy policy from Q-learning
+O*: A stochastic policy (uniform 1/3 each), learned by a policy-based method
+O: Epsilon-greedy with epsilon = 0
+O: Value iteration's greedy policy
+E: Any deterministic strategy can be exploited. The equilibrium is a mixed strategy, which value-based greedy methods cannot represent. Policy-based methods can.
+
+@mcq pg
+Q: Your agent sees only walls around it, so two corridor cells look identical and a deterministic policy loops forever. What helps most?
+O: A larger gamma
+O*: A stochastic policy learned by policy gradient (or a belief or memory based state)
+O: Value iteration on the observations
+O: A higher learning rate
+E: This is state aliasing in a partially observed problem. A stochastic policy can mix left and right in aliased states. Adding memory to recover the true state is the other proper fix.
+
+@mcq pg
+Q: REINFORCE learns, but the gradient estimates are so noisy that progress is painfully slow. What is the first improvement?
+O: Remove the discount
+O*: Subtract a learned state-value baseline, or move to actor-critic
+O: Use a deterministic policy
+O: Increase the learning rate a lot
+E: A baseline lowers variance without adding bias. Actor-critic goes further by replacing the full return with a TD estimate. Raising the learning rate with noisy gradients makes things worse.
+
+@mcq pg
+Q: Your policy gradient agent sometimes takes one big update and collapses into a useless policy it never recovers from. Which algorithm targets exactly this?
+O: REINFORCE
+O: Double Q-learning
+O*: PPO (or TRPO)
+O: Every-visit MC
+E: PPO clips the probability ratio and TRPO adds a KL constraint, both limiting how far one update can move the policy. In RL a bad policy produces bad data, so preventing big jumps matters.
+
+@mcq pg
+Q: You want TRPO-like stability but with simple first-order optimisation that any deep learning framework supports. Which algorithm?
+O: TRPO with conjugate gradient
+O*: PPO
+O: LSTD
+O: Value iteration
+E: PPO replaces TRPO's second-order KL-constrained step with a clipped objective optimised by ordinary SGD or Adam.
+
+@mcq pg
+Q: In an actor-critic, what plays the role of the advantage estimate in the simplest one-step version?
+O: The return $G_t$
+O*: The TD error $\delta = R + \gamma\hat v(S') - \hat v(S)$
+O: The importance sampling ratio
+O: The entropy of the policy
+E: In expectation, with an accurate critic, the TD error equals $q_\pi(s,a) - v_\pi(s)$, the advantage.
+
+@mcq plan
+Q: You must choose moves in a board game with a fast simulator and a huge state space. You only need a good move from the current position, within one second. Which method?
+O: Value iteration over every board
+O*: Monte Carlo Tree Search with UCT
+O: Tabular SARSA
+O: Bandit with one arm per move and no tree
+E: Online, anytime planning from the current state with a simulator is exactly MCTS. Value iteration cannot cover the full state space.
+
+@mcq plan
+Q: You want superhuman Go or chess from self-play, with search guided by learned move probabilities and position values. Which approach?
+O: Plain DQN
+O: Pure random-rollout MCTS
+O*: AlphaZero (MCTS with a policy and value network trained by self-play)
+O: REINFORCE alone
+E: AlphaZero uses the network's prior to focus search and its value head to replace long random rollouts, and trains the network to match the search results.
+
+@mcq plan
+Q: Real experience is very expensive, but you can fit a reasonably accurate model of the dynamics from the data you have. What should you consider?
+O: Pure Monte Carlo on real data only
+O*: Model-based RL: learn the model, then plan or generate simulated experience for a model-free learner
+O: A larger replay buffer only
+O: Higher epsilon
+E: Model-based RL is the data-efficient option. The cost is compounding error if the model is wrong, so mention that risk.
+
+@mcq plan
+Q: MCTS performs terribly on a game where reward only appears after a long, specific sequence of moves. What is the main reason?
+O: UCT constant too small
+O*: Sparse reward: random rollouts almost never reach any reward, so the search gets no signal
+O: The game is deterministic
+O: The tree is reused between moves
+E: Freeway in the notes is the example. Fixes include heuristic or learned rollout policies and value networks.
+
+@mcq rlhf
+Q: You want a chatbot to give answers that people prefer, but you cannot write a reward function for "helpful and harmless". What is the standard approach?
+O: Supervised learning on more internet text only
+O: Q-learning over tokens with a hand-written reward
+O*: RLHF: SFT, then a reward model from human comparisons, then PPO with a KL penalty
+O: A multi-armed bandit over whole answers
+E: Humans compare answers, a reward model learns their preferences, and PPO optimises the policy against it, with a KL penalty to the SFT model to avoid reward hacking.
+
+@mcq rlhf
+Q: During RLHF the model starts producing strange text that scores very high on the reward model but humans dislike. What is happening and what limits it?
+O: Exploration problem, fixed by UCB
+O*: Reward hacking (over-optimising the reward model), limited by the KL penalty to the reference model
+O: Maximisation bias, fixed by Double Q-learning
+O: Underfitting, fixed by a bigger reward
+E: The policy exploits the reward model's flaws. The KL term keeps it close to the SFT model, where the reward model's judgements are trustworthy.
+
+@mcq other
+Q: You have thousands of labelled images of sharks and not-sharks and want a classifier. Which approach?
+O: Q-learning
+O*: Supervised learning
+O: Policy gradient
+O: MCTS
+E: Labels exist and there is a single prediction with no sequence of decisions. Using RL here would be a red flag to an examiner.
+
+@mcq other
+Q: You have recordings of expert drivers but no reward function, and you want to know what they are optimising for. Which approach?
+O: Bandits
+O: Value iteration
+O*: Inverse reinforcement learning
+O: Unsupervised clustering
+E: IRL infers the reward from demonstrations. Imitation learning would copy the behaviour directly without recovering the reward.
+
+@mcq other
+Q: A long task (make breakfast) has very delayed reward and natural sub-tasks (boil water, toast bread). Which idea helps most?
+O: Larger replay buffer
+O*: Hierarchical RL with options
+O: Ordinary importance sampling
+O: Smaller gamma
+E: Options are temporally extended actions with their own policies and termination conditions, giving temporal abstraction and shorter effective horizons. A smaller gamma would make the agent ignore the delayed goal.
+
+@mcq other
+Q: The agent can only see a noisy sensor reading, not its true position. What is the correct formal model?
+O: Multi-armed bandit
+O: Fully observable MDP
+O*: POMDP, where the agent keeps a belief state or memory
+O: Markov chain
+E: Observations do not reveal the full state, which is the definition of partial observability.
+
+@mcq other
+Q: Which of these is guaranteed to converge for on-policy prediction with a nonlinear neural network, according to the lecture table?
+O: TD(0)
+O*: Monte Carlo
+O: Q-learning
+O: Off-policy TD(0)
+E: MC uses real returns and never bootstraps, so it is a true gradient method and converges (to a local optimum). TD with nonlinear approximation can diverge.

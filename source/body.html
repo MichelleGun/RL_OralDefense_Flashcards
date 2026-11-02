@@ -1,0 +1,58 @@
+<div class="wrap">
+<header class="top">
+  <div class="eyebrow">42028 / 43008 Reinforcement Learning · oral defense prep</div>
+  <h1>RL Defense Deck</h1>
+  <p>Built from your RL Weekly Notes, Weeks 1 to 11, including your margin comments. Glossary first, then flashcards, step-by-step derivations, "which model would you use" questions, and the weak spots you should fix first.</p>
+  <div class="stats" id="stats" aria-live="polite"></div>
+</header>
+</div>
+<nav class="tabs" aria-label="Sections"><div class="wrap">
+  <a href="#glossary" data-view="glossary">Glossary</a>
+  <a href="#cards" data-view="cards">Flashcards</a>
+  <a href="#derivations" data-view="derivations">Derivations</a>
+  <a href="#models" data-view="models">Which model?</a>
+  <a href="#weak" data-view="weak">Weak spots</a>
+</div></nav>
+<main class="wrap">
+  <section class="view" id="v-glossary">
+    <p class="intro">Every keyword used in the cards, grouped by week. Search by term or by words in the definition. Keyword chips on any card jump here.</p>
+    <input type="search" id="g-search" placeholder="Search terms, for example advantage or bootstrapping" aria-label="Search glossary">
+    <div class="toolbar"><span class="label">Week</span><div class="chips" id="g-weeks"></div></div>
+    <div class="panel"><div class="gloss" id="g-list"></div></div>
+  </section>
+
+  <section class="view" id="v-cards" hidden>
+    <p class="intro">Mark each card <b>Know it</b> or <b>Review again</b>. Your marks are saved, so you can come back to any pile later, including everything you have already answered, newest first.</p>
+    <div class="toolbar"><span class="label">Pile</span><div class="chips" id="c-piles"></div></div>
+    <div class="toolbar"><span class="label">Topic</span><div class="chips" id="c-weeks"></div></div>
+    <div class="toolbar"><span class="label">View</span><div class="chips">
+      <button id="c-mode-deck" aria-pressed="true">Deck</button>
+      <button id="c-mode-list" aria-pressed="false">List</button>
+      <button id="c-shuffle" aria-pressed="false">Shuffle</button>
+    </div></div>
+    <div id="c-body"></div>
+  </section>
+
+  <section class="view" id="v-derivations" hidden>
+    <p class="intro">Each derivation reveals one step at a time with the reason for the step underneath. Try to say the next line before you reveal it. Mark the ones you can write from memory.</p>
+    <div class="toolbar"><span class="label">Show</span><div class="chips" id="d-piles"></div></div>
+    <div class="list" id="d-list"></div>
+  </section>
+
+  <section class="view" id="v-models" hidden>
+    <p class="intro">Practical scenario questions. Pick an answer to see why it is right and why the others are wrong. Your answers are saved, so you can filter to the ones you got wrong and retry them.</p>
+    <div class="toolbar"><span class="label">Show</span><div class="chips" id="m-piles"></div><span class="score" id="m-score"></span></div>
+    <div class="list" id="m-list"></div>
+  </section>
+
+  <section class="view" id="v-weak" hidden>
+    <p class="intro">Honest read of where you are likely to get caught, taken from your own quiz feedback and margin notes, plus how to answer under pressure.</p>
+    <div class="list" id="w-list"></div>
+    <div class="panel">
+      <h3>Progress</h3>
+      <p class="muted" id="sync-detail"></p>
+      <div class="marks"><button id="reset-1" class="rev">Reset all progress</button><button id="reset-2" class="rev" hidden>Confirm reset</button><button id="reset-x" class="ghost" hidden>Cancel</button></div>
+    </div>
+  </section>
+</main>
+<div class="wrap"><footer>Keyboard in deck view: Space shows the answer, 1 marks Review again, 2 marks Know it, arrow keys move between cards.</footer></div>

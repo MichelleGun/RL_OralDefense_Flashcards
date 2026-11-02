@@ -1,0 +1,51 @@
+@weak You confused "policy" with "optimal policy"
+A: Your quiz feedback: you picked an answer implying a policy always chooses the best action. A policy is **any** mapping from states to actions, deterministic or stochastic, good or bad. Only $\pi_*$ is guaranteed to be best. If an examiner hears this mistake in your first two minutes, they will probe every definition after it. Drill the definition until you say "any strategy" without thinking.
+
+@weak You described epsilon-greedy as pure greedy
+A: Your own quiz feedback called this "the more worrying miss", and it was right. Epsilon-greedy is the most basic exploration method in the subject and appears in bandits, MC control, SARSA, Q-learning and DQN. Say it in this order every time: "with probability epsilon a uniformly random action, otherwise the greedy action". Then add why it decays (GLIE).
+
+@weak "Fix the moving target with a sequence"
+A: Your margin note on the carrot and donkey problem says the fix is a "Sequence". That answer would fail in a defense. The fixes are: **experience replay** (random mini-batches from a buffer) for correlated samples, and a **fixed target network** $\mathbf w^-$ copied every $C$ steps for the moving target. Know which fix solves which problem, because examiners ask exactly that.
+
+@weak Your notes contain errors you might repeat
+A: - Week 8 sections 18 and 19 write $\mathbf w \leftarrow \mathbf w - \alpha(G_t - \hat v)\mathbf x$. With error defined as target minus prediction, the sign is **plus**.
+- Week 7 Frozen Lake prints $Q(\text{tile2},\text{Down}) = -0.9$. The arithmetic $0.1 \times (-10)$ gives $-1.0$.
+- Week 2 big picture lists TD and Monte Carlo as off-policy and SARSA as the on-policy example, while Week 1 lists TD and MC as on-policy. TD(0) and MC are prediction methods that can be run either way. The clean control examples are SARSA (on-policy) and Q-learning (off-policy).
+- Week 1 lists "DPN" under policy gradient. If asked, give REINFORCE, actor-critic and PPO as examples instead.
+Lecture-derived notes are not gospel. Saying "my notes had this, but working it through gives that" is a strong move in a viva.
+
+@weak Vague phrasing: "or sth", "blablabla"
+A: Several margin notes trail off ("G(t) or sth", "MC will calculate beginning, end and take the average or sth", "calculate V, check v, compare v, override blablabla"). Those are exactly the spots where your understanding is thin, and an oral examiner follows the hesitation. Rewrite each one as a single precise sentence. Example: "Monte Carlo waits for the episode to end and moves $V(S_t)$ towards the actual return $G_t$. TD moves it towards $R_{t+1}+\gamma V(S_{t+1})$ after one step."
+
+@weak Symbol meanings that were slightly off
+A: - "$\gamma$ is future rewards". No: $\gamma$ is the **discount factor** that weights future rewards.
+- "$v_\pi$ is how much reward we get". It is the **expected discounted return**, an average over many futures, not one reward.
+- "Deterministic: when you can only take one type of action in a state". A deterministic **policy** picks one action with probability 1. The state can still have many available actions.
+- "Off-policy: as it updates its behavioural policy, it eventually updates the target policy". Backwards. Learning targets the **target** policy. In Q-learning the behaviour policy is derived from the same Q table, so it changes as a side effect.
+
+@weak You have no project-specific prep yet
+A: Nothing in your notes describes the assignment or project you will defend. If the defense is about your own code, the hardest questions will be "why did you choose X", "what does this line do", and "why does your curve look like that". Those cannot be answered from lecture notes. Upload your report or notebook and I will add cards tied to your actual choices. Leaving this until the night before is the biggest risk in your preparation.
+
+@weak Derivations you can recognise but not yet produce
+A: Recognising a derivation is not the same as producing it on a whiteboard with someone watching. For the three most likely ones (Bellman expectation equation, policy gradient via the log-derivative trick, TD update from the MC update) close the page and write them from scratch twice before the defense. If you cannot, that is your priority, ahead of rereading cards you already know.
+
+@tip How to structure every answer
+A: Use a four-beat answer and stop:
+1. **Definition** in one sentence with the keyword.
+2. **Intuition** or example (cliff walking, driving home, Blackjack).
+3. **Equation**, if one exists, and name each symbol.
+4. **Trade-off** or when you would not use it.
+Thirty to sixty seconds. Then let them ask the next question. Long rambling answers give the examiner more places to catch errors.
+
+@tip When you do not know
+A: Say what you do know and reason out loud: "I am not certain, but from the Bellman equation I would expect...". Examiners grade reasoning. Never bluff a formula. Ask for clarification if the question is ambiguous, for example "do you mean on-policy prediction or control?".
+
+@tip Comparison questions are the most likely
+A: Oral examiners love "compare X and Y". Have a three-point comparison ready for: MC vs TD, SARSA vs Q-learning, policy iteration vs value iteration, on-policy vs off-policy, value-based vs policy-based, REINFORCE vs actor-critic, TRPO vs PPO, model-based vs model-free, first-visit vs every-visit, ordinary vs weighted importance sampling, experience replay vs target network. Points to cover each time: what it learns, bias and variance, data needed, when to choose it.
+
+@tip A study plan for the days left
+A: 1. Day 1: do the MCQ tab once fully. Every miss goes to review.
+2. Day 1 and 2: flashcards in deck mode on the **Review again** pile only. Say answers out loud, it is an oral exam.
+3. Day 2: write the top five derivations from memory.
+4. Day 3: have someone (or me) quiz you with random cards and interrupt with "why?" after each answer.
+5. Last day: only the review pile and the weak spots on this tab. No new material.

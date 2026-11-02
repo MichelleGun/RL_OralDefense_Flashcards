@@ -1,0 +1,166 @@
+@g w1 | Reinforcement Learning (RL) | Learning to make a good sequence of decisions by interacting with an environment and receiving scalar reward feedback, with no labelled correct answers.
+@g w1 | Agent | The learner and decision maker. It holds the policy.
+@g w1 | Environment | Everything outside the agent. It receives actions and returns the next observation and reward. In an MDP the transition probabilities and rewards live here, not in the agent.
+@g w1 | State $S_t$ | The information used to decide what happens next. Formally a function of the history, $S_t = f(H_t)$.
+@g w1 | Action $A_t$ | A decision the agent makes that affects the environment.
+@g w1 | Reward $R_t$ | A scalar feedback signal saying how good the last step was. It defines the goal of the problem.
+@g w1 | Policy $\pi$ | The agent's behaviour: a mapping from states to actions, deterministic $a=\pi(s)$ or stochastic $\pi(a\mid s)$. A policy is any strategy, good or bad. Only the optimal policy $\pi^*$ is guaranteed to pick the best action.
+@g w1 | Exploration | Trying actions whose effects are uncertain in order to gather information. Costs reward in the short term.
+@g w1 | Exploitation | Choosing the action currently believed to give the highest return, based on what has been learned so far.
+@g w1 | Generalisation | Using what was learned in visited situations to act well in unseen but similar situations.
+@g w1 | Model-based RL | Methods that use a model of the environment (transition and reward functions) to plan, for example DP, value iteration, MCTS.
+@g w1 | Model-free RL | Methods that learn values or policies directly from experience without a model, for example MC, TD, SARSA, Q-learning, DQN, REINFORCE.
+@g w1 | Imitation learning | Learning a policy by copying demonstrations of good behaviour. Limited by the quality and coverage of the demonstrations.
+@g w1 | Gymnasium | The maintained fork of OpenAI Gym (Farama Foundation). Core API: make, reset, step, render, close.
+@g w1 | terminated vs truncated | Gymnasium step flags. Terminated means a true terminal state was reached (value of next state is 0). Truncated means the episode was cut off, for example by a time limit, so the next state still has value and you should still bootstrap.
+@g w2 | Sequential decision making | Selecting a series of actions to maximise total expected future reward, where actions can have delayed consequences.
+@g w2 | Reward hypothesis | The idea that every goal can be described as maximising the expected cumulative sum of a scalar reward.
+@g w2 | Sparse reward | Reward that arrives rarely, for example only at the end of an episode. Makes credit assignment and exploration hard.
+@g w2 | Credit assignment | Working out which earlier actions were responsible for a later reward.
+@g w2 | History $H_t$ | The full sequence of observations, actions and rewards up to time $t$.
+@g w2 | Markov state (information state) | A state that contains all useful information from the history: $P[S_{t+1}\mid S_t] = P[S_{t+1}\mid S_1,\dots,S_t]$.
+@g w2 | Fully observable | The agent sees the environment state directly: $O_t = S^a_t = S^e_t$. This is an MDP.
+@g w2 | POMDP | Partially Observable MDP. The agent only gets observations, so it must build its own state from history, a belief, or a recurrent network.
+@g w2 | Belief state | A probability distribution over the possible true environment states, used in POMDPs.
+@g w2 | Multi-armed bandit | An RL problem with a single state: pick one of $k$ arms, get an immediate reward, actions do not affect future situations.
+@g w2 | Contextual bandit | A one-step problem where an observation (context) is shown before choosing the arm, so the best arm depends on the context. Still no long-term consequences.
+@g w2 | $\varepsilon$-greedy | With probability $\varepsilon$ pick a uniformly random action, otherwise pick the action with the highest estimated value.
+@g w2 | Upper Confidence Bound (UCB) | Pick the arm maximising $Q(a) + c\sqrt{\ln t / N(a)}$. The bonus is large for rarely tried arms, so exploration is directed by uncertainty.
+@g w2 | Incremental mean | $Q_{n+1} = Q_n + \frac{1}{n}(R_n - Q_n)$. New estimate equals old estimate plus step size times error.
+@g w2 | Inverse RL (IRL) | Inferring the reward function from expert demonstrations.
+@g w2 | Hierarchical RL / options | Breaking a task into sub-tasks. An option is a temporally extended action defined by a policy, an initiation set and a termination condition.
+@g w3 | Markov property | The future is independent of the past given the present state.
+@g w3 | Markov process (chain) | A tuple $\langle S, P\rangle$: states and transition probabilities. No rewards, no actions.
+@g w3 | Markov Reward Process (MRP) | A tuple $\langle S, P, R, \gamma\rangle$: a Markov chain with rewards and a discount factor. Still no actions.
+@g w3 | Markov Decision Process (MDP) | A tuple $\langle S, A, P, R, \gamma\rangle$: an MRP where the agent chooses actions that affect transitions and rewards.
+@g w3 | Transition matrix $P$ | $P_{ss'} = P[S_{t+1}=s' \mid S_t=s]$. Each row sums to 1.
+@g w3 | Return $G_t$ | Total discounted reward from time $t$: $G_t = R_{t+1} + \gamma R_{t+2} + \gamma^2 R_{t+3} + \dots$. Your notes also call it the Goal.
+@g w3 | Discount factor $\gamma$ | A number in $[0,1]$ weighting future rewards. Near 0 is myopic, near 1 is far-sighted. It keeps infinite returns finite.
+@g w3 | Episodic task | A task that ends in a terminal state, for example a game.
+@g w3 | Continuing task | A task with no terminal state, for example process control. Needs $\gamma<1$ or an average-reward objective.
+@g w3 | Trajectory / episode | A sequence $S_0, A_0, R_1, S_1, A_1, R_2, \dots$ from a start state to a terminal state.
+@g w3 | Absorbing (terminal) state | A state that, once entered, is never left and gives zero further reward.
+@g w4 | State-value function $v_\pi(s)$ | Expected return starting in $s$ and following $\pi$: $v_\pi(s) = \mathbb{E}_\pi[G_t \mid S_t=s]$. How good is it to be here.
+@g w4 | Action-value function $q_\pi(s,a)$ | Expected return starting in $s$, taking $a$, then following $\pi$. How good is this action here.
+@g w4 | Bellman expectation equation | $v_\pi(s) = \mathbb{E}_\pi[R_{t+1} + \gamma v_\pi(S_{t+1}) \mid S_t=s]$. Value equals immediate reward plus discounted value of the next state, averaged over the policy and the dynamics.
+@g w4 | Bellman optimality equation | $v_*(s) = \max_a \sum_{s',r} p(s',r\mid s,a)[r + \gamma v_*(s')]$. Replaces the average over actions with a max. Non-linear.
+@g w4 | Optimal value function | $v_*(s) = \max_\pi v_\pi(s)$ and $q_*(s,a) = \max_\pi q_\pi(s,a)$.
+@g w4 | Optimal policy $\pi^*$ | A policy at least as good as every other policy in every state. A deterministic one always exists for a finite MDP. There can be several.
+@g w4 | Greedy policy | Picks $\arg\max_a q(s,a)$ in each state.
+@g w4 | Backup | Updating a state's value using values of its successors. Full backups enumerate all successors (DP), sample backups use one sampled successor (MC, TD).
+@g w5 | Dynamic Programming (DP) | Algorithms that compute optimal policies given a perfect model of the MDP, by turning Bellman equations into update rules.
+@g w5 | Optimal substructure | An optimal solution can be built from optimal solutions of sub-problems. Bellman equations express this.
+@g w5 | Overlapping sub-problems | The same sub-problems recur, so solutions are cached and reused. The value function is the cache.
+@g w5 | Prediction problem | Given a policy, compute its value function. Also called policy evaluation.
+@g w5 | Control problem | Find the optimal policy (and optimal value function).
+@g w5 | Policy evaluation | Iteratively applying the Bellman expectation backup until values stop changing by more than $\theta$.
+@g w5 | Sweep | One pass updating every state once.
+@g w5 | Policy improvement | Making the policy greedy with respect to the current value function.
+@g w5 | Policy improvement theorem | If $q_\pi(s,\pi'(s)) \ge v_\pi(s)$ for all $s$, then $v_{\pi'}(s) \ge v_\pi(s)$ for all $s$.
+@g w5 | Policy iteration | Alternate full policy evaluation and greedy improvement until the policy stops changing.
+@g w5 | Value iteration | Repeatedly apply the Bellman optimality backup, then read off the greedy policy. Equivalent to policy iteration with one evaluation sweep.
+@g w5 | Generalised Policy Iteration (GPI) | The general pattern of interleaving evaluation and improvement at any granularity. Almost every RL algorithm is a form of GPI.
+@g w5 | Asynchronous DP | Updating states in any order instead of full sweeps. Still converges if every state keeps being updated.
+@g w5 | Curse of dimensionality | The number of states grows exponentially with the number of state variables.
+@g w6 | Monte Carlo (MC) methods | Model-free methods that estimate values by averaging complete sampled returns. Episodic tasks only. No bootstrapping.
+@g w6 | First-visit MC | Averages the return following only the first visit to a state in each episode.
+@g w6 | Every-visit MC | Averages the returns following every visit to a state in each episode.
+@g w6 | Constant-$\alpha$ MC | $V(S_t) \leftarrow V(S_t) + \alpha[G_t - V(S_t)]$. Forgets old episodes, which helps in non-stationary problems.
+@g w6 | Exploring starts | Every episode starts from a random state-action pair, with every pair having non-zero probability. Guarantees coverage but is often unrealistic.
+@g w6 | Soft policy | A policy with $\pi(a\mid s) > 0$ for every action, for example $\varepsilon$-greedy.
+@g w6 | GLIE | Greedy in the Limit with Infinite Exploration. Every pair is tried infinitely often and the policy becomes greedy in the limit, for example $\varepsilon_k = 1/k$.
+@g w6 | On-policy | Learning about the same policy that is used to generate behaviour (SARSA, MC control with $\varepsilon$-greedy).
+@g w6 | Off-policy | Learning about a target policy $\pi$ from data generated by a different behaviour policy $b$ (Q-learning, off-policy MC with importance sampling).
+@g w6 | Target policy | The policy being learned about. In Q-learning it is the greedy policy.
+@g w6 | Behaviour policy | The policy that actually chooses actions and generates data. Usually exploratory.
+@g w6 | Coverage | Off-policy requirement: if $\pi(a\mid s)>0$ then $b(a\mid s)>0$.
+@g w6 | Importance sampling ratio $\rho$ | $\rho_{t:T-1} = \prod_{k=t}^{T-1} \frac{\pi(A_k\mid S_k)}{b(A_k\mid S_k)}$. Re-weights returns from $b$ so their expectation matches $\pi$.
+@g w6 | Ordinary importance sampling | Simple average of $\rho G$. Unbiased but variance can be huge or infinite.
+@g w6 | Weighted importance sampling | $\sum \rho G / \sum \rho$. Biased (bias goes to 0) but much lower variance. Preferred in practice.
+@g w7 | Temporal-Difference (TD) learning | Model-free learning that updates after every step by bootstrapping from the current estimate of the next state.
+@g w7 | Bootstrapping | Updating an estimate using other estimates. DP and TD bootstrap. MC does not, because it waits for the real return.
+@g w7 | TD target | $R_{t+1} + \gamma V(S_{t+1})$. The value the TD update moves towards.
+@g w7 | TD error $\delta_t$ | $\delta_t = R_{t+1} + \gamma V(S_{t+1}) - V(S_t)$. The surprise that drives every TD update.
+@g w7 | TD(0) | One-step TD prediction: $V(S_t) \leftarrow V(S_t) + \alpha\,\delta_t$.
+@g w7 | Certainty equivalence | The value you would get by building the maximum-likelihood model from the data and solving it exactly. Batch TD(0) converges to this.
+@g w7 | SARSA | On-policy TD control. Update uses $(S_t, A_t, R_{t+1}, S_{t+1}, A_{t+1})$ with target $R_{t+1} + \gamma Q(S_{t+1}, A_{t+1})$.
+@g w7 | Q-learning | Off-policy TD control. Target $R_{t+1} + \gamma \max_a Q(S_{t+1}, a)$. Learns $q_*$ while acting with an exploratory policy.
+@g w7 | Expected SARSA | Target $R_{t+1} + \gamma \sum_a \pi(a\mid S_{t+1}) Q(S_{t+1},a)$. Removes the variance of sampling $A_{t+1}$. Equals Q-learning when $\pi$ is greedy.
+@g w7 | Maximisation bias | Positive bias from using the max of noisy estimates as an estimate of the max of true values.
+@g w7 | Double Q-learning | Keeps two estimates. One picks the argmax action, the other evaluates it. Removes maximisation bias.
+@g w7 | Afterstate | The position right after the agent's own move and before the environment responds. Useful when the immediate effect of an action is known, as in board games.
+@g w8 | Function approximation | Representing values with a parameterised function $\hat v(s,\mathbf{w})$ or $\hat q(s,a,\mathbf{w})$ instead of a table, so experience generalises to unseen states.
+@g w8 | Value Function Approximation (VFA) | Using a function approximator to estimate $v_\pi$ or $q_\pi$.
+@g w8 | Mean Squared Value Error (VE) | $\overline{VE}(\mathbf{w}) = \sum_s \mu(s)[v_\pi(s) - \hat v(s,\mathbf{w})]^2$, weighted by the on-policy state distribution $\mu$.
+@g w8 | On-policy distribution $\mu(s)$ | The fraction of time spent in state $s$ while following $\pi$.
+@g w8 | Stochastic Gradient Descent (SGD) | Adjust weights a small step against the gradient of the error on one sample: $\mathbf{w} \leftarrow \mathbf{w} + \alpha[U_t - \hat v(S_t,\mathbf{w})]\nabla \hat v(S_t,\mathbf{w})$.
+@g w8 | Gradient Monte Carlo | SGD with the unbiased target $U_t = G_t$. A true gradient method. Converges to a local optimum (global for linear).
+@g w8 | Semi-gradient method | SGD with a bootstrapped target that depends on $\mathbf{w}$, while ignoring the target's own gradient. Faster and online but weaker guarantees.
+@g w8 | Linear function approximation | $\hat v(s,\mathbf{w}) = \mathbf{w}^\top \mathbf{x}(s)$. Gradient is just the feature vector $\mathbf{x}(s)$.
+@g w8 | Feature vector $\mathbf{x}(s)$ | Numbers describing a state, fed to the approximator.
+@g w8 | State aggregation | Grouping states so each group shares one weight. Gives a staircase approximation.
+@g w8 | Polynomial features | Features such as $(1, s_1, s_2, s_1 s_2)$ that let a linear model capture interactions.
+@g w8 | Fourier basis | Cosine features $\cos(\pi\, \mathbf{c}^\top \mathbf{s})$ of different frequencies.
+@g w8 | Coarse coding | Binary features from overlapping regions. Two states generalise to each other in proportion to the features they share.
+@g w8 | Tile coding | Coarse coding with several offset grids (tilings). Exactly one tile per tiling is active, so the number of active features is constant.
+@g w8 | Radial Basis Function (RBF) | A smooth Gaussian feature $x_i(s) = \exp(-\lVert s - c_i\rVert^2 / 2\sigma_i^2)$.
+@g w8 | TD fixed point | Where linear semi-gradient TD(0) converges: $\mathbf{w}_{TD} = A^{-1}\mathbf{b}$. Within $\frac{1}{1-\gamma}$ of the best VE.
+@g w8 | LSTD | Least-Squares TD. Estimates $A$ and $\mathbf{b}$ from data and solves for the TD fixed point directly. Most data efficient, $O(d^2)$ per step.
+@g w8 | Deadly triad | Function approximation plus bootstrapping plus off-policy training. Together they can make value estimates diverge.
+@g w8 | Memory-based (lazy) learning | Nonparametric methods that store examples and answer queries by combining nearby stored examples, for example nearest neighbour.
+@g w8 | Kernel function | $k(s,s')$, the strength of generalisation from $s'$ to $s$.
+@g w8 | Interest and emphasis | Interest $I_t$ says how much you care about a state's accuracy. Emphasis $M_t$ scales the update accordingly.
+@g w9 | Batch method | Fitting the value function to a stored dataset of experience, reusing every sample many times.
+@g w9 | Least squares | Picking weights that minimise the sum of squared errors over a batch.
+@g w9 | Deep neural network (DNN) | Many stacked linear and nonlinear layers trained by backpropagation and SGD.
+@g w9 | Convolutional neural network (CNN) | A network of convolution, pooling and fully connected layers that exploits the spatial structure of images.
+@g w9 | Filter (kernel) | A small weight matrix slid across the input to detect a feature such as an edge.
+@g w9 | Padding $p$ | Zeros added around the input. Same padding keeps output size equal to input size: $p = (f-1)/2$.
+@g w9 | Stride $s$ | How many pixels the filter moves each step.
+@g w9 | Pooling | Down-sampling (max, average, sum) to cut spatial size and parameters.
+@g w9 | Deep Q-Network (DQN) | Q-learning with a deep network, stabilised by experience replay and fixed Q-targets.
+@g w9 | Experience replay | Storing transitions $(s,a,r,s')$ in a buffer and training on random mini-batches. Breaks correlation between consecutive samples and reuses data.
+@g w9 | Fixed Q-targets (target network) | A copy of the network with frozen weights $\mathbf{w}^-$ used to compute targets, refreshed every $C$ steps. Stops the target moving on every update.
+@g w9 | Double DQN | Online network picks the next action, target network evaluates it. Reduces overestimation.
+@g w9 | Dueling DQN | Network splits into a state-value stream and an advantage stream, recombined into Q.
+@g w9 | Prioritised replay | Sampling transitions with large TD error more often.
+@g w10 | Policy-based RL | Directly parameterise and optimise the policy $\pi_\theta(a\mid s)$ by gradient ascent on $J(\theta)$.
+@g w10 | Policy gradient | $\nabla_\theta J(\theta)$, the direction in parameter space that increases expected return.
+@g w10 | Score function | $\nabla_\theta \log \pi_\theta(a\mid s)$. Direction that makes action $a$ more likely in $s$.
+@g w10 | Log-derivative (likelihood ratio) trick | $\nabla_\theta \pi_\theta = \pi_\theta \nabla_\theta \log \pi_\theta$. Turns the gradient of an expectation into an expectation you can sample.
+@g w10 | Policy Gradient Theorem | $\nabla_\theta J(\theta) = \mathbb{E}_{\pi_\theta}[\nabla_\theta \log \pi_\theta(a\mid s)\, q_{\pi_\theta}(s,a)]$. No derivative of the state distribution or dynamics is needed.
+@g w10 | Softmax (Boltzmann) policy | $\pi(a\mid s) = \frac{e^{h(s,a,\theta)}}{\sum_b e^{h(s,b,\theta)}}$ over action preferences $h$.
+@g w10 | Gaussian policy | Continuous action $a \sim \mathcal N(\mu_\theta(s), \sigma^2)$.
+@g w10 | Aliased states | Different states that look identical to the agent. A deterministic policy must treat them the same, which can be fatal.
+@g w10 | REINFORCE | Monte Carlo policy gradient: $\theta \leftarrow \theta + \alpha \gamma^t G_t \nabla \log \pi(A_t\mid S_t,\theta)$. Unbiased, high variance.
+@g w10 | Baseline $b(s)$ | Any action-independent function subtracted from the return. Leaves the gradient unbiased and reduces variance.
+@g w10 | Reward-to-go | Weighting each action only by rewards that come after it, since earlier rewards cannot depend on it.
+@g w10 | Advantage $A(s,a)$ | $q(s,a) - v(s)$. How much better an action is than the policy's average in that state.
+@g w10 | Actor-critic | The actor is the policy $\pi_\theta$. The critic is a learned value function $v_w$ whose TD error tells the actor how good its action was.
+@g w10 | A2C / A3C | Advantage actor-critic, and its asynchronous version with many parallel learners updating shared weights.
+@g w10 | GAE | Generalised Advantage Estimation. An exponentially weighted mix of multi-step TD errors, controlled by $\lambda$.
+@g w10 | n-step return | $G_{t:t+n} = R_{t+1} + \dots + \gamma^{n-1}R_{t+n} + \gamma^n V(S_{t+n})$.
+@g w10 | $\lambda$-return | A geometrically weighted mixture of all n-step returns. $\lambda=0$ is TD(0), $\lambda=1$ is MC.
+@g w10 | KL divergence | $D_{KL}(p\Vert q)$, a non-symmetric measure of how different two distributions are.
+@g w10 | TRPO | Trust Region Policy Optimisation. Maximise a surrogate advantage subject to a KL constraint. Needs second-order optimisation.
+@g w10 | PPO | Proximal Policy Optimisation. Clips the probability ratio to $[1-\epsilon, 1+\epsilon]$ inside the objective. First-order and simple.
+@g w10 | Probability ratio $r_t(\theta)$ | $\pi_\theta(a_t\mid s_t) / \pi_{\theta_{old}}(a_t\mid s_t)$.
+@g w10 | Entropy bonus | Term added to the objective that rewards randomness, preventing premature collapse to a deterministic policy.
+@g w10 | Stop-gradient | Treating a quantity as a constant when differentiating, used on TD targets.
+@g w11 | Model | A learned or given approximation $\langle P_\eta, R_\eta\rangle$ of the MDP dynamics.
+@g w11 | Model learning | Supervised learning from $(s,a)$ to $(r,s')$ using observed transitions.
+@g w11 | Sample-based planning | Using the model only to generate simulated experience, then applying a model-free method to it.
+@g w11 | Compounding error | In model-based RL, model error and planning error stack, and planning on a wrong model can magnify the mistake.
+@g w11 | Online planning | Planning from the current state right before acting, then re-planning from the next state.
+@g w11 | ExpectiMax tree | A tree form of an MDP: max over actions at state nodes, expectation over outcomes at chance nodes. Full cost grows like $(|S||A|)^H$.
+@g w11 | Monte Carlo Tree Search (MCTS) | Online, anytime planning that grows a partial search tree using simulations: select, expand, simulate, backpropagate.
+@g w11 | Tree policy | The rule for choosing children inside the tree, usually UCT.
+@g w11 | Rollout (default) policy | How actions are chosen in the simulation phase. Random, heuristic or learned.
+@g w11 | UCT | Upper Confidence bounds applied to Trees. UCB1 used for selection in MCTS.
+@g w11 | Anytime algorithm | Can be stopped whenever the budget runs out and still return its best answer so far.
+@g w11 | AlphaZero | Self-play RL that combines MCTS with a deep network outputting a policy prior $P(a\mid s)$ and a value $V(s)$.
+@g w11 | Self-play | Training an agent by having it play against copies of itself.
+@g w11 | RLHF | Reinforcement Learning from Human Feedback. Pre-train, supervised fine-tune, train a reward model on human comparisons, then fine-tune with PPO plus a KL penalty.
+@g w11 | Supervised fine-tuning (SFT) | Fine-tuning on human-written demonstrations of good responses.
+@g w11 | Reward model (RM) | A model trained on human preference comparisons that outputs a scalar score for a response.
+@g w11 | Reward hacking (over-optimisation) | The policy exploits flaws in the reward model to get a high score without really being better.

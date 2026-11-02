@@ -1,0 +1,223 @@
+@deriv w2 | Incremental mean update
+G: Show that a running average can be updated without storing past samples, giving the template new estimate = old estimate + step size times (target minus old estimate).
+S: $$\mu_k = \frac{1}{k}\sum_{j=1}^{k} x_j$$
+W: Definition of the mean of $k$ samples.
+S: $$\mu_k = \frac{1}{k}\left(x_k + \sum_{j=1}^{k-1} x_j\right)$$
+W: Pull the newest sample out of the sum.
+S: $$\mu_k = \frac{1}{k}\left(x_k + (k-1)\mu_{k-1}\right)$$
+W: The remaining sum is $(k-1)$ times the previous mean.
+S: $$\mu_k = \mu_{k-1} + \frac{1}{k}\left(x_k - \mu_{k-1}\right)$$
+W: Expand and rearrange. Memory needed: only the old mean and a counter.
+S: $$Q(A) \leftarrow Q(A) + \frac{1}{N(A)}\left(R - Q(A)\right) \qquad V(S_t) \leftarrow V(S_t) + \alpha\left(G_t - V(S_t)\right)$$
+W: The bandit update and constant-$\alpha$ MC are this same formula. Replacing $1/k$ with a constant $\alpha$ forgets old data, which suits non-stationary problems. TD replaces the target $G_t$ with $R_{t+1}+\gamma V(S_{t+1})$.
+
+@deriv w3 | Return recursion and its bound
+G: Show $G_t = R_{t+1} + \gamma G_{t+1}$ and that the return is finite when $\gamma<1$.
+S: $$G_t = R_{t+1} + \gamma R_{t+2} + \gamma^2 R_{t+3} + \gamma^3 R_{t+4} + \dots$$
+W: Definition of the discounted return.
+S: $$G_t = R_{t+1} + \gamma\left(R_{t+2} + \gamma R_{t+3} + \gamma^2 R_{t+4} + \dots\right)$$
+W: Factor one $\gamma$ out of every term after the first.
+S: $$G_t = R_{t+1} + \gamma G_{t+1}$$
+W: The bracket is exactly the return from $t+1$. This one line is the seed of every Bellman equation.
+S: $$|G_t| \le \sum_{k=0}^{\infty}\gamma^k R_{max} = \frac{R_{max}}{1-\gamma}$$
+W: Bound each reward by $R_{max}$ and sum the geometric series. Finite for $\gamma<1$, which is why continuing tasks need discounting.
+
+@deriv w4 | Bellman expectation equation for v
+G: Derive $v_\pi(s) = \sum_a \pi(a\mid s)\sum_{s',r}p(s',r\mid s,a)[r + \gamma v_\pi(s')]$ from the definition of value.
+S: $$v_\pi(s) = \mathbb E_\pi[G_t \mid S_t = s]$$
+W: Definition: expected return from $s$ under $\pi$.
+S: $$v_\pi(s) = \mathbb E_\pi[R_{t+1} + \gamma G_{t+1} \mid S_t = s]$$
+W: Substitute the return recursion.
+S: $$v_\pi(s) = \mathbb E_\pi[R_{t+1} + \gamma\, v_\pi(S_{t+1}) \mid S_t = s]$$
+W: By the Markov property and the law of total expectation, the expected future return given $S_{t+1}$ is $v_\pi(S_{t+1})$.
+S: $$v_\pi(s) = \sum_a \pi(a\mid s)\sum_{s',r}p(s',r\mid s,a)\left[r + \gamma v_\pi(s')\right]$$
+W: Write the expectation out. First average over actions with $\pi$, then over next states and rewards with the dynamics $p$.
+S: $$q_\pi(s,a) = \sum_{s',r}p(s',r\mid s,a)\left[r + \gamma\sum_{a'}\pi(a'\mid s')q_\pi(s',a')\right]$$
+W: The same steps conditioned on $A_t=a$ give the action-value version. Read it as: reward, then the policy's average over next action values.
+
+@deriv w4 | Matrix solution of the MRP Bellman equation
+G: Solve $\mathbf v = \mathbf R + \gamma P\mathbf v$ in closed form.
+S: $$\mathbf v = \mathbf R + \gamma P\mathbf v$$
+W: Bellman equation stacked for all $n$ states. $P_{ij}$ is the probability of going from $i$ to $j$.
+S: $$\mathbf v - \gamma P\mathbf v = \mathbf R$$
+W: Move the unknown to one side.
+S: $$(I - \gamma P)\mathbf v = \mathbf R$$
+W: Factor out $\mathbf v$.
+S: $$\mathbf v = (I - \gamma P)^{-1}\mathbf R$$
+W: The inverse exists for $\gamma<1$ because the eigenvalues of $\gamma P$ have magnitude below 1. Cost is $O(n^3)$, so only small problems. Linear because there is no max.
+
+@deriv w4 | Bellman optimality equations
+G: Get $v_*$ and $q_*$ equations from the $v$ and $q$ relationships by replacing the policy average with a max.
+S: $$v_*(s) = \max_a q_*(s,a)$$
+W: An optimal agent puts all probability on the best action, so the policy average becomes a max.
+S: $$q_*(s,a) = \sum_{s',r}p(s',r\mid s,a)\left[r + \gamma v_*(s')\right]$$
+W: After taking $a$, nature still chooses the next state, so this part stays an expectation.
+S: $$v_*(s) = \max_a\sum_{s',r}p(s',r\mid s,a)\left[r + \gamma v_*(s')\right]$$
+W: Substitute the second into the first. This is the value iteration update.
+S: $$q_*(s,a) = \sum_{s',r}p(s',r\mid s,a)\left[r + \gamma \max_{a'}q_*(s',a')\right]$$
+W: Substitute the first into the second. Replace the expectation with one sample and you get the Q-learning target $R + \gamma\max_{a'}Q(S',a')$.
+
+@deriv w5 | Policy improvement theorem (sketch)
+G: Show that acting greedily on $q_\pi$ never makes the policy worse.
+S: $$q_\pi(s,\pi'(s)) = \max_a q_\pi(s,a) \ge \sum_a\pi(a\mid s)q_\pi(s,a) = v_\pi(s)$$
+W: The max is at least the average. So taking the greedy action once, then following $\pi$, is at least as good.
+S: $$v_\pi(s) \le q_\pi(s,\pi'(s)) = \mathbb E[R_{t+1} + \gamma v_\pi(S_{t+1}) \mid S_t = s, A_t = \pi'(s)]$$
+W: Expand $q_\pi$ one step.
+S: $$\le \mathbb E_{\pi'}[R_{t+1} + \gamma q_\pi(S_{t+1},\pi'(S_{t+1})) \mid S_t=s] \le \dots \le \mathbb E_{\pi'}[R_{t+1} + \gamma R_{t+2} + \gamma^2 R_{t+3} + \dots] = v_{\pi'}(s)$$
+W: Apply the same inequality at $S_{t+1}$, then $S_{t+2}$, and keep unrolling. In the limit you are following $\pi'$ everywhere.
+S: $$\text{If } v_{\pi'} = v_\pi \text{ then } v_\pi(s) = \max_a\sum p[r + \gamma v_\pi(s')]$$
+W: No improvement means $v_\pi$ satisfies the Bellman optimality equation, so $\pi$ is optimal. This is the stopping rule of policy iteration.
+
+@deriv w6 | Importance sampling ratio has no dynamics
+G: Show the off-policy correction depends only on the two policies.
+S: $$\Pr(A_t,S_{t+1},\dots,S_T \mid S_t, \pi) = \prod_{k=t}^{T-1}\pi(A_k\mid S_k)\,p(S_{k+1}\mid S_k,A_k)$$
+W: Probability of a trajectory: policy choice times environment transition at each step.
+S: $$\rho_{t:T-1} = \frac{\prod_{k}\pi(A_k\mid S_k)\,p(S_{k+1}\mid S_k,A_k)}{\prod_{k}b(A_k\mid S_k)\,p(S_{k+1}\mid S_k,A_k)} = \prod_{k=t}^{T-1}\frac{\pi(A_k\mid S_k)}{b(A_k\mid S_k)}$$
+W: Divide target by behaviour probability. The unknown $p$ terms cancel.
+S: $$\mathbb E_b[\rho_{t:T-1}G_t \mid S_t = s] = v_\pi(s)$$
+W: Weighting each return by $\rho$ fixes the expectation. Ordinary IS averages $\rho G$ (unbiased, high variance). Weighted IS divides by $\sum\rho$ instead of the count (biased, low variance).
+
+@deriv w7 | From MC to TD(0), SARSA and Q-learning
+G: See how every TD control update is the incremental-mean template with a different target.
+S: $$V(S_t) \leftarrow V(S_t) + \alpha[G_t - V(S_t)]$$
+W: Constant-$\alpha$ MC. Target is the real return.
+S: $$G_t = R_{t+1} + \gamma G_{t+1} \approx R_{t+1} + \gamma V(S_{t+1})$$
+W: Replace the unknown future return with the current estimate. That substitution is bootstrapping.
+S: $$V(S_t) \leftarrow V(S_t) + \alpha[\underbrace{R_{t+1} + \gamma V(S_{t+1}) - V(S_t)}_{\delta_t}]$$
+W: TD(0). The bracket is the TD error.
+S: $$Q(S_t,A_t) \leftarrow Q(S_t,A_t) + \alpha[R_{t+1} + \gamma Q(S_{t+1},A_{t+1}) - Q(S_t,A_t)]$$
+W: SARSA: a sample of the Bellman expectation equation for $q_\pi$, using the action actually taken.
+S: $$Q(S_t,A_t) \leftarrow Q(S_t,A_t) + \alpha[R_{t+1} + \gamma \max_a Q(S_{t+1},a) - Q(S_t,A_t)]$$
+W: Q-learning: a sample of the Bellman optimality equation for $q_*$.
+S: $$Q(S_t,A_t) \leftarrow Q(S_t,A_t) + \alpha[R_{t+1} + \gamma \textstyle\sum_a\pi(a\mid S_{t+1})Q(S_{t+1},a) - Q(S_t,A_t)]$$
+W: Expected SARSA: average instead of sample or max. Greedy $\pi$ turns it into Q-learning.
+
+@deriv w7 | Frozen Lake Q-learning by hand
+G: Do two Q-learning steps with $\alpha=0.1$, $\gamma=1$, reward +1 goal, -10 hole, 0 otherwise, all Q starting at 0.
+S: $$Q(\text{start},R) = 0 + 0.1[0 + 1\cdot\max_a Q(\text{tile2},a) - 0] = 0.1[0 + 0 - 0] = 0$$
+W: Step 1: random action Right lands on an ordinary tile. Reward 0 and all next values 0, so nothing changes.
+S: $$Q(\text{tile2},D) = 0 + 0.1[-10 + 1\cdot 0 - 0] = -1.0$$
+W: Step 2: Down falls in the hole. Terminal, so no bootstrap term. Your notes print -0.9, but $0.1\times(-10) = -1.0$. Be ready to recompute this live because examiners like hand calculations, and check numbers rather than trusting the notes.
+S: $$\text{SARSA: } 10 + 0.5[2 + 0.9(8) - 10] = 9.6 \qquad \text{Q-learning: } 10 + 0.5[2 + 0.9(11) - 10] = 10.95$$
+W: Same transition, different bootstrap value: the action taken (8) versus the best action (11).
+
+@deriv w8 | SGD update for value function approximation
+G: Derive $\mathbf w \leftarrow \mathbf w + \alpha[U_t - \hat v(S_t,\mathbf w)]\nabla\hat v(S_t,\mathbf w)$ and its linear form.
+S: $$J(\mathbf w) = \mathbb E_\pi\left[(v_\pi(S) - \hat v(S,\mathbf w))^2\right]$$
+W: Objective: mean squared error weighted by the on-policy distribution (the VE).
+S: $$\nabla_{\mathbf w}J = -2\,\mathbb E_\pi\left[(v_\pi(S) - \hat v(S,\mathbf w))\nabla_{\mathbf w}\hat v(S,\mathbf w)\right]$$
+W: Chain rule. The true value does not depend on $\mathbf w$.
+S: $$\mathbf w \leftarrow \mathbf w - \tfrac12\alpha\nabla_{\mathbf w}J \;\approx\; \mathbf w + \alpha\,[v_\pi(S_t) - \hat v(S_t,\mathbf w)]\,\nabla_{\mathbf w}\hat v(S_t,\mathbf w)$$
+W: Gradient descent, with the expectation replaced by one sample. Minus a negative gradient gives a plus sign.
+S: $$\mathbf w \leftarrow \mathbf w + \alpha\,[U_t - \hat v(S_t,\mathbf w)]\,\nabla_{\mathbf w}\hat v(S_t,\mathbf w)$$
+W: We never know $v_\pi$, so substitute a target $U_t$: $G_t$ (gradient MC, true gradient) or $R_{t+1}+\gamma\hat v(S_{t+1},\mathbf w)$ (semi-gradient TD, because we ignore the target's dependence on $\mathbf w$).
+S: $$\hat v = \mathbf w^\top\mathbf x(s) \Rightarrow \nabla_{\mathbf w}\hat v = \mathbf x(s) \Rightarrow \mathbf w \leftarrow \mathbf w + \alpha[U_t - \mathbf w^\top\mathbf x(S_t)]\mathbf x(S_t)$$
+W: Linear case: the gradient is the feature vector, so update equals step size times error times features.
+
+@deriv w8 | TD fixed point for linear TD(0)
+G: Find where linear semi-gradient TD(0) settles.
+S: $$\mathbf w_{t+1} = \mathbf w_t + \alpha\left(R_{t+1} + \gamma\mathbf w_t^\top\mathbf x_{t+1} - \mathbf w_t^\top\mathbf x_t\right)\mathbf x_t$$
+W: Linear TD(0) update with $\mathbf x_t = \mathbf x(S_t)$.
+S: $$\mathbf w_{t+1} = \mathbf w_t + \alpha\left(R_{t+1}\mathbf x_t - \mathbf x_t(\mathbf x_t - \gamma\mathbf x_{t+1})^\top\mathbf w_t\right)$$
+W: Rearrange using $\mathbf w^\top\mathbf x = \mathbf x^\top\mathbf w$.
+S: $$\mathbb E[\mathbf w_{t+1}\mid\mathbf w_t] = \mathbf w_t + \alpha(\mathbf b - A\mathbf w_t), \quad \mathbf b = \mathbb E[R_{t+1}\mathbf x_t],\; A = \mathbb E[\mathbf x_t(\mathbf x_t-\gamma\mathbf x_{t+1})^\top]$$
+W: Take expectations in steady state.
+S: $$\mathbf b - A\mathbf w_{TD} = 0 \Rightarrow \mathbf w_{TD} = A^{-1}\mathbf b$$
+W: The expected update is zero at the fixed point. LSTD estimates $A$ and $\mathbf b$ from data and solves this directly. Guarantee: $\overline{VE}(\mathbf w_{TD}) \le \frac{1}{1-\gamma}\min_{\mathbf w}\overline{VE}(\mathbf w)$.
+
+@deriv w9 | CNN output size and same padding
+G: Derive the output size of a convolution and the padding that keeps size constant.
+S: $$\text{padded width} = n + 2p$$
+W: Padding adds $p$ zeros on each side.
+S: $$\text{number of positions} = \left\lfloor\frac{n + 2p - f}{s}\right\rfloor + 1$$
+W: The filter's left edge can start at 0 and move in steps of $s$ until its right edge hits the border at $n+2p-f$. Count the starts.
+S: $$s=1,\; \text{out}=n \Rightarrow n + 2p - f + 1 = n \Rightarrow p = \frac{f-1}{2}$$
+W: Same padding. A 3x3 filter needs $p=1$, a 5x5 needs $p=2$. Odd filter sizes keep this whole.
+S: $$6\times6,\; f=3,\; p=0,\; s=1 \Rightarrow 4\times4 \qquad 84\times84,\; f=8,\; s=4 \Rightarrow \lfloor 76/4\rfloor + 1 = 20$$
+W: Checks: the edge detector example, and the first DQN conv layer giving 20x20 maps.
+
+@deriv w10 | Score function trick (one-step case)
+G: Turn $\nabla_\theta\mathbb E[R]$ into an expectation you can sample.
+S: $$J(\theta) = \mathbb E_{s\sim d,\,a\sim\pi_\theta}[R(s,a)] = \sum_s d(s)\sum_a\pi_\theta(a\mid s)R(s,a)$$
+W: Expected reward in a contextual bandit.
+S: $$\nabla_\theta J = \sum_s d(s)\sum_a\nabla_\theta\pi_\theta(a\mid s)\,R(s,a)$$
+W: Only the policy depends on $\theta$.
+S: $$= \sum_s d(s)\sum_a\pi_\theta(a\mid s)\frac{\nabla_\theta\pi_\theta(a\mid s)}{\pi_\theta(a\mid s)}R(s,a)$$
+W: Multiply and divide by $\pi_\theta$ to restore a probability weighting.
+S: $$= \mathbb E_{\pi_\theta}\left[\nabla_\theta\log\pi_\theta(a\mid s)\,R(s,a)\right]$$
+W: Because $\nabla\log x = \nabla x / x$. Now sample: $\theta \leftarrow \theta + \alpha R_t\nabla_\theta\log\pi_\theta(A_t\mid S_t)$. The policy gradient theorem replaces $R$ with $q_\pi(s,a)$ for sequential problems.
+
+@deriv w10 | Policy gradient over trajectories (why no model is needed)
+G: Show $\nabla_\theta J = \mathbb E[\sum_t \nabla_\theta\log\pi_\theta(A_t\mid S_t)\,G_t]$ without knowing the dynamics.
+S: $$J(\theta) = \mathbb E_{\tau\sim p_\theta}[G(\tau)] \Rightarrow \nabla_\theta J = \mathbb E_\tau[G(\tau)\nabla_\theta\log p_\theta(\tau)]$$
+W: Same log-derivative trick, applied to whole trajectories $\tau$.
+S: $$p_\theta(\tau) = p(s_0)\prod_t\pi_\theta(a_t\mid s_t)\,p(s_{t+1}\mid s_t,a_t)$$
+W: A trajectory's probability is start state times policy times dynamics at each step.
+S: $$\nabla_\theta\log p_\theta(\tau) = \underbrace{\nabla_\theta\log p(s_0)}_{0} + \sum_t\nabla_\theta\log\pi_\theta(a_t\mid s_t) + \underbrace{\sum_t\nabla_\theta\log p(s_{t+1}\mid s_t,a_t)}_{0}$$
+W: Log of a product is a sum. Start and dynamics terms do not contain $\theta$, so their gradients are zero. This is why no model is needed.
+S: $$\nabla_\theta J = \mathbb E\left[\sum_t\nabla_\theta\log\pi_\theta(a_t\mid s_t)\sum_{k\ge t}\gamma^{k-t}r_{k+1}\right]$$
+W: Causality: rewards before $t$ cannot depend on $a_t$ and contribute zero in expectation, so keep only the reward-to-go, which is $G_t$. Its expectation is $q_\pi(s_t,a_t)$, giving the policy gradient theorem. This is REINFORCE.
+
+@deriv w10 | A baseline adds no bias
+G: Show subtracting any action-independent $b(s)$ leaves the expected gradient unchanged.
+S: $$\mathbb E_{a\sim\pi}[\nabla_\theta\log\pi_\theta(a\mid s)\,b(s)] = \sum_a\pi_\theta(a\mid s)\frac{\nabla_\theta\pi_\theta(a\mid s)}{\pi_\theta(a\mid s)}b(s)$$
+W: Write the expectation out and expand the log gradient.
+S: $$= b(s)\sum_a\nabla_\theta\pi_\theta(a\mid s) = b(s)\,\nabla_\theta\sum_a\pi_\theta(a\mid s)$$
+W: $b(s)$ does not depend on $a$, so it comes out of the sum. Swap gradient and sum.
+S: $$= b(s)\,\nabla_\theta 1 = 0$$
+W: Probabilities sum to 1, a constant. If $b$ depended on $a$, it could not leave the sum and the proof would fail.
+S: $$\nabla_\theta J = \mathbb E[\nabla_\theta\log\pi_\theta(a\mid s)\,(q_\pi(s,a) - v_\pi(s))] = \mathbb E[\nabla_\theta\log\pi_\theta(a\mid s)\,A_\pi(s,a)]$$
+W: With $b = v_\pi$ the weight becomes the advantage, which is centred on zero and has much lower variance.
+
+@deriv w10 | Expected TD error equals the advantage
+G: Justify using $\delta$ as the actor's signal in actor-critic.
+S: $$\delta_t = R_{t+1} + \gamma v_\pi(S_{t+1}) - v_\pi(S_t)$$
+W: TD error with the true value function.
+S: $$\mathbb E[\delta_t\mid S_t=s, A_t=a] = \mathbb E[R_{t+1} + \gamma v_\pi(S_{t+1})\mid s,a] - v_\pi(s)$$
+W: Condition on state and action. $v_\pi(s)$ is a constant here.
+S: $$= q_\pi(s,a) - v_\pi(s) = A_\pi(s,a)$$
+W: The first term is the definition of $q_\pi$ one step out. So $\delta$ is an unbiased sample of the advantage when the critic is exact, and needs only a state-value critic.
+
+@deriv w10 | Softmax and Gaussian policy scores
+G: Compute $\nabla_\theta\log\pi$ for the two standard parameterisations.
+S: $$\log\pi(a\mid s) = \theta^\top\mathbf x(s,a) - \log\sum_b e^{\theta^\top\mathbf x(s,b)}$$
+W: Softmax with linear preferences, log taken.
+S: $$\nabla_\theta\log\pi(a\mid s) = \mathbf x(s,a) - \sum_b\frac{e^{\theta^\top\mathbf x(s,b)}}{\sum_c e^{\theta^\top\mathbf x(s,c)}}\mathbf x(s,b) = \mathbf x(s,a) - \mathbb E_\pi[\mathbf x(s,\cdot)]$$
+W: Differentiate the log-sum-exp. The fraction is $\pi(b\mid s)$. Chosen feature minus average feature.
+S: $$\log\pi(a\mid s) = -\frac{(a - \mu_\theta(s))^2}{2\sigma^2} - \log(\sqrt{2\pi}\sigma)$$
+W: Gaussian policy with fixed $\sigma$.
+S: $$\nabla_\theta\log\pi(a\mid s) = \frac{a - \mu_\theta(s)}{\sigma^2}\nabla_\theta\mu_\theta(s)$$
+W: Chain rule. The update pulls the mean towards actions that did better than expected.
+
+@deriv w10 | Reading the PPO clipped objective
+G: Understand when the gradient switches off.
+S: $$r_t(\theta) = \frac{\pi_\theta(a_t\mid s_t)}{\pi_{\theta_{old}}(a_t\mid s_t)}, \qquad r_t(\theta_{old}) = 1$$
+W: Probability ratio. At the start of each update round it equals 1.
+S: $$L^{CLIP} = \mathbb E_t\left[\min\left(r_t\hat A_t,\;\text{clip}(r_t,1-\epsilon,1+\epsilon)\hat A_t\right)\right]$$
+W: The unclipped term is the TRPO surrogate. The clipped copy caps the ratio.
+S: $$\hat A_t>0:\; L = \min(r_t, 1+\epsilon)\hat A_t$$
+W: For a good action, increasing $r$ helps only up to $1+\epsilon$. Beyond that the objective is flat, so the gradient is zero.
+S: $$\hat A_t<0:\; L = \max(r_t, 1-\epsilon)\hat A_t$$
+W: For a bad action, lowering $r$ helps only down to $1-\epsilon$. The min keeps the objective a pessimistic bound, so the policy never gains by moving far from the old one.
+
+@deriv w11 | MCTS backpropagation by hand
+G: Reproduce the reading's example: $\gamma=0.8$, $Q(s,a)=18$, $Q(t,f)=0$, reward 6 on reaching $t$, rollout from $y$ ends with terminal reward 31.25 two steps away.
+S: $$G_y = 0.8^2 \times 31.25 = 0.64 \times 31.25 = 20$$
+W: Discount the terminal reward back to $y$.
+S: $$G_{t} = 0.8 \times 20 = 16, \qquad N(t,f) = 2, \qquad Q(t,f) = 0 + \tfrac12(16 - 0) = 8$$
+W: Carry the return up one level with $G \leftarrow r + \gamma G$ (no reward on reaching $y$). Incremental average with the new visit count.
+S: $$G_s = 6 + 0.8\times16 = 18.8, \qquad N(s,a) = 5$$
+W: Add the reward received on arriving at $t$, discount the rest.
+S: $$Q(s,a) = 18 + \tfrac15(18.8 - 18) = 18 + 0.16 = 18.16$$
+W: A well visited node moves slowly. Same incremental-mean formula as the bandits in Week 2.
+
+@deriv w11 | Why UCB and UCT explore rarely tried actions
+G: See how the bonus behaves.
+S: $$\text{score}(a) = Q(a) + c\sqrt{\frac{\ln t}{N(a)}}$$
+W: Estimate plus uncertainty bonus.
+S: $$N(a)\uparrow \Rightarrow \text{bonus}\downarrow$$
+W: The more you try an arm, the more you trust its estimate.
+S: $$N(a) \text{ fixed},\; t\uparrow \Rightarrow \text{bonus}\uparrow \text{ slowly (like } \sqrt{\ln t})$$
+W: An arm you ignore slowly becomes attractive again, so nothing is starved forever. Growth is logarithmic, so exploration fades but never stops.
+S: $$\text{UCT: } Q(s,a) + 2C_p\sqrt{\frac{2\ln N(s)}{N(s,a)}}$$
+W: In a tree, $t$ becomes the parent's visit count $N(s)$ and $N(a)$ becomes $N(s,a)$.
