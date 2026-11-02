@@ -9,6 +9,7 @@ The max over actions is fine as long as the action set is small and discrete.
 K: control, function approximation, semi-gradient SARSA, GPI
 
 @card w9
+I: triad
 Q: Which algorithms converge with which representations? Give the key pattern.
 A: Prediction:
 - On-policy MC: table, linear and nonlinear all converge.
@@ -22,12 +23,14 @@ Pattern: **MC never bootstraps so it is safest**. Divergence appears when bootst
 K: convergence, divergence, deadly triad, chattering
 
 @card w9
+I: dqnloop
 Q: What are batch methods and why are they more sample efficient?
 A: Incremental SGD uses each transition once and throws it away. **Batch methods** store experience $\mathcal D$ and find the best fit to all of it, for example least squares $LS(\mathbf w) = \sum_t (v_t^\pi - \hat v(s_t,\mathbf w))^2$.
 You can reach the least squares solution by repeatedly sampling pairs from $\mathcal D$ and applying SGD. That idea, store and resample, is exactly **experience replay** in DQN. LSTD solves it in closed form for linear features.
 K: batch methods, least squares, experience replay, sample efficiency
 
 @card w9
+I: dqnarch
 Q: Why use deep neural networks in RL, and why CNNs for images?
 A: DNNs are universal approximators, learn features end to end from raw inputs, generalise to unseen and continuous states, and can output policies for continuous actions.
 CNNs suit images because:
@@ -37,6 +40,8 @@ CNNs suit images because:
 K: deep learning, CNN, weight sharing, end-to-end
 
 @card w9
+I: conv
+I: pool
 Q: Explain convolution, padding, stride and pooling with numbers.
 A: - **Convolution**: slide an $f\times f$ filter over the input, multiply and sum. A 3x3 vertical edge filter on a 6x6 image (100s on the left, 0s on the right) gives a 4x4 map with 300 along the edge.
 - **Output size**: $\lfloor \frac{n + 2p - f}{s} \rfloor + 1$.
@@ -47,6 +52,7 @@ A: - **Convolution**: slide an $f\times f$ filter over the input, multiply and s
 K: convolution, padding, stride, pooling, output size
 
 @card w9
+I: triad
 Q: Why does naive Q-learning with a neural network become unstable?
 A: Two reasons:
 1. **Correlated samples**: consecutive transitions come from the same trajectory, so they are highly correlated. SGD assumes roughly independent samples and overfits to recent experience.
@@ -56,6 +62,7 @@ Your note says the fix is "Sequence". That is wrong. The fixes are **experience 
 K: instability, correlated samples, moving target, DQN
 
 @card w9
+I: dqnloop
 Q: Explain experience replay and fixed Q-targets.
 A: **Experience replay**: store transitions $(s,a,r,s',\text{done})$ in a replay buffer $\mathcal D$. Train on **random mini-batches** from it.
 - Breaks temporal correlation.
@@ -67,6 +74,7 @@ Loss: $L(\mathbf w) = \mathbb E_{(s,a,r,s')\sim\mathcal D}\left[(r + \gamma \max
 K: experience replay, replay buffer, target network, fixed Q-targets
 
 @card w9
+I: dqnloop
 Q: Walk through the DQN algorithm.
 A: 1. Initialise replay buffer $\mathcal D$, network $\mathbf w$, target $\mathbf w^- = \mathbf w$.
 2. Each step: choose $a$ $\varepsilon$-greedily from $\hat q(s,\cdot,\mathbf w)$, act, observe $r, s'$, store $(s,a,r,s')$ in $\mathcal D$.
@@ -77,6 +85,7 @@ A: 1. Initialise replay buffer $\mathcal D$, network $\mathbf w$, target $\mathb
 K: DQN, algorithm, epsilon-greedy, mini-batch, target network
 
 @card w9
+I: dqnarch
 Q: Describe DQN on Atari: input, architecture, output, reward, results.
 A: - Input: last **4 frames**, 84x84 greyscale, stacked (4 frames give motion, a single frame is not Markov).
 - Lecture architecture: conv 16 filters 8x8, conv 32 filters 4x4, both ReLU, then a 256-unit fully connected layer, then a linear output with **one Q value per action** (up to 18 joystick actions).
@@ -87,6 +96,7 @@ Follow-ups: Double DQN, Dueling DQN, Prioritised Replay.
 K: DQN, Atari, frame stacking, architecture, Montezuma's Revenge
 
 @card w9
+I: maxbias
 Q: What do Double DQN, Dueling DQN and prioritised replay add?
 A: - **Double DQN**: target $r + \gamma\,\hat q(s', \arg\max_{a'}\hat q(s',a',\mathbf w), \mathbf w^-)$. The online net selects, the target net evaluates. Reduces overestimation.
 - **Dueling DQN**: separate streams for $V(s)$ and advantages $A(s,a)$, combined as $Q = V + A - \text{mean}(A)$. Learns state values even when actions do not matter much.
@@ -94,6 +104,7 @@ A: - **Double DQN**: target $r + \gamma\,\hat q(s', \arg\max_{a'}\hat q(s',a',\m
 K: Double DQN, Dueling DQN, prioritised replay
 
 @card w10
+I: actorcritic
 Q: Value-based vs policy-based vs actor-critic. When would you pick each?
 A: - **Value-based** (Q-learning, DQN): learn $Q$, act greedily. Good for discrete actions, sample efficient with replay. Struggles with continuous actions and cannot represent stochastic optimal policies.
 - **Policy-based** (REINFORCE): parameterise $\pi_\theta(a\mid s)$ directly and do gradient ascent on $J(\theta)$. Handles continuous actions and stochastic policies, smoother convergence. High variance, sample inefficient, local optima.
@@ -101,6 +112,7 @@ A: - **Value-based** (Q-learning, DQN): learn $Q$, act greedily. Good for discre
 K: value-based, policy-based, actor-critic, continuous actions
 
 @card w10
+I: alias
 Q: Why would you ever want a stochastic policy if a deterministic optimal policy always exists?
 A: That existence result holds for **fully observed MDPs**. Stochastic policies are needed when:
 - **Aliased states** (partial observability): two corridor cells look identical. A deterministic policy must go the same way in both and can loop forever. Moving left or right with probability 0.5 reaches the goal.
@@ -118,6 +130,7 @@ All three give the same gradient direction up to a constant, so the policy gradi
 K: policy objective, start value, average reward, gradient ascent
 
 @card w10
+I: softmaxpush
 Q: State the policy gradient theorem and why it is so important.
 A: $$\nabla_\theta J(\theta) = \mathbb E_{\pi_\theta}\left[\nabla_\theta\log\pi_\theta(a\mid s)\; q_{\pi_\theta}(s,a)\right]$$
 Why it matters:
@@ -128,6 +141,7 @@ Why it matters:
 K: policy gradient theorem, score function, model-free
 
 @card w10
+I: softmaxpush
 Q: What is the score function and how does the softmax policy's score look?
 A: Score: $\nabla_\theta\log\pi_\theta(a\mid s)$, the direction in parameter space that makes $a$ more likely.
 Softmax $\pi(a\mid s) = \frac{e^{h(s,a)}}{\sum_b e^{h(s,b)}}$ with linear preferences $h = \theta^\top\mathbf x(s,a)$:
@@ -136,6 +150,7 @@ Feature of the chosen action minus the policy's average feature. Multiplying by 
 K: score function, softmax policy, action preferences
 
 @card w10
+I: baseline
 Q: Explain REINFORCE and its weaknesses.
 A: Monte Carlo policy gradient (Williams 1992). Run a full episode with $\pi_\theta$, then for each step
 $$\theta \leftarrow \theta + \alpha\,\gamma^t G_t\,\nabla_\theta\log\pi_\theta(A_t\mid S_t)$$
@@ -144,6 +159,7 @@ Weaknesses: **very high variance** (whole-episode returns), must wait for the ep
 K: REINFORCE, Monte Carlo policy gradient, variance
 
 @card w10
+I: baseline
 Q: What does a baseline do in policy gradients, and why does it not add bias?
 A: Replace $G_t$ with $G_t - b(S_t)$ where $b$ does not depend on the action. Usually $b(s) = \hat v(s,\mathbf w)$.
 No bias because $\mathbb E_a[\nabla\log\pi(a\mid s)\,b(s)] = b(s)\sum_a\nabla\pi(a\mid s) = b(s)\nabla\sum_a\pi(a\mid s) = b(s)\nabla 1 = 0$.
@@ -152,6 +168,7 @@ The baseline must not depend on the action, so $G_t$ itself cannot be the baseli
 K: baseline, variance reduction, unbiased, REINFORCE with baseline
 
 @card w10
+I: actorcritic
 Q: Explain actor-critic and why the TD error estimates the advantage.
 A: **Actor**: policy $\pi_\theta$. **Critic**: value estimate $\hat v_{\mathbf w}(s)$ trained by TD.
 One-step actor-critic, each step:
@@ -163,6 +180,7 @@ Benefits over REINFORCE: online, every step, much lower variance. Cost: bias fro
 K: actor-critic, critic, TD error, advantage, A2C
 
 @card w10
+I: spectrum
 Q: What are A2C, A3C and GAE?
 A: - **A2C**: advantage actor-critic, usually with n-step returns and a shared network body with a policy head and a value head.
 - **A3C**: many asynchronous workers, each with its own environment copy, updating shared parameters. Parallel data decorrelates updates without a replay buffer.
@@ -170,12 +188,14 @@ A: - **A2C**: advantage actor-critic, usually with n-step returns and a shared n
 K: A2C, A3C, GAE, n-step, lambda
 
 @card w10
+I: trpo
 Q: Why do policy updates need to be constrained? Explain TRPO.
 A: In RL the policy generates its own data. One overly large step can produce a terrible policy (driving into a wall), and then all new data is useless and recovery is very hard. Learning rate tuning cannot guarantee safety.
 **TRPO**: maximise the surrogate $\mathbb E\left[\frac{\pi_\theta(a\mid s)}{\pi_{\theta_{old}}(a\mid s)}\hat A\right]$ subject to $\mathbb E[D_{KL}(\pi_{\theta_{old}}\Vert\pi_\theta)] \le \delta$. Stay in a trust region where the old advantage estimates are still valid. It comes with a monotonic improvement guarantee. Downside: needs second-order methods (conjugate gradient, Fisher matrix, line search), complex and expensive.
 K: trust region, TRPO, KL divergence, monotonic improvement
 
 @card w10
+I: ppoclip
 Q: Explain PPO's clipped objective.
 A: Ratio $r_t(\theta) = \frac{\pi_\theta(a_t\mid s_t)}{\pi_{\theta_{old}}(a_t\mid s_t)}$.
 $$L^{CLIP}(\theta) = \mathbb E_t\left[\min\left(r_t\hat A_t,\; \text{clip}(r_t, 1-\epsilon, 1+\epsilon)\hat A_t\right)\right]$$
@@ -186,6 +206,7 @@ Full loss adds a value loss ($c_1 \approx 0.5$) and an entropy bonus ($c_2 \appr
 K: PPO, clipped objective, probability ratio, entropy bonus
 
 @card w10
+I: gaussian
 Q: How do you handle continuous actions with policy gradients?
 A: Use a **Gaussian policy**: $a\sim\mathcal N(\mu_\theta(s),\sigma^2)$.
 Score: $\nabla_\theta\log\pi_\theta(a\mid s) = \frac{a - \mu_\theta(s)}{\sigma^2}\nabla_\theta\mu_\theta(s)$.
@@ -193,6 +214,7 @@ Weighted by the advantage, this moves the mean towards actions that turned out b
 K: Gaussian policy, continuous actions, score function
 
 @card w10
+I: trpo
 Q: Compare REINFORCE, actor-critic, TRPO and PPO.
 A: - Value signal: MC return, TD error, surrogate advantage, clipped surrogate advantage.
 - Updates: end of episode, every step, every rollout, every rollout with K epochs.
@@ -204,6 +226,7 @@ A: - Value signal: MC return, TD error, surrogate advantage, clipped surrogate a
 K: REINFORCE, actor-critic, TRPO, PPO, comparison
 
 @card w11
+I: modelbased
 Q: What is model-based RL, and what are its advantages and main drawback?
 A: Learn (or be given) a **model** $\langle P_\eta, R_\eta\rangle$, then **plan** with it to get values or a policy.
 Advantages: model learning is ordinary supervised learning from $(s,a)$ to $(r,s')$, the model can represent its own uncertainty, and it can generate unlimited simulated experience, so it is very data efficient.
@@ -211,6 +234,7 @@ Main drawback: **two sources of error that compound**. An approximate model plus
 K: model-based RL, model learning, planning, compounding error
 
 @card w11
+I: modelbased
 Q: How do you learn a table lookup model and use it for sample-based planning?
 A: Count visits: $\hat P(s'\mid s,a) = \frac{N(s,a,s')}{N(s,a)}$ and $\hat R(s,a) = \frac{1}{N(s,a)}\sum r$.
 **Sample-based planning**: use the model only to generate simulated transitions, then run model-free learning (MC, SARSA, Q-learning) on them.
@@ -218,17 +242,20 @@ AB example: real MC gives $V(A)=0$ from one episode. Fit the model (A goes to B,
 K: table lookup model, sample-based planning, AB example
 
 @card w11
+I: mcts
 Q: Offline vs online planning. Why does MCTS plan online?
 A: **Offline** (value iteration): solve every state in advance, then act. Impossible for huge state spaces like Go.
 **Online**: plan from the current state right before acting, execute, then plan again from the new state. Effort goes only to states that can actually be reached from here. It needs only a simulator, which is often easier to write than explicit probabilities. MCTS is online and **anytime**: stop whenever the time budget runs out and take the best action so far.
 K: online planning, offline planning, simulator, anytime
 
 @card w11
+I: expectimax
 Q: What is an ExpectiMax tree?
 A: A tree representation of an MDP. State nodes take the **max** over actions, chance nodes take the **expectation** over outcomes using $P(s'\mid s,a)$. Fully expanding it to horizon $H$ gives exact $q(s,a)$ at the root but costs about $(|S||A|)^H$. MCTS builds only the promising part of this tree.
 K: ExpectiMax, chance node, search tree
 
 @card w11
+I: mcts
 Q: Walk through the four phases of MCTS.
 A: Repeat until the budget runs out:
 1. **Selection**: from the root, follow the tree policy (UCT) down through fully expanded nodes until reaching a node with an untried action.
@@ -239,6 +266,7 @@ Then play $\arg\max_a Q(\text{root},a)$, observe the real next state, keep that 
 K: MCTS, selection, expansion, simulation, backpropagation
 
 @card w11
+I: ucb
 Q: What is UCT and what does each term do?
 A: UCT is UCB1 used for selection inside the tree:
 $$UCT(s,a) = Q(s,a) + 2C_p\sqrt{\frac{2\ln N(s)}{N(s,a)}}$$
@@ -257,6 +285,7 @@ Fixes: heuristic or learned rollout policies, and a pre-trained Q function or va
 K: MCTS advantages, sparse reward, rollout policy, cold start
 
 @card w11
+I: mcts
 Q: Value iteration vs MCTS: which and when?
 A: - Value iteration: exhaustive over all states, higher cost, but the policy works from **any** state. Solve once, reuse many times.
 - MCTS: only explores states reachable from the current one, lower cost per decision, but must re-plan online at each new state.
@@ -264,6 +293,7 @@ Pick VI for small MDPs with a known model that you will query from everywhere. P
 K: value iteration, MCTS, offline, online
 
 @card w11
+I: alphazero
 Q: How does AlphaZero combine MCTS and deep learning?
 A: A network takes the board and outputs a **policy prior** $P(a\mid s)$ and a **value** $V(s)$ (probability of winning).
 - At each move, MCTS runs with a UCB-like rule: $Q(s,a) + c\,P(s,a)\frac{\sqrt{N(s)}}{1+N(s,a)}$. The prior boosts promising moves and its effect fades as $N(s,a)$ grows. The value network replaces long random rollouts.
@@ -273,12 +303,14 @@ MCTS acts as a policy improvement operator and the network learns to imitate it.
 K: AlphaZero, self-play, policy network, value network, MCTS
 
 @card w11
+I: rlhf
 Q: What is RLHF and why is it needed?
 A: **Reinforcement Learning from Human Feedback** fine-tunes a model, usually an LLM, to maximise a **reward model** learned from human preferences.
 Why: pre-training maximises the likelihood of internet text, which can be harmful, biased, wrong or unhelpful (the "use goto everywhere" answer). Metrics like BLEU do not capture what people want. Humans find it easier to compare two answers than to write a reward function.
 K: RLHF, alignment, reward model, human preferences
 
 @card w11
+I: rlhf
 Q: Describe the RLHF pipeline in four stages.
 A: 1. **Pre-training** on a huge corpus. Output: a base model.
 2. **Supervised fine-tuning (SFT)** on human-written demonstrations. ChatGPT used about 13K conversations.

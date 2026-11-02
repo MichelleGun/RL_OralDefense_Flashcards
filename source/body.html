@@ -1,6 +1,7 @@
 <div class="wrap">
 <header class="top">
-  <div class="eyebrow">42028 / 43008 Reinforcement Learning · oral defense prep</div>
+  <div class="toprow"><div class="eyebrow">42028 / 43008 Reinforcement Learning · oral defense prep</div>
+  <div class="themes" id="theme" role="group" aria-label="Colour theme"><button type="button" data-t="light">Light</button><button type="button" data-t="dark">Dark</button><button type="button" data-t="auto">Auto</button></div></div>
   <h1>RL Defense Deck</h1>
   <p>Built from your RL Weekly Notes, Weeks 1 to 11, including your margin comments. Glossary first, then flashcards, step-by-step derivations, "which model would you use" questions, and the weak spots you should fix first.</p>
   <div class="stats" id="stats" aria-live="polite"></div>
@@ -12,6 +13,7 @@
   <a href="#derivations" data-view="derivations">Derivations</a>
   <a href="#models" data-view="models">Which model?</a>
   <a href="#weak" data-view="weak">Weak spots</a>
+  <a href="#progress" data-view="progress">Account</a>
 </div></nav>
 <main class="wrap">
   <section class="view" id="v-glossary">
@@ -48,11 +50,30 @@
   <section class="view" id="v-weak" hidden>
     <p class="intro">Honest read of where you are likely to get caught, taken from your own quiz feedback and margin notes, plus how to answer under pressure.</p>
     <div class="list" id="w-list"></div>
+  </section>
+
+  <section class="view" id="v-progress" hidden>
+    <p class="intro" style="display:block">Save your progress to a username so it follows you to any phone or laptop. No email and no Claude sign-in. Without an account, progress stays in this browser only.</p>
+    <div class="panel" id="acct-out">
+      <h3>Log in or create an account</h3>
+      <form id="acct-form" class="acct" autocomplete="on">
+        <label>Username<input id="a-user" name="username" autocomplete="username" autocapitalize="none" autocorrect="off" spellcheck="false" maxlength="32" required></label>
+        <label>Password<input id="a-pass" name="password" type="password" autocomplete="current-password" maxlength="72" required></label>
+        <div class="marks"><button type="submit" class="primary" id="a-login">Log in</button><button type="button" id="a-register">Create account</button></div>
+        <p class="pmsg" id="a-msg" aria-live="polite"></p>
+      </form>
+      <p class="hint">Usernames are 3 to 32 letters, numbers, dots, dashes or underscores. Passwords need 6 or more characters. Pick one you use nowhere else, because this is a small study tool, not a bank. There is no password reset, so write it down.</p>
+    </div>
+    <div class="panel" id="acct-in" hidden>
+      <h3>Logged in as <span id="a-name"></span></h3>
+      <p class="muted" id="a-status"></p>
+      <div class="marks"><button type="button" id="a-sync">Sync now</button><button type="button" id="a-logout" class="ghost">Log out</button></div>
+    </div>
     <div class="panel">
-      <h3>Progress</h3>
-      <p class="muted" id="sync-detail"></p>
+      <h3>Reset</h3>
+      <p class="muted">Clears every mark and MCQ answer on this device, and in your account if you are logged in.</p>
       <div class="marks"><button id="reset-1" class="rev">Reset all progress</button><button id="reset-2" class="rev" hidden>Confirm reset</button><button id="reset-x" class="ghost" hidden>Cancel</button></div>
     </div>
   </section>
 </main>
-<div class="wrap"><footer>Keyboard in deck view: Space shows the answer, 1 marks Review again, 2 marks Know it, arrow keys move between cards.</footer></div>
+<div class="wrap"><footer class="key-hint">Keyboard in deck view: Space shows the answer, 1 marks Review again, 2 marks Know it, arrow keys move between cards.</footer></div>

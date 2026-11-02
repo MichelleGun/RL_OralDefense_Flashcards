@@ -1,0 +1,9 @@
+-- Account backend for the RL Defense Deck (Supabase project "rl-defense-deck", ref havrwkeymjjzeypnjlgh, Sydney).
+-- Already applied. Kept here as a record. Tables are closed to the public API; the page only calls these functions:
+--   deck_register(p_username, p_password) -> {username, token, progress}
+--   deck_login(p_username, p_password)    -> {username, token, progress} or {error}
+--   deck_load(p_token) -> {username, progress}
+--   deck_save(p_token, p_progress) -> merged progress (newest timestamp wins per item)
+--   deck_logout(p_token)
+-- Passwords are stored as bcrypt hashes (pgcrypto). Session tokens are stored as SHA-256 hashes and expire after 90 idle days.
+-- 5 wrong passwords lock a username for 10 minutes.
