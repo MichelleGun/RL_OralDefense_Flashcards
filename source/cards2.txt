@@ -20,6 +20,7 @@ First-visit samples are independent across episodes and unbiased. Every-visit is
 K: first-visit MC, every-visit MC, returns, bias
 
 @card w6
+I: qvsv
 Q: Why does Monte Carlo control estimate Q instead of V?
 A: Without a model, $V$ is not enough to act. Greedy improvement from $V$ needs $\pi'(s)=\arg\max_a [R(s,a) + \gamma\sum_{s'}P(s'\mid s,a)V(s')]$, which uses $P$ and $R$.
 With $Q$, improvement is just $\pi'(s) = \arg\max_a Q(s,a)$, which is model-free. So every model-free control method (MC control, SARSA, Q-learning, DQN) learns action values.
@@ -34,6 +35,7 @@ A: If the policy is deterministic you only ever see one action per state, so you
 K: exploring starts, soft policy, epsilon-soft, coverage
 
 @card w6
+I: glie
 Q: What is GLIE and why do we need it?
 A: **Greedy in the Limit with Infinite Exploration**:
 1. Every state-action pair is visited infinitely often.
@@ -177,6 +179,7 @@ Axis 2, **width**: sample backups (one sampled successor: MC, TD) vs full backup
 K: unified view, backup depth, sample backup, full backup
 
 @card w7
+I: afterstate
 Q: What are afterstates and when are they useful?
 A: An **afterstate** is the situation right after your own move but before the environment or opponent responds, like a tic-tac-toe board after you place your mark.
 Useful when the immediate effect of your action is known even if the rest of the dynamics is not. Different (position, move) pairs that lead to the same board share one value, so learning is faster. Also used in queuing problems.
@@ -220,12 +223,14 @@ Choice: small low-dimensional continuous state, use linear with tile coding. Raw
 K: function approximator, linear, neural network, tile coding, non-stationary
 
 @card w8
+I: vemu
 Q: What is the VE objective and why do we need a state weighting?
 A: $\overline{VE}(\mathbf w) = \sum_s \mu(s)[v_\pi(s) - \hat v(s,\mathbf w)]^2$.
 With fewer weights than states, improving one state's estimate makes others worse, so you must decide which states matter. $\mu(s)$, the **on-policy distribution** (fraction of time spent in $s$), weights errors by how often you are actually there. Semi-gradient TD's convergence results depend on updating according to this distribution.
 K: VE, mean squared value error, on-policy distribution
 
 @card w8
+I: semigrad
 Q: Gradient MC vs semi-gradient TD. Why is TD only a semi-gradient?
 A: General update: $\mathbf w \leftarrow \mathbf w + \alpha[U_t - \hat v(S_t,\mathbf w)]\nabla_{\mathbf w}\hat v(S_t,\mathbf w)$.
 - **Gradient MC**: $U_t = G_t$, unbiased and independent of $\mathbf w$. True SGD on VE. Converges to a local optimum (global for linear).
@@ -234,6 +239,7 @@ Semi-gradient TD learns faster and online, converges for linear on-policy (to th
 K: gradient MC, semi-gradient, TD target, SGD
 
 @card w8
+I: houseprice
 Q: Linear value function approximation: write it, its update, and its convergence result.
 A: $\hat v(s,\mathbf w) = \mathbf w^\top \mathbf x(s)$, so $\nabla_{\mathbf w}\hat v = \mathbf x(s)$ and the update is $\mathbf w \leftarrow \mathbf w + \alpha[U_t - \mathbf w^\top\mathbf x(S_t)]\,\mathbf x(S_t)$.
 Update equals step size times prediction error times feature value.
@@ -266,6 +272,7 @@ A: Group states, one shared weight per group. It is the simplest linear FA (a on
 K: state aggregation, staircase, random walk
 
 @card w8
+I: lstd
 Q: What is LSTD and when would you use it?
 A: **Least-Squares TD** estimates the TD fixed point directly instead of creeping towards it: $\hat A = \sum_t \mathbf x_t(\mathbf x_t - \gamma\mathbf x_{t+1})^\top + \epsilon I$, $\hat{\mathbf b} = \sum_t R_{t+1}\mathbf x_t$, then $\mathbf w = \hat A^{-1}\hat{\mathbf b}$.
 - Most **data efficient** linear TD method, no step size needed.
@@ -284,6 +291,7 @@ can make value estimates diverge to infinity. Any two are fine. Q-learning with 
 K: deadly triad, divergence, off-policy, bootstrapping, function approximation
 
 @card w8
+I: knn
 Q: What are memory-based and kernel-based methods?
 A: **Memory-based (lazy)** methods store experiences and only compute when queried, for example nearest neighbour or a distance-weighted average of nearby stored targets. Nonparametric: the shape of the function is not fixed in advance and accuracy improves with data. They focus on visited regions and avoid exponential memory, but queries slow down as memory grows (k-d trees help).
 **Kernel regression**: $\hat v(s) = \sum_{s'\in D} k(s,s')\,g(s')$, where the kernel measures how strongly $s'$ generalises to $s$. Any linear method corresponds to the kernel $k(s,s') = \mathbf x(s)^\top\mathbf x(s')$ (kernel trick).

@@ -1,4 +1,5 @@
 @card w9
+I: gpi
 Q: How does control with function approximation work?
 A: Same GPI loop with $\hat q(s,a,\mathbf w)$ instead of a table: approximate evaluation, then $\varepsilon$-greedy improvement.
 Update: $\mathbf w \leftarrow \mathbf w + \alpha[U_t - \hat q(S_t,A_t,\mathbf w)]\nabla_{\mathbf w}\hat q(S_t,A_t,\mathbf w)$ where
@@ -122,6 +123,7 @@ A parameterised policy can be random in some states and deterministic in others,
 K: stochastic policy, aliasing, mixed strategy, partial observability
 
 @card w10
+I: jobj
 Q: What policy objectives J(theta) can you optimise?
 A: - **Episodic, start value**: $J_1(\theta) = v_{\pi_\theta}(s_1)$.
 - **Continuing, average value**: $J_{avV}(\theta) = \sum_s d^{\pi_\theta}(s)\,v_{\pi_\theta}(s)$.
@@ -278,6 +280,8 @@ Check which version your assessor expects before quoting constants.
 K: UCT, UCB1, exploration constant, tree policy
 
 @card w11
+I: mcts
+I: sparse
 Q: What are the advantages of MCTS and when does it struggle?
 A: Advantages: selective best-first search, evaluates states dynamically from the current position, sampling beats the curse of dimensionality, needs only a black-box simulator, anytime, principled exploration via UCT.
 Struggles: **sparse rewards** (Atari Freeway: random rollouts almost never reach the reward), long random rollouts that wander, needs a simulator, repeated expansion of the same state in vanilla form, and it gives an answer only for the current state rather than a policy for everywhere.
@@ -320,6 +324,7 @@ In RL terms: the state is the prompt plus text so far, the action is the next to
 K: RLHF pipeline, SFT, reward model, PPO, KL penalty
 
 @card w11
+I: rlhf
 Q: Benefits and challenges of RLHF?
 A: Benefits: aligns models with human values, safer and more helpful outputs, handles fuzzy goals that are hard to write as a reward.
 Challenges: expensive human annotation, **human bias becomes model bias**, **reward hacking** (over-optimising a flawed reward model), hard to scale human feedback, disagreement between annotators.

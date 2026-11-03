@@ -78,6 +78,7 @@ Send me your report or notebook and I can add cards that match it line by line.
 K: project defense, implementation, hyperparameters, learning curves
 
 @card p
+I: seedband
 Q: How do you make your RL experiments reproducible and how do you report results honestly?
 A: Fix every random source and report several seeds:
 `env.reset(seed=67)`, `env.action_space.seed(67)`, `np.random.seed(67)`, `random.seed(67)`, `torch.manual_seed(67)`.
@@ -85,6 +86,7 @@ Then run several seeds (for example 67, 68, 69, 70, 71) and plot the **mean with
 K: reproducibility, seeds, evaluation, learning curves
 
 @card p
+I: debugflow
 Q: Your learning curve is flat or collapses. How do you debug an RL agent?
 A: Work from simple to complex:
 1. Check the environment with a random agent and a hand-coded policy.

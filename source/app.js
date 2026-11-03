@@ -5,7 +5,7 @@ window.MathJax = {
   startup: { typeset: false, ready: function () { MathJax.startup.defaultReady(); mjReady = true; flushTypeset(); } }
 };
 var mjReady = false, mjQueue = [];
-function typeset(el) { if (!el) return; mjQueue.push(el); if (mjReady) setTimeout(flushTypeset, 0); }
+function typeset(el) { if (!el) return; watchFigs(el); mjQueue.push(el); if (mjReady) setTimeout(flushTypeset, 0); }
 function flushTypeset() {
   var els = mjQueue.splice(0).filter(function (e) { return e.isConnected; });
   if (!els.length) return;
@@ -18,6 +18,44 @@ function fitMath(root) {
     if (m.getBoundingClientRect().width > p.clientWidth - 2) m.classList.add('wide');
   });
 }
+/* diagram build animation: lines draw themselves, everything else fades in, once when scrolled into view */
+var REDUCED = !!(window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches);
+var figIO = (!REDUCED && 'IntersectionObserver' in window) ? new IntersectionObserver(function (ents) {
+  ents.forEach(function (e) { if (e.isIntersecting) { figIO.unobserve(e.target); drawSvg(e.target); } });
+}, { threshold: 0.3 }) : null;
+function watchFigs(root) {
+  if (!figIO || !root.querySelectorAll) return;
+  root.querySelectorAll('.dg svg:not([data-w])').forEach(function (s) { s.setAttribute('data-w', '1'); figIO.observe(s); });
+}
+function drawSvg(svg) {
+  if (REDUCED || !svg) return;
+  var els = Array.prototype.slice.call(svg.children), n = els.length; if (!n) return;
+  var span = Math.min(1.6, 0.3 + n * 0.03), prev = null;
+  var tok = svg.__anim = (svg.__anim || 0) + 1;
+  els.forEach(function (e, i) {
+    var tag = e.tagName.toLowerCase(), cls = e.getAttribute('class') || '', len = 0;
+    var d = i / n * span;
+    var draw = /^ln\b/.test(cls) && !/\bdash\b/.test(cls) && (tag === 'line' || tag === 'path' || tag === 'polyline') && typeof e.getTotalLength === 'function';
+    if (draw) { try { len = e.getTotalLength(); } catch (x) { len = 0; } if (!(len > 0)) draw = false; }
+    if (tag === 'polygon' && prev && prev.__draw) d = prev.__d + 0.5;
+    e.__d = d; e.__draw = draw; e.style.transition = 'none';
+    if (draw) { e.style.strokeDasharray = len + ' ' + len; e.style.strokeDashoffset = String(len); }
+    else e.style.opacity = '0';
+    prev = e;
+  });
+  svg.getBoundingClientRect();
+  requestAnimationFrame(function () { requestAnimationFrame(function () {
+    els.forEach(function (e) {
+      if (e.__draw) { e.style.transition = 'stroke-dashoffset .6s ease ' + e.__d.toFixed(2) + 's'; e.style.strokeDashoffset = '0'; }
+      else { e.style.transition = 'opacity .45s ease ' + e.__d.toFixed(2) + 's'; e.style.opacity = '1'; }
+    });
+    setTimeout(function () { if (svg.__anim !== tok) return; els.forEach(function (e) { e.removeAttribute('style'); }); }, (span + 1.3) * 1000);
+  }); });
+}
+document.addEventListener('click', function (e) {
+  var b = e.target.closest && e.target.closest('.dg-replay'); if (!b) return;
+  drawSvg(b.parentNode.querySelector('svg'));
+});
 var fitTimer = null;
 window.addEventListener('resize', function () { clearTimeout(fitTimer); fitTimer = setTimeout(function () { if (window.MathJax && mjReady) fitMath(document.body); }, 250); });
 
@@ -29,6 +67,15 @@ window.addEventListener('resize', function () { clearTimeout(fitTimer); fitTimer
     w10: 'Week 10 Policy gradients', w11: 'Week 11 MCTS and RLHF', x: 'Cross-topic', p: 'Your project'
   };
   var MTOPICS = { bandit: 'Bandits', dp: 'Dynamic programming', mc: 'Monte Carlo', td: 'TD control', fa: 'Function approximation', deep: 'Deep RL', pg: 'Policy gradients', plan: 'Planning', rlhf: 'RLHF', other: 'Framing' };
+
+  var MWK = { bandit: 'w2', dp: 'w5', mc: 'w6', td: 'w7', fa: 'w8', deep: 'w9', pg: 'w10', plan: 'w11', rlhf: 'w11', other: 'x' };
+  function wkVar(wk) { return 'var(--' + (wk === 'x' ? 'wx' : wk === 'p' ? 'wp' : wk) + ')'; }
+  function wkPill(wk, label) { return '<span class="pill wk" style="--wc:' + wkVar(wk) + '">' + esc(label || WEEKS[wk] || wk) + '</span>'; }
+  var ICON = {
+    user: '<svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/></svg>',
+    trophy: '<svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 4h8v5a4 4 0 0 1-8 0z"/><path d="M8 6H5a3 3 0 0 0 3 4M16 6h3a3 3 0 0 1-3 4M12 13v4M8 21h8M9 17h6"/></svg>',
+    play: '<svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 4l13 8-13 8z"/></svg>'
+  };
 
   /* ---------- parse source ---------- */
   function hash(s) { var h = 5381; for (var i = 0; i < s.length; i++) { h = ((h << 5) + h + s.charCodeAt(i)) | 0; } return (h >>> 0).toString(36); }
@@ -85,7 +132,7 @@ window.addEventListener('resize', function () { clearTimeout(fitTimer); fitTimer
   function figs(item) {
     var DG = window.DIAG || {};
     return (item.I || []).filter(function (n) { return DG[n]; }).map(function (n) {
-      return '<figure class="dg">' + DG[n].svg + '<div class="zoom-hint">Tap the diagram to zoom, tap again to fit.</div><figcaption class="rich">' + inline(DG[n].cap) + '</figcaption></figure>';
+      return '<figure class="dg">' + DG[n].svg + '<button type="button" class="dg-replay" aria-label="Replay the diagram animation">Replay</button><div class="zoom-hint">Tap the diagram to zoom, tap again to fit.</div><figcaption class="rich">' + inline(DG[n].cap) + '</figcaption></figure>';
     }).join('');
   }
   document.addEventListener('click', function (e) {
@@ -117,6 +164,7 @@ window.addEventListener('resize', function () { clearTimeout(fitTimer); fitTimer
 
   /* ---------- account sync (Supabase RPC, no Claude sign-in) ---------- */
   var SB_URL = 'https://havrwkeymjjzeypnjlgh.supabase.co', SB_KEY = 'sb_publishable_9efpWJ01urvHtJKxfvbl5g_yQOkIw5t', SKEY = 'rl-defense-session';
+  var board = null, boardErr = '', boardAt = 0, boardLoading = false, boardShow = true;
   var sess = null, acct = 'none', saveTimer = null, saving = false, dirty = false, lastSync = 0;
   try { sess = JSON.parse(localStorage.getItem(SKEY) || 'null'); } catch (e) {}
   function rpc(fn, body) {
@@ -144,18 +192,20 @@ window.addEventListener('resize', function () { clearTimeout(fitTimer); fitTimer
     saving = true; dirty = false; acct = 'saving'; renderStats();
     var tok = sess.token;
     rpc('deck_save', { p_token: tok, p_progress: { marks: state.marks, mcq: state.mcq } })
-      .then(function (merged) { if (!sess || sess.token !== tok) return; var n = mergeIn(merged); persistLocal(); acct = 'ok'; lastSync = Date.now(); if (n) renderView(currentView); })
+      .then(function (merged) { if (!sess || sess.token !== tok) return; var n = mergeIn(merged); persistLocal(); acct = 'ok'; lastSync = Date.now(); if (currentView === 'board') loadBoard(true); else if (n) renderView(currentView); })
       .catch(function (e) { if (!sess || sess.token !== tok) return; if (e.message === 'bad_session') { endSession('Your login expired. Log in again to keep syncing.'); } else { acct = 'offline'; dirty = true; } })
       .then(function () { saving = false; renderStats(); if (currentView === 'progress') renderProgress(); if (dirty && acct !== 'offline') pushRemote(); });
   }
   function startSession(res, msg) {
     sess = { u: res.username, token: res.token };
     try { localStorage.setItem(SKEY, JSON.stringify(sess)); } catch (e) {}
-    adopt(res.progress); dirty = true; acct = 'ok'; pushRemote();
+    adopt(res.progress); dirty = true; acct = 'ok'; pushRemote(); board = null;
+    boardShow = true;
+    rpc('deck_load', { p_token: res.token }).then(function (r) { if (r) boardShow = r.show_on_board !== false; syncSwitches(); }).catch(function () {});
     renderAll(); if (msg) flash('a-msg', msg);
   }
   function endSession(msg) {
-    sess = null; acct = 'none'; clearTimeout(saveTimer);
+    sess = null; acct = 'none'; clearTimeout(saveTimer); board = null;
     try { localStorage.removeItem(SKEY); } catch (e) {}
     state.marks = {}; state.mcq = {}; persistLocal();
     renderAll(); if (msg) flash('a-msg', msg, true);
@@ -163,7 +213,7 @@ window.addEventListener('resize', function () { clearTimeout(fitTimer); fitTimer
   if (sess && sess.token) {
     acct = 'saving';
     rpc('deck_load', { p_token: sess.token })
-      .then(function (res) { adopt(res.progress); acct = 'ok'; lastSync = Date.now(); dirty = true; pushRemote(); renderAll(); })
+      .then(function (res) { boardShow = res.show_on_board !== false; adopt(res.progress); acct = 'ok'; lastSync = Date.now(); dirty = true; pushRemote(); renderAll(); })
       .catch(function (e) { if (e.message === 'bad_session') endSession('Your login expired. Log in again to keep syncing.'); else { acct = 'offline'; renderStats(); } });
   }
   window.addEventListener('online', function () { if (sess && acct === 'offline') { dirty = true; pushRemote(); } });
@@ -192,6 +242,20 @@ window.addEventListener('resize', function () { clearTimeout(fitTimer); fitTimer
       '<span class="stat"><b>' + dk + '/' + D.length + '</b> derivations solid</span>' +
       '<a class="sync" href="#progress"></a>';
     document.querySelector('#stats .sync').textContent = syncTxt;
+    renderBanner();
+  }
+  var bannerFor;
+  function renderBanner() {
+    var b = document.getElementById('abanner'), who = sess ? sess.u : '';
+    if (!b || bannerFor === who) return; bannerFor = who;
+    if (sess) {
+      b.className = 'abanner in';
+      b.innerHTML = '<div class="ab-t"><b>Logged in as <span></span>.</b> Your progress syncs to your account on every device.</div><div class="ab-b"><a class="btn" href="#board">' + ICON.trophy + 'Leaderboard</a><a class="btn" href="#progress">' + ICON.user + 'Account</a></div>';
+      b.querySelector('.ab-t span').textContent = sess.u;
+    } else {
+      b.className = 'abanner';
+      b.innerHTML = '<div class="ab-t"><b>Free accounts are here.</b> Pick a username and a password, no email needed. Your progress follows you to any phone or laptop, and you join the study leaderboard.</div><div class="ab-b"><a class="btn primary" href="#progress">' + ICON.user + 'Create account or log in</a><a class="btn" href="#board">' + ICON.trophy + 'Leaderboard</a></div>';
+    }
   }
 
   /* ---------- glossary ---------- */
@@ -200,19 +264,20 @@ window.addEventListener('resize', function () { clearTimeout(fitTimer); fitTimer
     container.innerHTML = '';
     items.forEach(function (it) {
       var b = el('<button type="button"></button>');
-      b.textContent = it[1]; b.setAttribute('aria-pressed', String(it[0] === current));
+      if (it[2]) b.innerHTML = '<span class="dot" style="--wc:' + it[2] + '"></span>' + esc(it[1]); else b.textContent = it[1];
+      b.setAttribute('aria-pressed', String(it[0] === current));
       b.addEventListener('click', function () { onPick(it[0]); });
       container.appendChild(b);
     });
   }
   function renderGlossary() {
-    var weeks = [['all', 'All']].concat(Object.keys(WEEKS).filter(function (w) { return G.some(function (g) { return g.wk === w; }); }).map(function (w) { return [w, WEEKS[w].replace(/^Week (\d+).*/, 'W$1')]; }));
+    var weeks = [['all', 'All']].concat(Object.keys(WEEKS).filter(function (w) { return G.some(function (g) { return g.wk === w; }); }).map(function (w) { return [w, WEEKS[w].replace(/^Week (\d+).*/, 'W$1'), wkVar(w)]; }));
     chipRow(document.getElementById('g-weeks'), weeks, gWeek, function (w) { gWeek = w; renderGlossary(); });
     var q = document.getElementById('g-search').value.trim().toLowerCase();
     var list = document.getElementById('g-list');
     var items = G.filter(function (g) { return (gWeek === 'all' || g.wk === gWeek) && (!q || (g.term + ' ' + g.def).toLowerCase().indexOf(q) >= 0); });
     list.innerHTML = items.length ? items.map(function (g) {
-      return '<div class="gitem"><div class="gterm">' + inline(g.term) + '<div><span class="pill">' + esc(WEEKS[g.wk] || g.wk) + '</span></div></div><div class="gdef rich">' + inline(g.def) + '</div></div>';
+      return '<div class="gitem" style="--wc:' + wkVar(g.wk) + '"><div class="gterm">' + inline(g.term) + '<div>' + wkPill(g.wk) + '</div></div><div class="gdef rich">' + inline(g.def) + '</div></div>';
     }).join('') : '<div class="empty">No terms match. Try a shorter word.</div>';
     typeset(list);
   }
@@ -265,7 +330,7 @@ window.addEventListener('resize', function () { clearTimeout(fitTimer); fitTimer
   }
   function renderCards() {
     chipRow(document.getElementById('c-piles'), PILES.map(function (p) { return [p[0], p[1] + ' (' + pileCount(p[0]) + ')']; }), cPile, function (p) { cPile = p; cIdx = 0; cShow = false; saveUI(); renderCards(); });
-    var wk = [['all', 'All']].concat(Object.keys(WEEKS).filter(function (w) { return C.some(function (c) { return c.wk === w; }); }).map(function (w) { return [w, WEEKS[w]]; }));
+    var wk = [['all', 'All']].concat(Object.keys(WEEKS).filter(function (w) { return C.some(function (c) { return c.wk === w; }); }).map(function (w) { return [w, WEEKS[w], wkVar(w)]; }));
     chipRow(document.getElementById('c-weeks'), wk, cWeek, function (w) { cWeek = w; cIdx = 0; cShow = false; saveUI(); renderCards(); });
     document.getElementById('c-mode-deck').setAttribute('aria-pressed', String(cMode === 'deck'));
     document.getElementById('c-mode-list').setAttribute('aria-pressed', String(cMode === 'list'));
@@ -283,8 +348,8 @@ window.addEventListener('resize', function () { clearTimeout(fitTimer); fitTimer
     if (cIdx >= list.length) cIdx = list.length - 1; if (cIdx < 0) cIdx = 0;
     var c = list[cIdx];
     var deck = el('<div class="deck"></div>');
-    var card = el('<article class="card" aria-live="polite"></article>');
-    card.appendChild(el('<div class="meta"><span class="pill">' + esc(WEEKS[c.wk]) + '</span>' + pillFor(markOf(c.id)) + '<span class="counter">' + (cIdx + 1) + ' / ' + list.length + '</span></div>'));
+    var card = el('<article class="card wkc" aria-live="polite" style="--wc:' + wkVar(c.wk) + '"></article>');
+    card.appendChild(el('<div class="meta">' + wkPill(c.wk) + pillFor(markOf(c.id)) + '<span class="counter">' + (cIdx + 1) + ' / ' + list.length + '</span></div>'));
     var q = el('<div class="q rich"></div>'); q.innerHTML = inline(c.Q); card.appendChild(q);
     if (cShow) {
       var a = el('<div class="ans rich"></div>'); a.innerHTML = figs(c) + rich(c.A); card.appendChild(a);
@@ -387,11 +452,14 @@ window.addEventListener('resize', function () { clearTimeout(fitTimer); fitTimer
     items.forEach(function (d) { list.appendChild(derivPanel(d)); });
   }
   function derivPanel(d) {
-    var p = el('<article class="panel"></article>');
+    var p = el('<article class="panel wkc" style="--wc:' + wkVar(d.wk) + '"></article>');
     var n = dReveal[d.id] || 0;
-    p.appendChild(el('<div class="meta" style="display:flex;gap:8px;flex-wrap:wrap;justify-content:space-between;align-items:center"><span class="pill">' + esc(WEEKS[d.wk]) + '</span>' + (markOf(d.id) === 'know' ? '<span class="pill know">Can write it</span>' : markOf(d.id) === 'review' ? '<span class="pill review">Practise again</span>' : '') + '</div>'));
+    p.appendChild(el('<div class="meta" style="display:flex;gap:8px;flex-wrap:wrap;justify-content:space-between;align-items:center">' + wkPill(d.wk) + (markOf(d.id) === 'know' ? '<span class="pill know">Can write it</span>' : markOf(d.id) === 'review' ? '<span class="pill review">Practise again</span>' : '') + '</div>'));
     var h = el('<h3 style="margin-top:8px"></h3>'); h.innerHTML = inline(d.title); p.appendChild(h);
     var g = el('<p class="goal rich muted"></p>'); g.innerHTML = '<strong>Goal.</strong> ' + inline(d.G); p.appendChild(g);
+    var pb = el('<div class="marks"><button type="button" class="play">' + ICON.play + 'Play with voice</button><span class="hint" style="align-self:center">' + d.steps.length + ' steps, narrated and animated</span></div>');
+    pb.querySelector('button').addEventListener('click', function () { openPlayer(d, this); });
+    p.appendChild(pb);
     if (d.I) { var fg = el('<div class="figs"></div>'); fg.innerHTML = figs(d); p.appendChild(fg); }
     var ol = el('<ol class="steps"></ol>');
     d.steps.slice(0, n).forEach(function (s) {
@@ -437,9 +505,9 @@ window.addEventListener('resize', function () { clearTimeout(fitTimer); fitTimer
     typeset(list);
   }
   function mcqPanel(q) {
-    var p = el('<article class="panel"></article>');
+    var p = el('<article class="panel wkc" style="--wc:' + wkVar(MWK[q.topic] || 'x') + '"></article>');
     var num = M.indexOf(q) + 1;
-    p.appendChild(el('<div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:space-between"><span class="pill">' + esc(MTOPICS[q.topic] || q.topic) + '</span><span class="hint">Question ' + num + '</span></div>'));
+    p.appendChild(el('<div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:space-between">' + wkPill(MWK[q.topic] || 'x', MTOPICS[q.topic] || q.topic) + '<span class="hint">Question ' + num + '</span></div>'));
     var h = el('<p class="rich" style="margin:8px 0 0;font-family:var(--f-display);font-weight:600;font-size:17px;line-height:1.35"></p>'); h.innerHTML = inline(q.Q); p.appendChild(h);
     var r = mcqOf(q.id);
     var opts = el('<div class="opts"></div>');
@@ -486,6 +554,7 @@ window.addEventListener('resize', function () { clearTimeout(fitTimer); fitTimer
     document.getElementById('acct-in').hidden = !sess;
     if (sess) {
       document.getElementById('a-name').textContent = sess.u;
+      syncSwitches();
       var nm = Object.keys(state.marks).filter(function (k) { return markOf(k); }).length, nq = Object.keys(state.mcq).filter(function (k) { return mcqOf(k); }).length;
       document.getElementById('a-status').textContent = (acct === 'offline' ? 'Cannot reach the server right now. Changes are kept here and sent when it is back. ' : acct === 'saving' ? 'Saving… ' : 'All changes saved. ') +
         nm + ' marks and ' + nq + ' MCQ answers in this account. Log in with the same username on another device to pick up where you left off.';
@@ -529,6 +598,281 @@ window.addEventListener('resize', function () { clearTimeout(fitTimer); fitTimer
     document.getElementById('reset-2').hidden = true; document.getElementById('reset-x').hidden = true; document.getElementById('reset-1').hidden = false;
   });
 
+  /* ---------- leaderboard ---------- */
+  function ago(ts) {
+    var s = (Date.now() - new Date(ts).getTime()) / 1000;
+    if (!(s >= 0)) return '';
+    if (s < 3600) return Math.max(1, Math.round(s / 60)) + ' min ago';
+    if (s < 86400) return Math.round(s / 3600) + ' h ago';
+    return Math.round(s / 86400) + ' d ago';
+  }
+  function localScore() {
+    var c = C.filter(function (x) { return markOf(x.id) === 'know'; }).length;
+    var d = D.filter(function (x) { return markOf(x.id) === 'know'; }).length;
+    var m = M.filter(function (x) { var r = mcqOf(x.id); return r && r.ok; }).length;
+    return c + 2 * d + m;
+  }
+  function syncSwitches() { document.querySelectorAll('#a-board,#b-board').forEach(function (x) { x.checked = !!boardShow; }); }
+  function setBoard(on) {
+    if (!sess) return;
+    var before = boardShow; boardShow = on; syncSwitches();
+    rpc('deck_set_board', { p_token: sess.token, p_show: on })
+      .then(function () { if (currentView === 'board') loadBoard(true); })
+      .catch(function (e) {
+        if (e.message === 'bad_session') { endSession('Your login expired. Log in again to keep syncing.'); return; }
+        boardShow = before; syncSwitches(); flash('a-msg', errText(e), true);
+        var bm = document.getElementById('b-msg'); if (bm) bm.textContent = errText(e);
+      });
+  }
+  document.addEventListener('change', function (e) { if (e.target && (e.target.id === 'a-board' || e.target.id === 'b-board')) setBoard(e.target.checked); });
+  function loadBoard(force) {
+    if (!force && board && Date.now() - boardAt < 30000) { renderBoard(); return; }
+    if (boardLoading) return;
+    boardLoading = true; boardErr = ''; renderBoard();
+    rpc('deck_leaderboard', {})
+      .then(function (rows) { board = Array.isArray(rows) ? rows : []; boardAt = Date.now(); })
+      .catch(function (e) { boardErr = errText(e); })
+      .then(function () { boardLoading = false; renderBoard(); });
+  }
+  function renderBoard() {
+    var me = document.getElementById('b-me'), list = document.getElementById('b-list'), when = document.getElementById('b-when');
+    var maxP = C.length + 2 * D.length + M.length;
+    var rows = board || [], myRank = -1;
+    rows.forEach(function (r, i) { if (sess && r.username === sess.u) myRank = i; });
+    if (sess) {
+      me.innerHTML = '<h3>' + ICON.trophy + '<span></span></h3><p class="muted" id="b-stat" style="margin:6px 0 10px"></p><label class="switch"><input type="checkbox" id="b-board"> Show me on the leaderboard</label><p class="pmsg bad" id="b-msg"></p>';
+      me.querySelector('h3 span').textContent = sess.u;
+      me.querySelector('#b-stat').textContent = myRank >= 0 ? 'Rank ' + (myRank + 1) + ' of ' + rows.length + ', score ' + rows[myRank].score + ' out of ' + maxP + ' possible.' :
+        boardShow ? 'Your score is ' + localScore() + '. It shows up here a few seconds after your next save.' : 'You are hidden from the leaderboard. Your progress still syncs.';
+      syncSwitches();
+    } else {
+      me.innerHTML = '<h3>Want to be on here?</h3><p class="muted" style="margin:6px 0 10px">Your score in this browser is <b>' + localScore() + '</b>. Create a free account, username and password only, to save it and appear on the board.</p><a class="btn primary" href="#progress">' + ICON.user + 'Create account or log in</a>';
+    }
+    if (boardLoading && !board) { list.innerHTML = '<div class="empty">Loading the leaderboard…</div>'; }
+    else if (boardErr && !board) { list.innerHTML = ''; list.appendChild(el('<div class="empty"></div>')).textContent = boardErr; }
+    else if (!rows.length) { list.innerHTML = '<div class="empty">Nobody is on the board yet. Create an account and be first.</div>'; }
+    else {
+      list.innerHTML = rows.map(function (r, i) {
+        var mine = i === myRank, w = function (v) { return (100 * v / Math.max(1, maxP)).toFixed(1) + '%'; };
+        return '<div class="brow' + (mine ? ' me' : '') + (i < 3 ? ' top' + (i + 1) : '') + '">' +
+          '<span class="rk">' + (i + 1) + '</span><span class="nm">' + esc(r.username) + (mine ? ' (you)' : '') + '</span><span class="sc"><b>' + r.score + '</b></span>' +
+          '<span class="bar" aria-hidden="true"><i class="bc" style="width:' + w(r.cards_known) + '"></i><i class="bd" style="width:' + w(2 * r.derivs_known) + '"></i><i class="bm" style="width:' + w(r.mcq_right) + '"></i></span>' +
+          '<span class="br">' + r.cards_known + ' cards, ' + r.derivs_known + ' derivations, ' + r.mcq_right + '/' + r.mcq_answered + ' MCQs' + (r.last_active ? ', active ' + ago(r.last_active) : '') + '</span></div>';
+      }).join('');
+    }
+    when.textContent = boardLoading ? 'Refreshing…' : boardErr ? (board ? boardErr : '') : boardAt ? 'Updated ' + new Date(boardAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '';
+  }
+  document.getElementById('b-refresh').addEventListener('click', function () { loadBoard(true); });
+
+  /* ---------- derivation player: animated steps with voice ---------- */
+  var HAS_TTS = 'speechSynthesis' in window && typeof window.SpeechSynthesisUtterance === 'function';
+  var VOICE = null, PKEY = 'rl-defense-player', pref = { rate: 1, voice: true };
+  try { var pp = JSON.parse(localStorage.getItem(PKEY) || '{}'); if (pp.rate) pref.rate = pp.rate; if (pp.voice === false) pref.voice = false; } catch (e) {}
+  function savePref() { try { localStorage.setItem(PKEY, JSON.stringify(pref)); } catch (e) {} }
+  function pickVoice() {
+    if (!HAS_TTS) return;
+    var vs = []; try { vs = speechSynthesis.getVoices() || []; } catch (e) {}
+    var good = /natural|neural|premium|enhanced|google|siri/i;
+    var langs = ['en-AU', 'en-GB', 'en-US', 'en'];
+    for (var i = 0; i < langs.length; i++) {
+      var L = langs[i].toLowerCase();
+      var m = vs.filter(function (v) { var l = (v.lang || '').replace('_', '-').toLowerCase(); return L === 'en' ? l.indexOf('en') === 0 : l === L; });
+      if (m.length) { VOICE = m.filter(function (v) { return good.test(v.name); })[0] || m[0]; return; }
+    }
+    VOICE = vs[0] || null;
+  }
+  if (HAS_TTS) { pickVoice(); try { speechSynthesis.onvoiceschanged = pickVoice; } catch (e) {} }
+
+  var GREEK = { alpha: 1, beta: 1, gamma: 1, delta: 1, epsilon: 1, theta: 1, lambda: 1, mu: 1, pi: 1, rho: 1, sigma: 1, tau: 1, phi: 1, psi: 1, omega: 1, eta: 1, xi: 1, kappa: 1, nu: 1, zeta: 1, chi: 1 };
+  var TW = { varepsilon: 'epsilon', Delta: 'delta', Pi: 'pi', Sigma: 'sigma', Omega: 'omega', Phi: 'phi', nabla: 'grad', sum: 'sum over', prod: 'product over', max: 'max over', min: 'min over', log: 'log', ln: 'log', exp: 'exp',
+    leftarrow: 'gets', gets: 'gets', to: 'to', rightarrow: 'goes to', Rightarrow: 'which means', approx: 'is approximately', le: 'is at most', leq: 'is at most', ge: 'is at least', geq: 'is at least', ne: 'is not equal to', neq: 'is not equal to',
+    infty: 'infinity', cdot: 'times', times: 'times', mid: 'given', in: 'in', propto: 'is proportional to', doteq: 'is defined as', equiv: 'is defined as', partial: 'partial', top: 'transpose', dots: 'and so on', ldots: 'and so on', cdots: 'and so on',
+    sim: 'sampled from', forall: 'for all', int: 'integral of', quad: ',', qquad: '. Also,', clip: 'clip', Pr: 'probability of', E: 'expectation', left: '', right: '', lfloor: 'the floor of', rfloor: '', lceil: 'the ceiling of', rceil: '', frac: 'fraction', underbrace: '', limits: '', displaystyle: '', star: 'star', sqrt: 'root', uparrow: 'goes up', downarrow: 'goes down', overbrace: '', tfrac: 'fraction', dfrac: 'fraction' };
+  function tex2say(t) {
+    var s = ' ' + t + ' ', i;
+    s = s.replace(/\\\\/g, ', ').replace(/&/g, ' ');
+    s = s.replace(/\\left\s*\\?([(\[{|.])/g, ' $1').replace(/\\right\s*\\?([)\]}|.])/g, '$1 ');
+    s = s.replace(/\\[bB]igg?[lr]?\s*/g, ' ');
+    s = s.replace(/\\(?:text|mathrm|operatorname|textrm|textbf)\s*\{([^{}]*)\}/g, function (_, x) { return ' ' + x.replace(/-/g, ' ') + ' '; });
+    s = s.replace(/([A-Za-z0-9}'*])([(\[])/g, '$1 of $2');
+    s = s.replace(/\\mathbb\s*\{?E\}?\s*_\s*/g, ' the expectation under ').replace(/\\mathbb\s*\{?E\}?/g, ' the expectation ');
+    s = s.replace(/\\arg\s*\\?max/g, ' arg max over ').replace(/\\arg\s*\\?min/g, ' arg min over ');
+    s = s.replace(/\\(?:hat|widehat)\s*(?:\{\s*\\?([A-Za-z]+)\s*\}|\\?([A-Za-z]))/g, function (_, a, b) { return ' ' + (a || b) + ' hat '; }).replace(/\\(?:bar|overline)\s*(?:\{\s*\\?([A-Za-z]+)\s*\}|\\?([A-Za-z]))/g, function (_, a, b) { return ' ' + (a || b) + ' bar '; });
+    s = s.replace(/\\(?:mathbf|boldsymbol|mathcal|mathbb)\s*(?:\{\s*\\?([A-Za-z]+)\s*\}|\\?([A-Za-z]))/g, function (_, a, b) { return ' ' + (a || b) + ' '; });
+    s = s.replace(/\\[dt]?frac\s*(\d)\s*(\d)/g, ' $1 over $2 ');
+    for (i = 0; i < 6; i++) {
+      s = s.replace(/\\[dt]?frac\s*\{([^{}]*)\}\s*\{([^{}]*)\}/g, ' $1 over $2 ');
+      s = s.replace(/\\underbrace\s*\{([^{}]*)\}\s*_\s*\{([^{}]*)\}/g, ' $1, which is $2, ');
+      s = s.replace(/\\sqrt\s*\{([^{}]*)\}/g, ' the square root of $1 ');
+      s = s.replace(/\\(sum|prod|max|min)\s*_\s*\{([^{}]*)\}\s*\^\s*\{?([^{}\s]*)\}?/g, ' $1 from $2 to $3, ');
+      s = s.replace(/\\(sum|prod|max|min)\s*_\s*\{([^{}]*)\}/g, ' \\$1 $2, ');
+      s = s.replace(/\^\s*\{\s*-\s*1\s*\}/g, ' inverse ').replace(/\^\s*\{?\s*(\\top|T)\s*\}?(?![A-Za-z])/g, ' transpose ').replace(/[\^_]\s*\{?\s*\*\s*\}?/g, ' star ');
+      s = s.replace(/\^\s*\{?\s*2\s*\}?(?![0-9])/g, ' squared ').replace(/\^\s*\{([^{}]*)\}/g, ' to the $1, ').replace(/\^\s*(\\[A-Za-z]+|[A-Za-z0-9])/g, ' to the $1 ');
+      s = s.replace(/_\s*\{([^{}]*)\}/g, ' sub $1, ').replace(/_\s*(\\[A-Za-z]+|[A-Za-z0-9])/g, ' $1 ');
+    }
+    for (i = 0; i < 4; i++) s = s.replace(/\{([^{}]*)\}/g, ' $1 ');
+    s = s.replace(/\\([A-Za-z]+)/g, function (_, w) { return ' ' + (GREEK[w] ? w : TW[w] != null ? TW[w] : w) + ' '; });
+    s = s.replace(/\\[,;:! ]/g, ' ').replace(/\\/g, ' ');
+    s = s.replace(/'/g, ' prime ').replace(/</g, ' is less than ').replace(/>/g, ' is greater than ').replace(/\|/g, ' ');
+    s = s.replace(/=/g, ' equals ').replace(/\+/g, ' plus ').replace(/-/g, ' minus ').replace(/:/g, ' to ');
+    s = s.replace(/[{}()\[\]]/g, ' ').replace(/\s*,\s*/g, ', ').replace(/(,\s*)+/g, ', ').replace(/\s+/g, ' ');
+    return s.replace(/^[\s,]+|[\s,]+$/g, '');
+  }
+  function prose2say(t) {
+    return String(t || '').replace(/\$\$([\s\S]+?)\$\$|\$([^$]+?)\$/g, function (_, a, b) { return ' ' + tex2say(a || b) + ' '; })
+      .replace(/\*\*/g, '').replace(/`/g, '').replace(/\s+/g, ' ').trim();
+  }
+  function estMs(text, rate) { var w = (text.match(/\S+/g) || []).length; return Math.max(2600, w / (165 * rate) * 60000 + 900); }
+  function stopSpeech() { if (HAS_TTS) { try { speechSynthesis.cancel(); } catch (e) {} } }
+  function unlockSpeech() { if (!HAS_TTS || !pref.voice) return; try { var u = new SpeechSynthesisUtterance(' '); u.volume = 0; speechSynthesis.speak(u); } catch (e) {} }
+  function speak(text, rate, tok, done) {
+    var parts = (text.match(/[^.!?]+[.!?]*\s*/g) || [text]).reduce(function (acc, p) { if (acc.length && (acc[acc.length - 1] + p).length < 180) acc[acc.length - 1] += p; else acc.push(p); return acc; }, []);
+    var idx = 0;
+    (function next() {
+      if (!PL || PL.tok !== tok) return;
+      if (idx >= parts.length) { done(); return; }
+      var txt = parts[idx++], fired = false, safety;
+      var fin = function () { if (fired) return; fired = true; clearTimeout(safety); next(); };
+      var u = new SpeechSynthesisUtterance(txt);
+      if (VOICE) { u.voice = VOICE; u.lang = VOICE.lang; } else u.lang = 'en-AU';
+      u.rate = rate; u.onend = fin; u.onerror = fin;
+      try { speechSynthesis.speak(u); } catch (e) { fin(); return; }
+      safety = setTimeout(fin, estMs(txt, rate) * 2 + 4000);
+    })();
+  }
+  function whenMath(nodes, cb) {
+    if (!window.MathJax || !MathJax.typesetPromise) { var tries = 0; (function w() { if (window.MathJax && MathJax.typesetPromise && mjReady) whenMath(nodes, cb); else if (++tries > 40) cb(); else setTimeout(w, 150); })(); return; }
+    if (!mjReady) { setTimeout(function () { whenMath(nodes, cb); }, 150); return; }
+    MathJax.typesetPromise(nodes).then(cb, cb);
+  }
+  function eqPieces(root) {
+    var svg = root.querySelector('mjx-container svg'); if (!svg) return [];
+    var g = svg.querySelector('g[data-mml-node="math"]'); if (!g) return [];
+    var out = [];
+    (function walk(node, depth) {
+      var kids = Array.prototype.filter.call(node.children, function (c) { return c.tagName.toLowerCase() === 'g'; });
+      if (kids.length === 1 && depth < 5) { walk(kids[0], depth + 1); return; }
+      kids.forEach(function (k) { out.push(k); });
+    })(g, 0);
+    return out;
+  }
+  function animateEq(root, rate, tok) {
+    var parts = eqPieces(root); if (!parts.length || REDUCED) return;
+    parts.forEach(function (p) { p.classList.add('tok'); });
+    root.getBoundingClientRect();
+    var total = Math.min(2600, Math.max(700, parts.length * 75)) / rate, step = total / parts.length;
+    parts.forEach(function (p, i) { setTimeout(function () { if (PL && PL.tok === tok) p.classList.add('on'); else p.classList.add('on'); }, 60 + i * step); });
+  }
+
+  var PL = null;
+  function openPlayer(d, from) {
+    closePlayer();
+    unlockSpeech();
+    var slides = [{ k: 'intro' }].concat(d.steps.map(function (s, i) { return { k: 'step', i: i }; })).concat([{ k: 'end' }]);
+    var ov = el('<div class="player" role="dialog" aria-modal="true" aria-label="Narrated derivation"><div class="pl-box" style="--wc:' + wkVar(d.wk) + '">' +
+      '<div class="pl-top">' + wkPill(d.wk, (WEEKS[d.wk] || '').replace(/^Week (\d+).*/, 'W$1')) + '<div class="pl-title rich"></div><button type="button" class="pl-x" aria-label="Close player">×</button></div>' +
+      '<div class="pl-bars"></div><div class="pl-stage"></div><div class="pl-cap rich" aria-live="polite"></div>' +
+      '<div><div class="pl-ctl"><button type="button" class="sm" data-a="prev" aria-label="Previous step">‹</button><button type="button" class="primary big" data-a="play"></button><button type="button" class="sm" data-a="next" aria-label="Next step">›</button><button type="button" class="sm" data-a="rate" aria-label="Narration speed"></button><button type="button" class="sm" data-a="voice"></button></div><div class="pl-note"></div></div>' +
+      '</div></div>');
+    ov.querySelector('.pl-title').innerHTML = inline(d.title);
+    var bars = ov.querySelector('.pl-bars');
+    slides.forEach(function (s, i) { var b = el('<button type="button"></button>'); b.setAttribute('aria-label', s.k === 'intro' ? 'Goal' : s.k === 'end' ? 'Finish' : 'Step ' + (s.i + 1)); b.addEventListener('click', function () { showSlide(i); }); bars.appendChild(b); });
+    document.body.appendChild(ov); document.body.classList.add('pl-open');
+    PL = { d: d, slides: slides, i: 0, playing: true, ov: ov, tok: 0, timer: null, raf: 0, from: from };
+    ov.addEventListener('click', function (e) {
+      if (e.target === ov) { closePlayer(); return; }
+      var b = e.target.closest && e.target.closest('[data-a]'); if (!b) { if (e.target.closest && e.target.closest('.pl-x')) closePlayer(); return; }
+      var a = b.dataset.a;
+      if (a === 'play') togglePlay();
+      else if (a === 'prev') showSlide(Math.max(0, PL.i - 1));
+      else if (a === 'next') showSlide(Math.min(PL.slides.length - 1, PL.i + 1));
+      else if (a === 'rate') { pref.rate = pref.rate === 1 ? 1.25 : pref.rate === 1.25 ? 0.8 : 1; savePref(); ctlLabels(); if (PL.playing) showSlide(PL.i); }
+      else if (a === 'voice') { pref.voice = !pref.voice; savePref(); if (pref.voice) unlockSpeech(); ctlLabels(); if (PL.playing) showSlide(PL.i); }
+      else if (a === 'replay') { PL.playing = true; unlockSpeech(); showSlide(0); }
+      else if (a === 'know' || a === 'review') { mark(d.id, a); var lbl = ov.querySelector('.pl-marked'); if (lbl) lbl.textContent = a === 'know' ? 'Marked Can write it.' : 'Marked Practise again.'; }
+    });
+    ctlLabels();
+    showSlide(0);
+    setTimeout(function () { var x = ov.querySelector('[data-a="play"]'); if (x) x.focus(); }, 30);
+  }
+  function ctlLabels() {
+    if (!PL) return;
+    var ov = PL.ov;
+    ov.querySelector('[data-a="play"]').innerHTML = PL.playing ? '<span aria-hidden="true">❚❚</span> Pause' : ICON.play + (PL.i >= PL.slides.length - 1 ? 'Replay' : 'Play');
+    ov.querySelector('[data-a="rate"]').textContent = (pref.rate === 1 ? '1' : pref.rate === 1.25 ? '1.25' : '0.8') + '×';
+    var vb = ov.querySelector('[data-a="voice"]');
+    vb.textContent = 'Voice'; vb.setAttribute('aria-label', HAS_TTS && pref.voice ? 'Voice on, tap to mute' : 'Voice off, tap to turn on'); vb.setAttribute('aria-pressed', String(HAS_TTS && pref.voice)); vb.disabled = !HAS_TTS;
+    ov.querySelector('[data-a="prev"]').disabled = PL.i === 0;
+    ov.querySelector('[data-a="next"]').disabled = PL.i >= PL.slides.length - 1;
+    ov.querySelector('.pl-note').textContent = !HAS_TTS ? 'This browser has no built-in voice, so captions play on a timer.' : pref.voice ? 'Voice uses your device. Check your phone is not on silent.' : 'Voice is off. Captions play on a timer.';
+  }
+  function togglePlay() {
+    if (!PL) return;
+    if (PL.playing) { PL.playing = false; PL.tok++; stopSpeech(); clearTimeout(PL.timer); cancelAnimationFrame(PL.raf); ctlLabels(); return; }
+    PL.playing = true; unlockSpeech();
+    showSlide(PL.i >= PL.slides.length - 1 ? 0 : PL.i);
+  }
+  function closePlayer() {
+    if (!PL) return;
+    var P = PL; PL = null; P.tok++;
+    stopSpeech(); clearTimeout(P.timer); cancelAnimationFrame(P.raf);
+    P.ov.remove(); document.body.classList.remove('pl-open');
+    if (currentView === 'derivations') renderDerivs();
+  }
+  function showSlide(i) {
+    var P = PL; if (!P) return;
+    stopSpeech(); clearTimeout(P.timer); cancelAnimationFrame(P.raf);
+    P.i = i; var tok = ++P.tok, sl = P.slides[i], d = P.d, ov = P.ov;
+    ov.querySelectorAll('.pl-bars button').forEach(function (b, j) { b.className = j < i ? 'done' : j === i ? 'now' : ''; b.style.setProperty('--p', '0'); });
+    var stage = ov.querySelector('.pl-stage'), cap = ov.querySelector('.pl-cap'), say = '';
+    if (sl.k === 'intro') {
+      stage.innerHTML = '<div class="pl-step">Goal</div><div class="pl-goal rich">' + inline(d.G) + '</div>' + (d.I && d.I.length ? figs({ I: [d.I[0]] }) : '');
+      cap.innerHTML = '<p>' + d.steps.length + ' steps. Each line appears as it is read out. Try to say the next line before it shows up.</p>';
+      say = prose2say(d.title) + '. ' + prose2say(d.G) + ' This takes ' + d.steps.length + ' steps.';
+    } else if (sl.k === 'step') {
+      var st = d.steps[sl.i], pv = sl.i > 0 ? d.steps[sl.i - 1] : null;
+      stage.innerHTML = (pv ? '<div class="pl-prev rich">' + inline(pv.s) + '</div><div class="pl-arrow">↓ step ' + (sl.i + 1) + ' of ' + d.steps.length + '</div>' : '<div class="pl-step">Step 1 of ' + d.steps.length + '</div>') + '<div class="pl-eq rich">' + inline(st.s) + '</div>';
+      cap.innerHTML = '<p>' + inline(st.w) + '</p>';
+      say = 'Step ' + (sl.i + 1) + '. ' + tex2say(st.s.replace(/^\$\$|\$\$$/g, '')) + '. ' + prose2say(st.w);
+    } else {
+      stage.innerHTML = '<div class="pl-end"><div class="pl-step">Done</div><div class="pl-goal">That is the whole derivation. Now cover the screen and write it out from memory.</div><div class="marks"><button type="button" data-a="replay">Replay from start</button><button type="button" class="rev" data-a="review">Practise again</button><button type="button" class="know" data-a="know">Can write it</button></div><p class="hint pl-marked"></p></div>';
+      cap.innerHTML = '<p>Saying each step and its reason out loud is exactly what the oral defense asks of you.</p>';
+      say = 'Done. Now cover the screen and write the derivation out from memory.';
+    }
+    ctlLabels();
+    stage.scrollTop = 0;
+    watchFigs(stage);
+    var rate = pref.rate;
+    whenMath([ov.querySelector('.pl-title'), stage, cap], function () {
+      if (!PL || PL.tok !== tok) return;
+      stage.querySelectorAll('.pl-eq,.pl-prev').forEach(function (e) {
+        e.style.fontSize = ''; var fs = parseFloat(getComputedStyle(e).fontSize) || 20, min = e.classList.contains('pl-eq') ? 13 : 11;
+        while (e.scrollWidth > e.clientWidth + 1 && fs > min) { fs -= 1; e.style.fontSize = fs + 'px'; }
+      });
+      var eq = stage.querySelector('.pl-eq'); if (eq) animateEq(eq, rate, tok);
+      if (!P.playing) return;
+      var bar = ov.querySelectorAll('.pl-bars button')[i], ms = estMs(say, rate), t0 = performance.now(), ended = false;
+      (function tick() { if (!PL || PL.tok !== tok) return; var f = Math.min(1, (performance.now() - t0) / ms); bar.style.setProperty('--p', ended ? 1 : f.toFixed(3)); if (!ended && f < 1) P.raf = requestAnimationFrame(tick); })();
+      var after = function () {
+        if (!PL || PL.tok !== tok) return; ended = true; bar.style.setProperty('--p', '1');
+        if (i < P.slides.length - 1) P.timer = setTimeout(function () { if (PL && PL.tok === tok && P.playing) showSlide(i + 1); }, 800);
+        else { P.playing = false; ctlLabels(); }
+      };
+      if (HAS_TTS && pref.voice) setTimeout(function () { if (PL && PL.tok === tok) speak(say, rate, tok, after); }, 250);
+      else P.timer = setTimeout(after, ms);
+    });
+  }
+  document.addEventListener('keydown', function (e) {
+    if (!PL) return;
+    if (e.key === 'Escape') { e.preventDefault(); closePlayer(); }
+    else if (e.key === ' ' && !(e.target && e.target.tagName === 'BUTTON')) { e.preventDefault(); togglePlay(); }
+    else if (e.key === 'ArrowRight') showSlide(Math.min(PL.slides.length - 1, PL.i + 1));
+    else if (e.key === 'ArrowLeft') showSlide(Math.max(0, PL.i - 1));
+  });
+  window.addEventListener('pagehide', function () { stopSpeech(); });
+  document.addEventListener('visibilitychange', function () { if (document.hidden && PL && PL.playing) togglePlay(); });
+  window.__tex2say = tex2say;
+
   /* ---------- theme ---------- */
   var TKEY = 'rl-defense-theme';
   function applyTheme(t) {
@@ -543,7 +887,7 @@ window.addEventListener('resize', function () { clearTimeout(fitTimer); fitTimer
   });
 
   /* ---------- routing ---------- */
-  var VIEWS = ['glossary', 'cards', 'derivations', 'models', 'weak', 'progress'];
+  var VIEWS = ['glossary', 'cards', 'derivations', 'models', 'weak', 'board', 'progress'];
   var currentView = 'glossary';
   function route() {
     var h = (location.hash || '').replace('#', '');
@@ -552,7 +896,7 @@ window.addEventListener('resize', function () { clearTimeout(fitTimer); fitTimer
     document.querySelectorAll('nav.tabs a').forEach(function (a) { if (a.dataset.view === currentView) a.setAttribute('aria-current', 'page'); else a.removeAttribute('aria-current'); });
     renderView(currentView);
   }
-  function renderView(v) { if (v === 'glossary') renderGlossary(); else if (v === 'cards') renderCards(); else if (v === 'derivations') renderDerivs(); else if (v === 'models') renderMCQ(); else if (v === 'progress') renderProgress(); else renderWeak(); }
+  function renderView(v) { if (v === 'glossary') renderGlossary(); else if (v === 'cards') renderCards(); else if (v === 'derivations') renderDerivs(); else if (v === 'models') renderMCQ(); else if (v === 'progress') renderProgress(); else if (v === 'board') loadBoard(false); else renderWeak(); }
   function renderAll() { renderStats(); route(); }
   window.addEventListener('hashchange', function () { route(); });
   renderStats(); route();

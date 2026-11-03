@@ -4,6 +4,7 @@
   <div class="themes" id="theme" role="group" aria-label="Colour theme"><button type="button" data-t="light">Light</button><button type="button" data-t="dark">Dark</button><button type="button" data-t="auto">Auto</button></div></div>
   <h1>RL Defense Deck</h1>
   <p>Built from your RL Weekly Notes, Weeks 1 to 11, including your margin comments. Glossary first, then flashcards, step-by-step derivations, "which model would you use" questions, and the weak spots you should fix first.</p>
+  <div class="abanner" id="abanner"></div>
   <div class="stats" id="stats" aria-live="polite"></div>
 </header>
 </div>
@@ -13,6 +14,7 @@
   <a href="#derivations" data-view="derivations">Derivations</a>
   <a href="#models" data-view="models">Which model?</a>
   <a href="#weak" data-view="weak">Weak spots</a>
+  <a href="#board" data-view="board">Leaderboard</a>
   <a href="#progress" data-view="progress">Account</a>
 </div></nav>
 <main class="wrap">
@@ -36,7 +38,7 @@
   </section>
 
   <section class="view" id="v-derivations" hidden>
-    <p class="intro">Each derivation reveals one step at a time with the reason for the step underneath. Try to say the next line before you reveal it. Mark the ones you can write from memory.</p>
+    <p class="intro">Each derivation reveals one step at a time with the reason for the step underneath. Tap <b>Play with voice</b> for a narrated, animated walkthrough, like a short video. Try to say the next line before it appears. Mark the ones you can write from memory.</p>
     <div class="toolbar"><span class="label">Show</span><div class="chips" id="d-piles"></div></div>
     <div class="list" id="d-list"></div>
   </section>
@@ -52,8 +54,16 @@
     <div class="list" id="w-list"></div>
   </section>
 
+  <section class="view" id="v-board" hidden>
+    <p class="intro" style="display:block">Study progress of everyone with an account. Score is cards you know, plus 2 for every derivation you can write, plus MCQs you got right. Only usernames and these counts are shown, never your answers.</p>
+    <div class="panel" id="b-me"></div>
+    <div class="legend"><span><i style="background:var(--accent)"></i>cards known</span><span><i style="background:var(--w8)"></i>derivations x2</span><span><i style="background:var(--w4)"></i>MCQs right</span></div>
+    <div class="board" id="b-list"></div>
+    <div class="marks"><button type="button" id="b-refresh">Refresh</button><span class="hint" id="b-when"></span></div>
+  </section>
+
   <section class="view" id="v-progress" hidden>
-    <p class="intro" style="display:block">Save your progress to a username so it follows you to any phone or laptop. No email and no Claude sign-in. Without an account, progress stays in this browser only.</p>
+    <p class="intro" style="display:block">Save your progress to a username so it follows you to any phone or laptop. No email and no Claude sign-in. Without an account, progress stays in this browser only. Accounts also appear on the <a href="#board">leaderboard</a>, and you can hide yourself from it any time.</p>
     <div class="panel" id="acct-out">
       <h3>Log in or create an account</h3>
       <form id="acct-form" class="acct" autocomplete="on">
@@ -67,6 +77,7 @@
     <div class="panel" id="acct-in" hidden>
       <h3>Logged in as <span id="a-name"></span></h3>
       <p class="muted" id="a-status"></p>
+      <label class="switch"><input type="checkbox" id="a-board"> Show me on the leaderboard</label>
       <div class="marks"><button type="button" id="a-sync">Sync now</button><button type="button" id="a-logout" class="ghost">Log out</button></div>
     </div>
     <div class="panel">

@@ -634,5 +634,214 @@ window.DIAG = (function () {
     T(95, 102, 'Q(s,a): 18 → 18.16', { s: 10, c: 't-a' }) + T(205, 102, 'Q(t,f): 0 → 8', { s: 10, c: 't-a' }) + T(95, 116, 'N(s,a) = 5', { s: 10, c: 't-m' }) + T(205, 116, 'N(t,f) = 2', { s: 10, c: 't-m' }) +
     A(330, 134, 30, 134, 'a') + T(180, 148, 'G ← r + γ G, carried back up the path', { c: 't-m', s: 10 }));
 
+
+  /* ===== v4 additions ===== */
+
+  /* 53. which learning setup */
+  (function () {
+    function q(y, t) { return BOX(20, y, 200, 36, t, 'bx', { s: 10 }); }
+    function yes(y, c) { return A(220, y, 248, y, c) + T(234, y - 9, 'yes', { s: 9, c: c ? 't-a' : 't-m' }); }
+    function no(y) { return A(120, y, 120, y + 20) + T(128, y + 10, 'no', { a: 'start', s: 9, c: 't-m' }); }
+    var s = q(8, 'Is there a label for\nthe right answer?') + yes(26) + BOX(250, 12, 96, 28, 'Supervised', 'bxm') + no(44) +
+      q(64, 'Expert demonstrations\nyou can copy?') + yes(82) + BOX(250, 68, 96, 28, 'Imitation', 'bxm') + no(100) +
+      q(120, 'Do my actions change\nwhat I see next?') + yes(138, 'a') + BOX(250, 120, 96, 36, 'RL\nreward, explore', 'bxa', { head: 1, sub: 1 }) + no(156) +
+      BOX(60, 176, 120, 28, 'Unsupervised', 'bxm') + T(250, 190, 'find structure only', { a: 'start', s: 10, c: 't-m' });
+    add('learnkinds', 360, 212, 'A quick test for which setup fits. A label for the right answer means supervised learning. Good demonstrations mean imitation, which can never beat its demonstrator. No label, and your actions change what you see next, means RL.', s);
+  })();
+
+  /* 54. online advertising bandit */
+  (function () {
+    var s = BOX(8, 60, 104, 44, 'Agent\nε-greedy or UCB', 'bxa', { head: 1, sub: 1 }) + T(300, 8, 'share of impressions', { c: 't-m', s: 10 });
+    [['Ad A', 'CTR 2%', 0.15, 14], ['Ad B', 'CTR 5%', 0.75, 64], ['Ad C', 'CTR 1%', 0.10, 114]].forEach(function (a, j) {
+      var best = j === 1, y = a[3];
+      s += A(112, 82, 168, y + 16, best ? 'a b' : 'm t') + BOX(170, y, 70, 32, a[0] + '\n' + a[1], best ? 'bxa' : 'bx', { head: 1, sub: 1 }) +
+        R(252, y + 8, Math.max(4, a[2] * 80), 16, best ? 'bxa' : 'bxm', 2) + T(258 + a[2] * 80, y + 16, Math.round(a[2] * 100) + '%', { a: 'start', s: 10, c: best ? 't-a' : 't-m' });
+    });
+    s += T(180, 160, 'pull = show an ad, reward = 1 if clicked', { c: 't-m', s: 10 });
+    add('adbandit', 360, 168, 'Online advertising as a bandit. Each ad is an arm with an unknown click-through rate, and a click is the reward. A good bandit algorithm moves most impressions to the best ad while still testing the others now and then.', s);
+  })();
+
+  /* 55. reward hacking */
+  (function () {
+    var s = T(10, 10, 'what you meant', { a: 'start', c: 't-a', s: 10 });
+    ['dough', 'sauce', 'top', 'pack'].forEach(function (t, j) { s += BOX(10 + 66 * j, 22, 56, 26, t, 'bx', { s: 10 }) + (j ? A(66 * j + 2, 35, 66 * j + 8, 35) : ''); });
+    s += A(266, 35, 280, 35, 'a') + BOX(282, 22, 70, 26, '+10 once', 'bxa', { s: 10 });
+    s += T(10, 74, 'what you actually rewarded', { a: 'start', c: 't-r', s: 10 }) + BOX(10, 86, 100, 28, 'easy sub-step', 'bxr', { s: 10 }) +
+      AQ(110, 92, 168, 100, 112, 112, 'r') + T(150, 92, '+1, +1, +1, … forever', { a: 'start', c: 't-r', s: 10 }) +
+      T(150, 108, '20 steps earn 20, which beats 10', { a: 'start', c: 't-m', s: 10 });
+    add('rewardhack', 360, 124, 'The agent optimises exactly what you reward. If each easy sub-step pays +1 and the finished pizza pays only +10, farming the sub-step forever earns more, so the robot never packs a pizza. Reward the outcome, not the steps you imagine.', s);
+  })();
+
+  /* 56. inverse RL and hierarchical RL */
+  (function () {
+    var s = T(10, 10, 'Inverse RL: learn the reward from behaviour', { a: 'start', c: 't-a', s: 10 }) +
+      BOX(10, 20, 92, 30, 'expert demos', 'bx', { s: 10 }) + A(102, 35, 128, 35) + BOX(130, 20, 100, 30, 'infer reward R', 'bxa', { s: 10 }) + A(230, 35, 256, 35) + BOX(258, 20, 92, 30, 'RL → policy', 'bx', { s: 10 }) +
+      T(10, 74, 'Hierarchical RL: a goal made of sub-goals', { a: 'start', c: 't-a', s: 10 }) +
+      BOX(120, 84, 120, 28, 'make coffee', 'bxa', { head: 1 });
+    ['go to kitchen', 'boil water', 'pour'].forEach(function (t, j) { s += A(180, 112, 60 + 120 * j, 138, 'm') + BOX(10 + 120 * j, 140, 100, 24, t, 'bx', { s: 10 }); });
+    s += T(180, 178, 'each option runs many primitive actions', { c: 't-m', s: 10 });
+    add('irlhrl', 360, 186, 'Two extensions. Inverse RL works backwards: from expert behaviour it infers the reward the expert seems to be maximising, then ordinary RL uses that reward. Hierarchical RL splits a long task into options, sub-policies that each run for many steps.', s);
+  })();
+
+  /* 57. episodic vs continuing */
+  (function () {
+    var s = T(10, 10, 'episodic: ends, then resets', { a: 'start', c: 't-a', s: 10 }), i;
+    for (i = 0; i < 4; i++) s += C(24 + 50 * i, 36, 12) + T(24 + 50 * i, 36, 'S' + '₀₁₂₃'.charAt(i), { s: 10 }) + A(36 + 50 * i, 36, 62 + 50 * i, 36, i === 3 ? 'a' : '');
+    s += R(212, 24, 24, 24, 'bxa', 2) + T(224, 36, 'T', { w: 600 }) + AQ(224, 50, 124, 96, 26, 50, 'm d') + T(124, 86, 'reset, new episode', { s: 9, c: 't-m' }) +
+      T(248, 30, 'G₀ is finite,', { a: 'start', s: 10 }) + T(248, 44, 'MC can wait for it', { a: 'start', s: 10, c: 't-m' });
+    s += T(10, 108, 'continuing: never ends, so discount', { a: 'start', c: 't-r', s: 10 });
+    for (i = 0; i < 5; i++) { var x = 24 + 50 * i, h = 22 * Math.pow(0.8, i); s += C(x, 130, 10) + A(x + 10, 130, x + 38, 130, 'm') + R(x - 7, 172 - h, 14, h, 'bxr', 1); }
+    s += T(280, 130, '… forever', { a: 'start', s: 10 }) + T(272, 162, 'weight γᵏ, γ = 0.8', { a: 'start', s: 10, c: 't-r' });
+    add('epcont', 360, 178, 'Episodic tasks end in a terminal state and restart, so every return is a finite sum and Monte Carlo can wait for it. Continuing tasks never end, so the return needs γ below 1 (bars show the shrinking weights) and only step-by-step methods like TD can learn.', s);
+  })();
+
+  /* 58. curse of dimensionality */
+  (function () {
+    var s = L(40, 130, 340, 130, 'm') + L(40, 130, 40, 14, 'm') + T(44, 12, 'number of states (log scale)', { a: 'start', s: 9, c: 't-m' });
+    ['10', '100', '1k', '10k', '100k', '1M'].forEach(function (t, j) {
+      var x = 62 + 46 * j, h = 18 * (j + 1);
+      s += R(x, 130 - h, 30, h, j > 3 ? 'bxr' : 'bxa', 2) + T(x + 15, 122 - h, t, { s: 10, c: j > 3 ? 't-r' : '' }) + T(x + 15, 140, String(j + 1), { s: 10, c: 't-m' });
+    });
+    s += T(190, 154, 'state variables, 10 values each', { c: 't-m', s: 10 });
+    add('curse', 360, 162, 'Why DP stops scaling. Each sweep is polynomial in the number of states, which is efficient, but the number of states grows exponentially with the number of state variables. Six variables with ten values each already make a million states.', s);
+  })();
+
+  /* 59. synchronous vs asynchronous DP */
+  (function () {
+    var s = T(10, 10, 'synchronous: full sweep, two copies', { a: 'start', s: 10, c: 't-m' }), i;
+    for (i = 0; i < 6; i++) s += R(10 + 26 * i, 20, 24, 22, 'bxm', 2) + R(200 + 26 * i, 20, 24, 22, 'bx', 2);
+    s += A(168, 31, 196, 31) + T(88, 52, 'old Vₖ', { s: 10, c: 't-m' }) + T(278, 52, 'new Vₖ₊₁', { s: 10 });
+    s += T(10, 76, 'asynchronous: one array, any order, in place', { a: 'start', s: 10, c: 't-a' });
+    var cnt = [1, 5, 1, 4, 1, 2];
+    for (i = 0; i < 6; i++) s += R(10 + 40 * i, 86, 36, 24, cnt[i] > 2 ? 'bxa' : 'bx', 2) + T(28 + 40 * i, 98, 's' + (i + 1), { s: 10 }) + T(28 + 40 * i, 122, '×' + cnt[i], { s: 10, c: cnt[i] > 2 ? 't-a' : 't-m' });
+    s += T(256, 92, 'states the agent', { a: 'start', s: 10 }) + T(256, 106, 'visits get updated', { a: 'start', s: 10 }) + T(256, 120, 'most often', { a: 'start', s: 10 }) +
+      T(180, 144, 'converges as long as every state keeps being updated', { c: 't-m', s: 10 });
+    add('asyncdp', 360, 152, 'Synchronous DP computes a whole new value array from the old one each sweep. Asynchronous DP keeps one array, updates states in any order using the newest values, and can spend most of its effort on the states that matter.', s);
+  })();
+
+  /* 60. gambler's problem policy */
+  (function () {
+    function x(c) { return 40 + 3 * c; } function y(st) { return 140 - 2.3 * st; }
+    var s = L(40, 140, 340, 140, 'm') + L(40, 140, 40, 18, 'm') + T(44, 14, 'stake', { a: 'start', s: 9, c: 't-m' }) + T(338, 130, 'capital', { a: 'end', s: 9, c: 't-m' });
+    [0, 25, 50, 75, 100].forEach(function (c) { s += T(x(c), 152, String(c), { s: 9, c: 't-m' }); });
+    s += PL([[x(0), y(0)], [x(50), y(50)], [x(100), y(0)]], 'm d') + T(x(78), y(32), 'max allowed', { a: 'start', s: 9, c: 't-m' });
+    s += PL([[x(1), y(1)], [x(25), y(25)], [x(49), y(1)], [x(50), y(50)], [x(51), y(1)], [x(75), y(25)], [x(99), y(1)]], 'a b');
+    s += T(x(50) + 6, y(50) + 2, 'bet all 50', { a: 'start', s: 10, c: 't-a' });
+    add('gambler', 360, 160, 'One optimal policy for the Gambler\'s Problem with heads probability 0.4. The stake is jagged: bet everything at 50, but only 1 at 51, with smaller peaks at 25 and 75. Value iteration finds this, and nobody would guess it.', s);
+  })();
+
+  /* 61. greedy from V needs a model, greedy from Q does not */
+  (function () {
+    var s = T(86, 10, 'greedy from V', { w: 600 }) + C(86, 34, 12) + T(86, 34, 's'), i;
+    [46, 126].forEach(function (ax, j) {
+      s += L(86, 46, ax, 72, 'm') + C(ax, 74, 4, 'fi') + T(ax + (j ? 10 : -10), 70, 'a' + (j ? '₂' : '₁'), { s: 9, a: j ? 'start' : 'end' });
+      [-20, 20].forEach(function (dx) { s += L(ax, 78, ax + dx, 104, 'r t') + C(ax + dx, 112, 9) + T(ax + dx, 112, 's′', { s: 9 }); });
+    });
+    s += T(86, 136, 'must know p(s′|s,a)', { c: 't-r', s: 10 }) + L(180, 10, 180, 140, 'm d t');
+    s += T(268, 10, 'greedy from Q', { w: 600 }) + C(268, 34, 12) + T(268, 34, 's') + A(262, 46, 228, 78, 'm') + A(274, 46, 308, 78, 'a b') +
+      BOX(188, 80, 80, 26, 'Q(s,a₁) = 3', 'bxm', { s: 10 }) + BOX(274, 80, 80, 26, 'Q(s,a₂) = 5', 'bxa', { s: 10 }) + T(268, 136, 'just take the max', { c: 't-a', s: 10 });
+    add('qvsv', 360, 144, 'Why model-free control learns Q. Acting greedily from V means looking one step ahead, which needs the transition model. With Q, each action already has its value, so you simply pick the largest one.', s);
+  })();
+
+  /* 62. GLIE decay */
+  (function () {
+    function x(k) { return 40 + 300 * (k - 1) / 49; } function y(e) { return 120 - 100 * e; }
+    var s = L(40, 120, 340, 120, 'm') + L(40, 120, 40, 14, 'm') + T(34, 20, '1', { a: 'end', s: 9, c: 't-m' }) + T(34, 120, '0', { a: 'end', s: 9, c: 't-m' }) + T(44, 10, 'ε', { a: 'start', s: 10, c: 't-m' }) + T(340, 132, 'episode k', { a: 'end', s: 9, c: 't-m' });
+    var pts = []; for (var k = 1; k <= 50; k++) pts.push([x(k), y(1 / k)]);
+    s += L(40, y(0.25), 340, y(0.25), 'r d') + T(338, y(0.25) - 9, 'fixed ε = 0.25: never fully greedy', { a: 'end', s: 10, c: 't-r' }) +
+      PL(pts, 'a b') + T(72, 46, 'εₖ = 1/k', { a: 'start', s: 10, c: 't-a', w: 600 }) + T(150, 106, 'greedy in the limit', { a: 'start', s: 10, c: 't-a' }) +
+      T(190, 146, 'slow enough decay: every action is still tried forever', { s: 10, c: 't-m' });
+    add('glie', 360, 154, 'GLIE in one picture. A fixed ε keeps exploring at the same rate, so the policy stays ε-soft. Decaying ε as 1/k drives the policy to greedy, yet it shrinks slowly enough that every state-action pair is still visited infinitely often.', s);
+  })();
+
+  /* 63. afterstates */
+  (function () {
+    function board(x0, y0, c, marks) {
+      var b = R(x0, y0, 3 * c, 3 * c, 'bxm', 2) + L(x0 + c, y0, x0 + c, y0 + 3 * c, 'm t') + L(x0 + 2 * c, y0, x0 + 2 * c, y0 + 3 * c, 'm t') + L(x0, y0 + c, x0 + 3 * c, y0 + c, 'm t') + L(x0, y0 + 2 * c, x0 + 3 * c, y0 + 2 * c, 'm t');
+      marks.forEach(function (m) { b += T(x0 + c * m[1] + c / 2, y0 + c * m[0] + c / 2, m[2], { s: c > 16 ? 14 : 11, w: 600, c: m[3] || '' }); });
+      return b;
+    }
+    var s = board(20, 10, 16, [[0, 0, 'X'], [1, 1, 'O'], [0, 2, 'X', 't-a']]) + board(20, 96, 16, [[0, 2, 'X'], [1, 1, 'O'], [0, 0, 'X', 't-a']]) +
+      T(96, 22, 'X plays top right', { a: 'start', s: 9, c: 't-m' }) + T(96, 132, 'X plays top left', { a: 'start', s: 9, c: 't-m' }) +
+      A(72, 34, 236, 66) + A(72, 120, 236, 92) + board(240, 42, 22, [[0, 0, 'X'], [1, 1, 'O'], [0, 2, 'X']]) + T(273, 122, 'same afterstate', { c: 't-a', s: 10, w: 600 }) + T(273, 136, 'one shared value', { c: 't-m', s: 10 });
+    add('afterstate', 360, 146, 'Afterstates. Two different positions and moves lead to exactly the same board. Q would learn their values separately, but a value on the afterstate, the board right after your move, learns both at once.', s);
+  })();
+
+  /* 64. VE weighting */
+  (function () {
+    var N = 40, xs = [], i, sw = 0, sx = 0, sy = 0, sxx = 0, sxy = 0;
+    for (i = 0; i < N; i++) { var u = i / (N - 1), v = 0.15 + 0.7 * u * u, mu = Math.exp(-Math.pow((u - 0.8) / 0.15, 2)) + 0.02; xs.push([u, v, mu]); sw += mu; sx += mu * u; sy += mu * v; sxx += mu * u * u; sxy += mu * u * v; }
+    var b1 = (sw * sxy - sx * sy) / (sw * sxx - sx * sx), b0 = (sy - b1 * sx) / sw;
+    function X(u) { return 40 + 300 * u; } function Y(v) { return 112 - 92 * v; }
+    var s = L(40, 112, 340, 112, 'm') + L(40, 112, 40, 14, 'm') + T(44, 10, 'value', { a: 'start', s: 9, c: 't-m' });
+    s += PL(xs.map(function (p) { return [X(p[0]), Y(p[1])]; }), 'b') + L(X(0), Y(b0), X(1), Y(b0 + b1), 'a b');
+    var mm = Math.max.apply(null, xs.map(function (p) { return p[2]; }));
+    xs.forEach(function (p) { var h = 28 * p[2] / mm; s += R(X(p[0]) - 3, 148 - h, 6, h, 'bxr', 1); });
+    s += L(40, 148, 340, 148, 'm') + T(46, 128, 'μ(s): time spent in s', { a: 'start', s: 10, c: 't-r' }) +
+      T(226, 46, 'true v', { a: 'end', s: 10 }) + T(50, 70, 'fit v̂: good where μ is high', { a: 'start', s: 10, c: 't-a' }) + T(340, 160, 'state', { a: 'end', s: 9, c: 't-m' });
+    add('vemu', 360, 166, 'Why VE needs a weighting. A straight line cannot match the curve everywhere, so the error has to be traded between states. Weighting by μ(s), how often you are in each state, makes the fit accurate where the agent actually spends its time.', s);
+  })();
+
+  /* 65. semi-gradient */
+  add('semigrad', 360, 172, 'Why TD is only a semi-gradient. The target also contains v̂ and so depends on w, but the update treats it as a fixed number and only differentiates the prediction. The Monte Carlo target Gₜ does not depend on w at all, so gradient MC is true gradient descent.',
+    T(180, 10, 'w ← w + α [ U − v̂(Sₜ,w) ] ∇v̂(Sₜ,w)', { s: 11 }) +
+    BOX(14, 30, 140, 40, 'target U\nR + γ v̂(Sₜ₊₁,w)', 'bxr', { head: 1, sub: 1 }) + BOX(206, 30, 140, 40, 'prediction\nv̂(Sₜ,w)', 'bxa', { head: 1, sub: 1 }) +
+    BOX(130, 120, 100, 28, 'weights w', 'bx', { head: 1 }) + A(160, 120, 100, 72, 'm t') + A(200, 120, 260, 72, 'm t') +
+    AQ(300, 72, 312, 132, 232, 134, 'a b') + AQ(60, 72, 48, 132, 128, 134, 'r d') + T(52, 104, '×', { c: 't-r', s: 18, w: 600 }) +
+    T(14, 164, 'treated as a constant', { a: 'start', s: 10, c: 't-r' }) + T(346, 164, 'gradient flows here', { a: 'end', s: 10, c: 't-a' }));
+
+  /* 66. LSTD vs TD */
+  add('lstd', 360, 150, 'TD versus LSTD on the same linear problem. TD creeps towards the TD fixed point with many cheap O(d) steps and needs a step size. LSTD builds Â and b̂ from all the data and solves for the fixed point directly, at O(d²) per step.',
+    '<ellipse class="ol" cx="260" cy="74" rx="90" ry="50"/><ellipse class="ol" cx="260" cy="74" rx="56" ry="31"/><ellipse class="ol" cx="260" cy="74" rx="24" ry="13"/>' +
+    APL([[40, 126], [92, 56], [128, 112], [170, 64], [198, 98], [224, 70], [240, 84], [252, 76]], 'm') + A(40, 126, 254, 76, 'a b') + C(260, 74, 4, 'fa') +
+    C(40, 126, 4, 'fi') + T(48, 140, 'start', { a: 'start', s: 9, c: 't-m' }) + T(272, 66, 'TD fixed point', { a: 'start', s: 10, w: 600 }) +
+    T(12, 16, 'TD: many small steps, O(d) each', { a: 'start', s: 10, c: 't-m' }) + T(12, 30, 'LSTD: solve Â w = b̂, no step size', { a: 'start', s: 10, c: 't-a' }));
+
+  /* 67. memory based nearest neighbour */
+  (function () {
+    var pts = [[50, 96], [78, 84], [104, 90], [138, 62], [166, 70], [214, 50], [236, 58], [262, 46], [296, 30], [322, 38]], q = 200;
+    var near = pts.map(function (p, j) { return [Math.abs(p[0] - q), j]; }).sort(function (a, b) { return a[0] - b[0]; }).slice(0, 3).map(function (a) { return a[1]; });
+    var est = 0; near.forEach(function (j) { est += pts[j][1]; }); est /= 3;
+    var s = L(30, 116, 340, 116, 'm') + L(q, 16, q, 116, 'r d') + T(q, 128, 'query s', { s: 10, c: 't-r' }) + T(340, 128, 'state', { a: 'end', s: 9, c: 't-m' });
+    pts.forEach(function (p, j) { var isN = near.indexOf(j) >= 0; if (isN) s += L(p[0], p[1], q, est, 'a t'); s += C(p[0], p[1], isN ? 5 : 3.5, isN ? 'fa' : 'fm'); });
+    s += C(q, est, 6, 'bxr') + T(q + 10, est + 16, 'estimate', { a: 'start', s: 10, c: 't-r' }) + T(30, 14, 'stored (s, target) pairs, nothing fitted in advance', { a: 'start', s: 10, c: 't-m' }) +
+      T(180, 144, 'average of the k = 3 nearest stored targets', { s: 10, c: 't-a' });
+    add('knn', 360, 152, 'A memory-based method. Every experience is stored. When a value is needed, it looks up the nearest stored states and averages their targets, weighted by distance in kernel regression. Accuracy grows with data, but queries get slower as memory grows.', s);
+  })();
+
+  /* 68. policy objective, gradient ascent */
+  (function () {
+    function y(x) { return 132 - 104 * Math.exp(-Math.pow((x - 230) / 80, 2)); }
+    var pts = []; for (var x = 30; x <= 340; x += 5) pts.push([x, y(x)]);
+    var s = L(30, 134, 340, 134, 'm') + PL(pts, 'b') + T(346, 134, 'θ', { a: 'end', s: 10, c: 't-m' }) + T(30, 14, 'J(θ)', { a: 'start', s: 10, c: 't-m' });
+    var st = [80, 130, 170, 200, 220];
+    st.forEach(function (sx, j) { s += C(sx, y(sx), 4, 'fa'); if (j < st.length - 1) s += AQ(sx, y(sx) - 6, (sx + st[j + 1]) / 2, y((sx + st[j + 1]) / 2) - 16, st[j + 1], y(st[j + 1]) - 6, 'a'); });
+    s += C(230, y(230), 4, 'fi') + T(240, 22, 'θ* (maximum)', { a: 'start', s: 10, w: 600 }) +
+      T(36, 40, 'θ ← θ + α ∇J(θ)', { a: 'start', s: 11, c: 't-a', w: 600 }) + T(36, 56, 'climb, do not descend', { a: 'start', s: 10, c: 't-m' }) +
+      T(180, 150, 'J: start value, average value, or average reward', { s: 10, c: 't-m' });
+    add('jobj', 360, 158, 'Policy gradients climb J(θ). Whichever objective you pick, start value for episodic tasks or average value or average reward for continuing ones, the gradient points the same way. Frameworks minimise, so you code the loss as minus J.', s);
+  })();
+
+  /* 69. RL debugging ladder */
+  (function () {
+    var steps = ['random agent and a hand policy behave?', 'reward sign, scale, done vs truncated', 'update sign: ascent for π, plus δ for TD', 'exploration: is ε decaying too fast?', 'lower the learning rate, look for NaNs', 'tiny environment with a known answer'];
+    var s = T(14, 10, 'simple', { a: 'start', s: 9, c: 't-m' }) + T(14, 196, 'complex', { a: 'start', s: 9, c: 't-m' }) + A(30, 20, 30, 186, 'm');
+    steps.forEach(function (t, j) { var yy = 18 + 29 * j; s += R(48, yy, 300, 24, j === 0 ? 'bxa' : 'bx', 4) + T(62, yy + 12, String(j + 1), { s: 10, w: 600, c: 't-a' }) + T(76, yy + 12, t, { a: 'start', s: 10 }); });
+    add('debugflow', 360, 204, 'Debug an RL agent from the bottom up. Check the environment and reward before you suspect the algorithm, then the sign of the update, then exploration and learning rate. Finish on a tiny problem where you already know the right answer.', s);
+  })();
+
+  /* 70. report seeds with bands */
+  (function () {
+    function X(u) { return 40 + 296 * u; }
+    function curve(f, sd, up) { var top = [], bot = [], mid = []; for (var i = 0; i <= 30; i++) { var u = i / 30, m = f(u), d = sd(u); mid.push([X(u), m]); top.push(X(u).toFixed(1) + ' ' + (m - d).toFixed(1)); bot.unshift(X(u).toFixed(1) + ' ' + (m + d).toFixed(1)); } return { band: 'M' + top.join(' L') + ' L' + bot.join(' L') + ' Z', mid: mid }; }
+    var a = curve(function (u) { return 124 - 86 * (1 - Math.exp(-4 * u)); }, function (u) { return 4 + 16 * u; });
+    var b = curve(function (u) { return 124 - 56 * (1 - Math.exp(-2.5 * u)); }, function (u) { return 3 + 6 * u; });
+    var s = L(40, 128, 340, 128, 'm') + L(40, 128, 40, 14, 'm') + T(44, 10, 'return', { a: 'start', s: 9, c: 't-m' }) + T(340, 140, 'environment steps', { a: 'end', s: 9, c: 't-m' }) +
+      SH(a.band, 'band') + SH(b.band, 'bandr') + PL(a.mid, 'a b') + PL(b.mid, 'r b') +
+      T(150, 18, 'method A, mean of 5 seeds', { a: 'start', s: 10, c: 't-a' }) + T(238, 92, 'method B', { a: 'start', s: 10, c: 't-r' }) +
+      T(120, 112, 'shaded: spread across seeds', { a: 'start', s: 10, c: 't-m' });
+    add('seedband', 360, 148, 'Report RL results honestly. Run several fixed seeds, plot the mean with a band for the spread, and state how many runs you used. A single lucky seed, or the best of many, tells the examiner nothing.', s);
+  })();
+
   return D;
 })();

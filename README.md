@@ -5,7 +5,7 @@ Interactive oral defense prep for 42028 / 43008 Reinforcement Learning (UTS), bu
 - `index.html`: the whole deck in one file. Open it in a browser, or publish it with GitHub Pages. Needs internet only for fonts and MathJax.
 - `source/`: the content files (`glossary.txt`, `cards*.txt`, `deriv.txt`, `mcq.txt`, `weak.txt`), the page code (`head.html`, `body.html`, `app.js`) and `build.sh` to rebuild `index.html` after editing content.
 
-Progress (Know it, Review again, MCQ answers) is saved in each visitor's own browser. On the Account tab anyone can create a username and password, with no email and no Claude sign-in, and their progress then follows them to any device.
+Progress (Know it, Review again, MCQ answers) is saved in each visitor's own browser. On the Account tab anyone can create a username and password, with no email and no Claude sign-in, and their progress then follows them to any device. A banner at the top of every page advertises this, and accounts appear on the Leaderboard tab (anyone can hide themselves with a switch).
 
 ## Accounts (Supabase)
 - Backend: Supabase project `rl-defense-deck` in Michelle's Playground, Sydney region, free plan. Details in `source/supabase.sql`.
@@ -23,3 +23,11 @@ Before sharing publicly, consider deleting the `@weak` entries in `source/weak.t
 
 ## Diagrams
 All diagrams are inline SVG in `source/diagrams.js`, so the page needs no image files. To attach one to a card, derivation or MCQ, add a line `I: name` (for example `I: cliff`) anywhere in that block of the content file, then run `build.sh` again.
+
+Diagrams draw themselves in when they scroll into view (lines draw, labels fade in). Each has a Replay button. Visitors who set reduce motion on their device see them static.
+
+## Narrated derivations
+Every derivation has a **Play with voice** button. It opens a full-screen player that shows one step at a time, animates the equation in, and reads the step and its reason aloud with the device's built-in voice (Web Speech API, preferring an Australian or British English voice). Controls: back, play or pause, next, speed (0.8x, 1x, 1.25x), voice on or off, and a step bar you can tap. Without a voice it plays captions on a timer. Nothing is uploaded and there are no video files.
+
+## Colours
+Each week has its own colour (pills, card top borders, chip dots), set as `--w1` to `--w11`, `--wx` and `--wp` in `source/head.html`, with separate light and dark values.

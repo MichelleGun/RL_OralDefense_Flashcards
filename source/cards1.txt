@@ -10,6 +10,7 @@ Differences from supervised learning:
 K: reward, sequential decisions, exploration, delayed reward, credit assignment
 
 @card w1
+I: learnkinds
 Q: When would you choose supervised learning, unsupervised learning, imitation learning or RL?
 A: - **Supervised**: you have labelled data and a one-shot prediction (classify a shark image).
 - **Unsupervised**: no labels, you want structure in the data (cluster customers).
@@ -31,6 +32,7 @@ In an MDP the transition probabilities and rewards are stored in the environment
 K: agent, environment, state, action, reward, policy
 
 @card w1
+I: loop
 Q: What are the key characteristics of RL problems?
 A: - **Trial and error** learning.
 - **Optimisation** over sequences of actions, not single actions.
@@ -67,6 +69,7 @@ Treating truncation as termination teaches the agent that time running out is a 
 K: Gymnasium, terminated, truncated, bootstrapping
 
 @card w2
+I: rewardhack
 Q: What is the reward hypothesis, and give a good and a bad reward design.
 A: The **reward hypothesis**: every goal can be described as maximising the expected cumulative scalar reward.
 Good: a soccer robot gets positive reward for moving the ball towards the goal and negative reward for falling.
@@ -129,12 +132,14 @@ In the lab code `np.sqrt(2*np.log(step+1)/(Num_pulls+1e-5))` the 1e-5 just avoid
 K: UCB, optimism, exploration bonus, uncertainty
 
 @card w2
+I: adbandit
 Q: How would you frame online advertising as a bandit?
 A: Arms: the ads. Pulling an arm: showing an ad. Reward: 1 if clicked, 0 if not (or payment amount). Each ad has an unknown click-through rate, $CTR = \text{clicks}/\text{impressions}$. Run $\varepsilon$-greedy or UCB to concentrate impressions on the best ad while still testing others. Payoff in the notes: CTR times advertiser pay.
 The AgriBot lab shows that two settings (irrigation 5 options, fertiliser 4 options) become 20 arms, one per combination.
 K: bandit, click-through rate, arms
 
 @card w2
+I: irlhrl
 Q: What are inverse RL and hierarchical RL?
 A: **Inverse RL**: given expert demonstrations, infer the **reward function** that would make that behaviour optimal. Useful when writing a reward by hand is hard, such as driving style.
 **Hierarchical RL**: split a long task into sub-tasks. **Options** are temporally extended actions, each with its own policy, an initiation set (where it can start) and a termination condition. This gives **temporal abstraction** and helps with long horizons and sparse rewards.
@@ -169,6 +174,7 @@ Note: $\gamma$ is the discount factor, not "future rewards". $\gamma = 0$ is myo
 K: return, discount factor, episodic, continuing
 
 @card w3
+I: epcont
 Q: Episodic vs continuing tasks. Which algorithms only work for one of them?
 A: **Episodic** tasks end in a terminal state (games, mazes). **Continuing** tasks run forever (temperature control, stock trading).
 - **Monte Carlo** methods need episodes to end because they wait for the full return. They cannot be used on continuing tasks.
@@ -190,6 +196,7 @@ Then mention: episodic or continuing, fully or partially observable, and whether
 K: MDP formulation, state, action, transition, reward, discount
 
 @card w3
+I: belief
 Q: What are the extensions and the limitations of MDPs?
 A: Extensions: **POMDPs** (hidden state), **finite-horizon MDPs** (fixed number of steps, deadlines), **continuous or infinite** state and action MDPs, and semi-MDPs with options.
 Limitations:
@@ -306,18 +313,21 @@ Nearly every method is GPI with a different evaluation step: DP (full model back
 K: GPI, evaluation, improvement, unifying framework
 
 @card w5
+I: asyncdp
 Q: What is asynchronous DP and why use it?
 A: Instead of full ordered sweeps, update states in any order, even some states many times before others once. In-place updates use the newest values.
 Still converges if every state keeps getting updated. It lets you focus computation on relevant states (for example ones the agent actually visits) and interleave DP with real interaction.
 K: asynchronous DP, in-place updates, prioritised sweeping
 
 @card w5
+I: curse
 Q: Is DP efficient? What is its real limitation?
 A: In a formal sense yes. DP is **polynomial** in the number of states and actions, while searching every deterministic policy costs $|A|^{|S|}$. It also scales better than linear programming.
 The real problem is the **curse of dimensionality**: the number of states grows exponentially with the number of state variables, plus DP needs a **perfect model**. MC and TD remove the model requirement, function approximation tackles the size.
 K: polynomial time, curse of dimensionality, perfect model
 
 @card w5
+I: gambler
 Q: Briefly describe Jack's Car Rental and the Gambler's Problem. What do they show?
 A: **Jack's Car Rental** (policy iteration): two locations, Poisson rentals and returns, move up to 5 cars overnight at 2 per car, earn 10 per rental. Policy iteration goes from "never move cars" to the optimal policy in about four improvements.
 **Gambler's Problem** (value iteration): capital 1 to 99, bet on coin flips with heads probability 0.4, reward +1 only on reaching 100. The optimal betting policy is jagged and non-obvious (bet everything at 50, not at 51).
