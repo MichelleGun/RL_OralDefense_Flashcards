@@ -286,11 +286,21 @@ window.addEventListener('resize', function () { clearTimeout(fitTimer); fitTimer
     typeset(list);
   }
   document.getElementById('g-search').addEventListener('input', renderGlossary);
+  var gMode = 'terms', cmpDone = false;
+  function setGMode(m) {
+    gMode = m;
+    document.querySelectorAll('#g-mode button').forEach(function (b) { b.setAttribute('aria-pressed', String(b.getAttribute('data-gm') === m)); });
+    document.getElementById('g-terms').hidden = m !== 'terms';
+    var c = document.getElementById('g-compare'); c.hidden = m !== 'compare';
+    if (m === 'compare' && !cmpDone) { cmpDone = true; typeset(c); }
+  }
+  document.querySelectorAll('#g-mode button').forEach(function (b) { b.addEventListener('click', function () { setGMode(b.getAttribute('data-gm')); }); });
   function lookup(term) {
     var box = document.getElementById('g-search');
     var t = term.toLowerCase();
     var hit = G.find(function (g) { return g.term.toLowerCase().indexOf(t) >= 0; });
     box.value = hit ? t : t.split(' ')[0];
+    setGMode('terms');
     gWeek = 'all'; if (location.hash !== '#glossary') location.hash = 'glossary'; else route(); window.scrollTo(0, 0);
   }
 
