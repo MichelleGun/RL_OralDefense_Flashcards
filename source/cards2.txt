@@ -261,13 +261,21 @@ K: VFA, weights, architectures, generalisation
 @card w8
 I: houseprice
 Q: Which function approximators can you use, and how do you choose?
-P: Options go from simple to powerful: a straight-line formula on hand-picked features, tiles or bumps (tile coding, RBFs), decision trees, nearest-neighbour memory, and neural networks.
-Choose like picking a tool: simple ones are fast, stable and easy to understand. Neural networks handle raw images but are harder to train stably.
-A: - **Tables**: exact, no generalisation, do not scale.
-- **Linear in features** $\mathbf w^\top \mathbf x(s)$: strong convergence guarantees, cheap, but needs good hand-made features (tile coding, RBF, Fourier, polynomial).
-- **Neural networks / CNNs**: learn their own features from raw inputs like pixels, powerful, weakest theory.
-- Decision trees, nearest neighbour, kernels (nonparametric).
-Choice: small low-dimensional continuous state, use linear with tile coding. Raw images, use a CNN. Whatever you pick must handle **non-stationary, incrementally arriving data**, which is what RL produces.
+P: A **function approximator** is the container you keep your knowledge in once a table is too big. It is a formula that takes a state and gives back a value or an action.
+Choosing one is like choosing how to store information: a notebook for a handful of items, a spreadsheet formula when there is a clear pattern, and a trained expert when the input is messy, like photos. Pick the simplest one that can handle your input.
+A: **What it is asking:** what type of model should represent $V(s)$, $Q(s,a)$ or $\pi(a \mid s)$?
+| Approximator | When to use | Trade-off |
+|---|---|---|
+| Lookup table | Small state spaces | Exact, but no generalisation and does not scale |
+| Linear function $\mathbf w^\top \mathbf x(s)$ | Simple problems with hand-crafted features (tile coding, RBF, Fourier, polynomial) | Cheap, strongest convergence guarantees, only as good as its features |
+| Decision tree | Structured or tabular data | Easy to read, but usually fitted in batches, so awkward for step-by-step RL updates |
+| Neural network (MLP) | Large or complex state spaces | Learns its own features, weakest theory, can be unstable |
+| CNN | Images and vision input | Finds the same pattern anywhere in the image (DQN on Atari) |
+| RNN / LSTM | POMDPs, sequential observations | Carries memory of the past, slower and harder to train |
+| Transformer | Very long histories or sequence modelling | Handles the longest context, needs the most data and compute |
+Also possible: nearest neighbour and kernel methods (nonparametric, memory-based).
+**How to choose:** match the input. Small and discrete, use a table. Low-dimensional and continuous, use linear with tile coding. Pixels, use a CNN. Partially observed, use an RNN/LSTM or a stacked history. Whatever you pick must cope with **non-stationary, incrementally arriving data**, because the targets keep moving as the policy improves.
+**Project link:** our drone policy is a 2 x 64 MLP on 41 hand-made features plus a frame history, chosen over a CNN or LSTM because it trains fast on a laptop CPU.
 K: function approximator, linear, neural network, tile coding, non-stationary
 
 @card w8

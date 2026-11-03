@@ -4,7 +4,7 @@ Interactive oral defense prep for 42028 / 43008 Reinforcement Learning (UTS), bu
 
 - `index.html`: the whole deck in one file. Open it in a browser, or publish it with GitHub Pages. Needs internet only for fonts and MathJax.
 - `source/`: the content files (`glossary.txt`, `cards*.txt`, `deriv.txt`, `mcq.txt`, `weak.txt`), the page code (`head.html`, `body.html`, `app.js`) and `build.sh` to rebuild `index.html` after editing content.
-- The Glossary tab has a second view, Comparison tables: six side-by-side cheat sheets (DP vs MC vs TD and the rest, model-based vs model-free, bootstrapping, sync vs async, bias vs variance, a one-page exam summary). They live as plain HTML inside `source/body.html`, under `#g-compare`.
+- The Glossary tab has a second view, Comparison tables: seven side-by-side cheat sheets (value-based vs Q-based vs policy-based vs actor-critic, DP vs MC vs TD and the rest, model-based vs model-free, bootstrapping, sync vs async, bias vs variance, a one-page exam summary). They live as plain HTML inside `source/body.html`, under `#g-compare`.
 
 Progress (Know it, Review again, MCQ answers) is saved in each visitor's own browser. On the Account tab anyone can create a username and password, with no email and no Claude sign-in, and their progress then follows them to any device. A banner at the top of every page advertises this, and accounts appear on the Leaderboard tab (anyone can hide themselves with a switch).
 

@@ -117,15 +117,24 @@ window.addEventListener('resize', function () { clearTimeout(fitTimer); fitTimer
     return s.replace(/\u0000(\d+)\u0000/g, function (_, i) { return esc(math[+i]); });
   }
   function rich(text) {
-    var out = [], list = null;
+    var out = [], list = null, tbl = null;
     text.split('\n').forEach(function (ln) {
       var m;
+      if (/^\|.*\|\s*$/.test(ln)) {
+        if (list) close();
+        if (/^\|[\s:|-]+\|\s*$/.test(ln)) return;
+        var cells = ln.trim().replace(/\\\|/g, '\u0000').slice(1, -1).split('|').map(function (c) { return c.replace(/\u0000/g, '|').trim(); });
+        if (!tbl) tbl = { head: cells, rows: [] }; else tbl.rows.push(cells);
+        return;
+      }
+      closeT();
       if ((m = ln.match(/^- (.*)$/))) { if (!list || list.t !== 'ul') { close(); list = { t: 'ul', items: [] }; } list.items.push(m[1]); return; }
       if ((m = ln.match(/^\d+\. (.*)$/))) { if (!list || list.t !== 'ol') { close(); list = { t: 'ol', items: [] }; } list.items.push(m[1]); return; }
       close();
       if (ln.trim()) out.push('<p>' + inline(ln) + '</p>');
     });
-    close();
+    close(); closeT();
+    function closeT() { if (!tbl) return; out.push('<div class="cmp-wrap"><table class="cmp"><thead><tr>' + tbl.head.map(function (h) { return '<th>' + inline(h) + '</th>'; }).join('') + '</tr></thead><tbody>' + tbl.rows.map(function (r) { return '<tr>' + r.map(function (c, i) { return i ? '<td>' + inline(c) + '</td>' : '<th scope="row">' + inline(c) + '</th>'; }).join('') + '</tr>'; }).join('') + '</tbody></table></div>'); tbl = null; }
     function close() { if (list) { out.push('<' + list.t + '>' + list.items.map(function (i) { return '<li>' + inline(i) + '</li>'; }).join('') + '</' + list.t + '>'); list = null; } }
     return out.join('');
   }
