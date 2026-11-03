@@ -314,9 +314,21 @@ K: GPI, evaluation, improvement, unifying framework
 
 @card w5
 I: asyncdp
-Q: What is asynchronous DP and why use it?
-A: Instead of full ordered sweeps, update states in any order, even some states many times before others once. In-place updates use the newest values.
-Still converges if every state keeps getting updated. It lets you focus computation on relevant states (for example ones the agent actually visits) and interleave DP with real interaction.
+Q: Synchronous vs asynchronous DP: what is the difference, and why use asynchronous?
+A: **Synchronous DP.** All states are updated at the same time, using the values from the previous iteration.
+$$V_{k+1}(s) = R(s) + \gamma \sum_{s'} P(s'\mid s)\,V_k(s')$$
+You compute the new value of every state, store them separately, then replace the old table once all updates are finished. Pro: easy to understand and analyse.
+**Asynchronous DP.** States are updated one at a time, and new values can be used immediately.
+1. Update state A.
+2. Use the new value of A when updating B.
+3. Use the new value of B when updating C.
+You do not have to wait for a full sweep through all states. Pros: often converges faster in practice, and can focus computation on important states, for example the ones the agent actually visits.
+**Simple comparison** (synchronous vs asynchronous)
+- **Updates:** all states together vs one state at a time.
+- **Values used:** old values throughout the sweep vs newly updated values immediately.
+- **Trade-off:** simpler vs often faster.
+- **Coverage:** full sweep required vs can update selected states.
+Exam line: asynchronous DP still converges as long as every state keeps getting updated.
 K: asynchronous DP, in-place updates, prioritised sweeping
 
 @card w5

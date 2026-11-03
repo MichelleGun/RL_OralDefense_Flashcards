@@ -64,12 +64,12 @@ window.addEventListener('resize', function () { clearTimeout(fitTimer); fitTimer
   var WEEKS = {
     w1: 'Week 1 Intro', w2: 'Week 2 Bandits', w3: 'Week 3 MDPs', w4: 'Week 4 Bellman', w5: 'Week 5 DP',
     w6: 'Week 6 Monte Carlo', w7: 'Week 7 TD', w8: 'Week 8 Function approx', w9: 'Week 9 Deep RL',
-    w10: 'Week 10 Policy gradients', w11: 'Week 11 MCTS and RLHF', x: 'Cross-topic', p: 'Your project'
+    w10: 'Week 10 Policy gradients', w11: 'Week 11 MCTS and RLHF', x: 'Cross-topic', p: 'Your project', d: 'Drone project'
   };
   var MTOPICS = { bandit: 'Bandits', dp: 'Dynamic programming', mc: 'Monte Carlo', td: 'TD control', fa: 'Function approximation', deep: 'Deep RL', pg: 'Policy gradients', plan: 'Planning', rlhf: 'RLHF', other: 'Framing' };
 
   var MWK = { bandit: 'w2', dp: 'w5', mc: 'w6', td: 'w7', fa: 'w8', deep: 'w9', pg: 'w10', plan: 'w11', rlhf: 'w11', other: 'x' };
-  function wkVar(wk) { return 'var(--' + (wk === 'x' ? 'wx' : wk === 'p' ? 'wp' : wk) + ')'; }
+  function wkVar(wk) { return 'var(--' + (wk === 'x' ? 'wx' : wk === 'p' ? 'wp' : wk === 'd' ? 'wd' : wk) + ')'; }
   function wkPill(wk, label) { return '<span class="pill wk" style="--wc:' + wkVar(wk) + '">' + esc(label || WEEKS[wk] || wk) + '</span>'; }
   var ICON = {
     user: '<svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/></svg>',

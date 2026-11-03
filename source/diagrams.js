@@ -843,5 +843,70 @@ window.DIAG = (function () {
     add('seedband', 360, 148, 'Report RL results honestly. Run several fixed seeds, plot the mean with a band for the spread, and state how many runs you used. A single lucky seed, or the best of many, tells the examiner nothing.', s);
   })();
 
+  /* 71. Drone project: the control loop */
+  (function () {
+    var s = '';
+    s += R(14, 18, 150, 54, 'bxm') + T(89, 38, '1. See', { w: 600, s: 11 }) + T(89, 54, 'camera frame, ring detector', { s: 9, c: 't-m' });
+    s += R(196, 18, 150, 54, 'bxa') + T(271, 38, '2. Describe', { w: 600, s: 11 }) + T(271, 54, '41 numbers x 6 lags = 246', { s: 9, c: 't-a' });
+    s += R(196, 112, 150, 54, 'bxa') + T(271, 132, '3. Decide', { w: 600, s: 11 }) + T(271, 148, 'actor MLP, mean action', { s: 9, c: 't-a' });
+    s += R(14, 112, 150, 54, 'bxm') + T(89, 132, '4. Act', { w: 600, s: 11 }) + T(89, 148, '4 sticks x 30, safety trims', { s: 9, c: 't-m' });
+    s += A(166, 45, 194, 45, 'a') + A(271, 74, 271, 110, 'a') + A(194, 139, 166, 139, 'a') + A(89, 110, 89, 74, 'm');
+    s += T(180, 96, '15 Hz', { s: 12, w: 700 });
+    s += T(180, 188, 'tinted: identical code in sim and on the Tello', { s: 9, c: 't-a' }) + T(180, 202, 'plain: differs between worlds (sim-to-real gap)', { s: 9, c: 't-m' });
+    add('dq_loop', 360, 210, 'One tick of the Drone Quidditch policy. Only the middle (observation builder and actor) is guaranteed identical in simulation and on the real drone. Camera, detector and drone physics differ, and that is where sim-to-real failures come from.', s);
+  })();
+
+  /* 72. Drone project: asymmetric actor-critic with memory */
+  (function () {
+    var s = '';
+    s += R(6, 20, 128, 50, 'bxa') + T(70, 40, 'camera, telemetry', { s: 9, w: 600 }) + T(70, 56, '41 x 6 lags', { s: 9, c: 't-a' });
+    s += R(6, 110, 128, 44, 'bxr') + T(70, 128, 'privileged state', { s: 9, w: 600 }) + T(70, 143, '20 sim values', { s: 9, c: 't-r' });
+    s += R(170, 14, 112, 56, 'bx') + T(226, 32, 'Actor', { s: 11, w: 700 }) + T(226, 48, '246>64>64 tanh', { s: 9, c: 't-m' }) + T(226, 62, 'Gaussian', { s: 9, c: 't-m' });
+    s += R(170, 104, 112, 56, 'bx') + T(226, 122, 'Critic', { s: 11, w: 700 }) + T(226, 138, '266>64>64 tanh', { s: 9, c: 't-m' }) + T(226, 152, 'training only', { s: 9, c: 't-m' });
+    s += A(136, 42, 168, 42, 'a') + A(136, 56, 168, 118, 'a') + A(136, 132, 168, 132, 'r') + L(136, 120, 166, 70, 'rd');
+    s += T(146, 92, 'x0', { s: 9, c: 't-r', w: 700 });
+    s += A(284, 42, 306, 42, 'a') + T(334, 38, '4 sticks', { s: 9, c: 't-a' }) + T(334, 50, 'to Tello', { s: 8, c: 't-m' });
+    s += A(284, 132, 306, 132, 'm') + T(334, 128, 'V(s)', { s: 10, w: 600 }) + T(334, 142, 'for A(s,a)', { s: 8, c: 't-m' });
+    s += T(180, 180, 'the mask zeroes privileged inputs for the actor,', { s: 9, c: 't-m' }) + T(180, 193, 'so the real drone never needs them', { s: 9, c: 't-m' });
+    add('dq_aac', 360, 200, 'The deployed architecture. The actor sees about 1 s of camera features plus the ring tracker. The critic also sees 20 privileged simulator values, which lowers the variance of the advantages, and is thrown away at flight time.', s);
+  })();
+
+  /* 73. Drone project: MDP versions and the loophole each closed */
+  (function () {
+    var rows = [['v1', 'shaped, one pass ends', 'PPO unstable, ~6 % success'], ['v2', 'potential shaping, rim -3', 'parked 18-31 cm in front'], ['v3', 'time budget, no shaping', 'never a second pass'], ['v4', 'armed flag, hover start', 'still one pass, one corner'], ['v5', 'same-side laps, streak, 9 zones', 'passes from every zone']];
+    var s = L(30, 16, 30, 194, 'm');
+    rows.forEach(function (r, j) {
+      var y = 24 + 36 * j, bad = j < 4;
+      s += C(30, y + 8, 6, bad ? 'fr' : 'fa') + T(46, y + 6, r[0], { a: 'start', s: 11, w: 700 }) + T(74, y + 6, r[1], { a: 'start', s: 10 }) + T(74, y + 20, r[2], { a: 'start', s: 9, c: bad ? 't-r' : 't-a' });
+    });
+    add('dq_mdp', 360, 204, 'Five MDP versions in the full-state PyBullet task. Each failure (red) exposed a loophole or a hidden variable: v2 parked because shaping paid for reaching the entrance and a pass risked the rim, v3 and v4 could not tell when a second pass would count.', s);
+  })();
+
+  /* 74. Drone project: optimiser lineage */
+  (function () {
+    var d = [['n8 memory + DAPG', 1.28], ['O slanted starts', 1.58], ['E9 stress drone', 2.00], ['C9 loop practice', 2.33], ['CL lr 2e-5', 2.58], ['LO 80 % slanted', 4.33], ['LE stress, lr 2e-5', 5.29]];
+    var s = T(150, 12, 'laps per 90 s episode (sim)', { a: 'start', s: 9, c: 't-m' }) + L(150, 18, 150, 196, 'm');
+    d.forEach(function (r, j) {
+      var y = 22 + 25 * j, w = r[1] / 5.6 * 190, last = j === d.length - 1;
+      s += T(144, y + 13, r[0], { a: 'end', s: 9 }) + R(150, y + 3, w, 15, last ? 'bxa' : 'bxm', 2) + T(154 + w, y + 14, r[1].toFixed(2), { a: 'start', s: 9, w: 600, c: last ? 't-a' : '' });
+    });
+    add('dq_lineage', 360, 204, 'Each bar is a policy that won its optimiser round and became the next parent. The biggest jumps came from memory, a gentler fine-tuning learning rate and training against a slower, driftier drone, not from bigger rewards.', s);
+  })();
+
+  /* 75. Drone project: loops rose, corners did not */
+  (function () {
+    var pts = [['n8', 1.03, 70], ['O', 1.58, 67], ['E9', 2.00, 53], ['C9', 2.33, 57], ['CL', 2.58, 60], ['LO', 4.33, 58], ['LE', 5.29, 60]];
+    function X(j) { return 46 + j * 46; }
+    var s = L(40, 150, 330, 150, 'm') + L(40, 150, 40, 16, 'm') + L(330, 150, 330, 16, 'm');
+    s += T(44, 12, 'laps/ep (0-6)', { a: 'start', s: 9, c: 't-a' }) + T(326, 12, 'oblique entry (0-100 %)', { a: 'end', s: 9, c: 't-r' });
+    var la = [], ob = [];
+    pts.forEach(function (p, j) { la.push([X(j), 150 - p[1] / 6 * 130]); ob.push([X(j), 150 - p[2] / 100 * 130]); s += T(X(j), 164, p[0], { s: 9 }); });
+    s += PL(la, 'a b') + PL(ob, 'r b');
+    la.forEach(function (q) { s += C(q[0], q[1], 3, 'fa'); }); ob.forEach(function (q) { s += C(q[0], q[1], 3, 'fr'); });
+    s += T(X(6) - 4, la[6][1] - 8, '5.29', { a: 'end', s: 9, c: 't-a', w: 600 }) + T(X(0) + 4, ob[0][1] - 8, '70 %', { a: 'start', s: 9, c: 't-r', w: 600 });
+    s += T(185, 182, 'corner entry, the real-drone failure, never improved', { s: 9, c: 't-m' });
+    add('dq_tradeoff', 360, 190, 'Laps per episode grew about five-fold across the lineage while oblique (corner) entry drifted between 53 and 70 %. The score rewarded loops more, so the flat policy got better at loops, not at the slanted entries that failed on the real Tello.', s);
+  })();
+
   return D;
 })();
