@@ -1,6 +1,8 @@
 @card w1
 I: loop
 Q: Define reinforcement learning in one sentence, then say what makes it different from supervised learning.
+P: Think of training a puppy. Nobody gives it a list of correct answers. It tries something, gets a treat or nothing, and slowly works out which behaviour earns treats. That is reinforcement learning: learning by trial and error from rewards.
+Supervised learning is like studying with an answer key. Every example comes with the right answer. In RL there is no answer key, only a score that may come much later.
 A: **Reinforcement learning** is learning to make a good **sequence of decisions** by interacting with an **environment** and receiving **scalar reward** feedback.
 Differences from supervised learning:
 - No labels. The agent is never told the correct action, it only gets a reward that says how good its choice was.
@@ -12,6 +14,8 @@ K: reward, sequential decisions, exploration, delayed reward, credit assignment
 @card w1
 I: learnkinds
 Q: When would you choose supervised learning, unsupervised learning, imitation learning or RL?
+P: Ask two questions. Do I have the right answers written down? Then use supervised learning, like a student with a marked practice exam. Do I have no answers and just want to find groups or patterns? Then use unsupervised learning, like sorting a pile of photos into piles that look alike.
+If an expert can show you what to do, copy them (imitation learning, like learning to cook by watching a chef). If nobody knows the best move and your choices change what happens next, you have to learn by trying (RL).
 A: - **Supervised**: you have labelled data and a one-shot prediction (classify a shark image).
 - **Unsupervised**: no labels, you want structure in the data (cluster customers).
 - **Imitation learning**: you have expert **demonstrations** of good behaviour and want to copy them. Weakness: it can never be better than the demonstrations and fails in situations they never covered.
@@ -22,6 +26,8 @@ K: supervised, unsupervised, imitation learning, demonstrations
 @card w1
 I: loop
 Q: Name the components of an RL system and describe the agent environment loop.
+P: Picture a video game. You are the **agent**, the game world is the **environment**. Each moment you look at the screen (the **state**), press a button (the **action**), and the game gives you points (the **reward**) and a new screen.
+The **policy** is your playing style, the rule for which button you press on each screen. The **value function** is your gut feeling for how good the current situation is. A **model**, if you have one, is your mental picture of how the game will react.
 A: Components: **agent**, **environment**, **state**, **action**, **reward**, **policy** (and often a **value function** and a **model**).
 Loop at each time step $t$:
 1. The agent observes state $S_t$.
@@ -34,6 +40,7 @@ K: agent, environment, state, action, reward, policy
 @card w1
 I: loop
 Q: What are the key characteristics of RL problems?
+P: RL problems feel like learning a sport. Nobody tells you the correct move, you only see the score. The score can come late, so a bad pass early in the game might only cost you the match at the end. Your own moves change what you see next. And time matters, because each step depends on the one before.
 A: - **Trial and error** learning.
 - **Optimisation** over sequences of actions, not single actions.
 - **Delayed consequences**, for example saving for retirement now or starting your project in Week 1.
@@ -44,6 +51,8 @@ K: trial and error, delayed reward, exploration, exploitation, generalisation
 @card w1
 I: egreedy
 Q: What is the exploration exploitation trade-off and why can't you just exploit?
+P: Choosing where to eat tonight. **Exploiting** means going to your favourite restaurant because you know it is good. **Exploring** means trying a new place that might be even better, or might be worse.
+If you only ever exploit, you never find out about the amazing place around the corner. If you only explore, you keep eating bad meals. Good learners mix the two, exploring more at the start and less once they know the area.
 A: **Exploitation** uses current knowledge to get the best reward now. **Exploration** tries uncertain actions to learn more.
 If you only exploit, early unlucky estimates can lock you onto a worse action forever. Example from the notes: a greedy agent opens the red box once, gets 0, and never opens it again even though red might be better on average.
 If you only explore, you waste reward on bad actions you already know are bad.
@@ -53,6 +62,8 @@ K: exploration, exploitation, epsilon-greedy, UCB, GLIE
 @card w1
 I: modelbased
 Q: What is the difference between model-based and model-free RL? Give two algorithms of each.
+P: **Model-based** is like a chess player who imagines moves in their head before playing. They have a mental model of what will happen. **Model-free** is like learning to ride a bike. You never compute physics, you just try, fall, and adjust.
+Model-based learns faster from less real experience but can be wrong if the mental model is wrong. Model-free needs more practice but never gets fooled by a bad model.
 A: A **model** predicts how the environment responds: $P(s'\mid s,a)$ and $R(s,a)$.
 - **Model-based** methods use a model to plan. Examples: policy iteration, value iteration (DP), MCTS, AlphaZero.
 - **Model-free** methods learn values or policies directly from experience. Examples: Monte Carlo control, SARSA, Q-learning, DQN, REINFORCE, PPO.
@@ -62,6 +73,8 @@ K: model, model-based, model-free, planning
 @card w1
 I: termtrunc
 Q: In Gymnasium, what does step() return, and why does the difference between terminated and truncated matter for learning?
+P: Every time you press a button in the game, Gymnasium tells you five things: what the new screen looks like, how many points you got, whether the game really ended (**terminated**), whether it was just cut off by a timer (**truncated**), and some extra info.
+The difference matters. If you fell off a cliff, the future really is worth zero. If the timer simply ran out, the future still had value, you were just stopped. Mixing these up teaches the agent that running out of time is as bad as dying.
 A: `observation, reward, terminated, truncated, info = env.step(action)`.
 - **terminated**: a true terminal state (fell in the hole, reached the goal). The value of the next state is zero, so the target is just $r$.
 - **truncated**: the episode was cut off, for example by a time limit. The next state still has value, so you should still bootstrap: target $r + \gamma V(s')$.
@@ -71,6 +84,8 @@ K: Gymnasium, terminated, truncated, bootstrapping
 @card w2
 I: rewardhack
 Q: What is the reward hypothesis, and give a good and a bad reward design.
+P: The **reward hypothesis** says any goal can be turned into a single score to maximise. Like a school grade standing in for "learned the subject".
+The catch is that agents chase the score, not your intention. Reward a student only for pages written and you get long, useless essays. Reward the robot for each small step and it repeats the easy step forever instead of finishing the job.
 A: The **reward hypothesis**: every goal can be described as maximising the expected cumulative scalar reward.
 Good: a soccer robot gets positive reward for moving the ball towards the goal and negative reward for falling.
 Bad: rewarding a pizza robot +1 for each sub-step but only +10 for a packed pizza can make it farm the easy sub-steps. The agent optimises exactly what you reward, not what you meant.
@@ -79,6 +94,8 @@ K: reward hypothesis, reward design, reward hacking
 @card w2
 I: sparse
 Q: What is the problem of sparse rewards and how can it be tackled?
+P: Imagine searching for a light switch in a huge dark house where the only feedback is the light turning on. You might wander for hours without any hint. That is a **sparse reward**.
+Fixes are like adding hints: a hot and cold game that tells you when you are getting closer (**reward shaping**), starting the search near the switch first (**curriculum**), or rewarding curiosity about rooms you have not seen yet.
 A: **Sparse reward** means feedback arrives rarely, for example only at the end of a long episode. Random exploration almost never reaches the reward, so there is nothing to learn from and credit assignment is very hard. Montezuma's Revenge (DQN scored near 0) and Freeway for MCTS are the classic examples.
 Remedies: reward shaping with intermediate rewards (careful, it can be gamed), demonstrations or imitation learning, inverse RL, hierarchical RL with options, better exploration such as UCB style bonuses, and model-based planning.
 K: sparse reward, credit assignment, reward shaping, hierarchical RL
@@ -86,6 +103,8 @@ K: sparse reward, credit assignment, reward shaping, hierarchical RL
 @card w2
 I: history
 Q: What is the difference between history, environment state, agent state and a Markov state?
+P: The **history** is the full diary of everything you have seen and done. The **environment state** is the full truth about the world, which you usually cannot see, like the cards in other players' hands.
+The **agent state** is your own summary, the notes you keep from the diary. A **Markov state** is a summary good enough that reading the old diary would not help you predict anything better. In chess, the current board is Markov. You do not need to know how the pieces got there.
 A: - **History** $H_t$: everything observed so far: observations, actions, rewards.
 - **Environment state**: the environment's private representation used to produce the next observation and reward. Usually invisible to the agent.
 - **Agent state** $S^a_t = f(H_t)$: what the agent uses to choose actions.
@@ -96,6 +115,8 @@ K: history, agent state, environment state, Markov state
 @card w2
 I: belief
 Q: What is a POMDP? Give examples and how an agent handles it.
+P: A **POMDP** is playing poker. You cannot see the other hands, only clues like how people bet. You never know the true state, only what you can observe.
+So the agent keeps a **belief**, a best guess with probabilities, like "I think there is a 70 percent chance they are bluffing". A robot in fog or a doctor guessing a disease from symptoms are the same kind of problem.
 A: A **Partially Observable MDP**: the agent only sees observations that do not reveal the full state, so agent state is not equal to environment state.
 Examples: a soccer robot with a camera does not know its exact position, a trading agent sees only the price, a card player cannot see opponents' cards, a robot with noisy sensors.
 The agent builds its own state using the full history, a **belief state** (a probability distribution over true states) or a recurrent neural network. Stochastic policies also help with aliased observations.
@@ -104,6 +125,8 @@ K: POMDP, partial observability, belief state, aliasing
 @card w2
 I: egreedy
 Q: What is a multi-armed bandit and how is it different from a full RL problem?
+P: A row of slot machines (the "one-armed bandits"), each paying out at a different hidden rate. You have a fixed number of coins and want to win the most. You learn which machine is best by playing.
+It is the simplest RL problem because nothing you do changes the situation. Pulling a lever now does not move you to a new room. Full RL adds states, where your choice changes what you face next.
 A: A **bandit** is RL with a single state: pick one of $k$ arms, get an immediate reward from an unknown distribution, repeat. Goal: maximise total reward.
 Differences: actions do not change future situations, there are no delayed rewards, and there is no state transition. Only the exploration exploitation dilemma remains.
 Uses: A/B testing ads, clinical trial design, news personalisation, recommender systems.
@@ -113,6 +136,8 @@ K: multi-armed bandit, contextual bandit, exploration
 @card w2
 I: egreedy
 Q: Explain epsilon-greedy precisely. What happens with epsilon = 0 and epsilon = 1?
+P: **Epsilon-greedy** is a coin flip before every choice. Most of the time (probability $1-\varepsilon$) you pick what looks best. Once in a while (probability $\varepsilon$) you pick something at random, just to check.
+With $\varepsilon = 0$ you never check, so you can get stuck with a wrong favourite forever. With $\varepsilon = 1$ you always pick randomly and never use what you learned.
 A: With probability $\varepsilon$ choose an action **uniformly at random** (explore). With probability $1-\varepsilon$ choose $\arg\max_a Q(a)$ (exploit). After each reward update $Q(A) \leftarrow Q(A) + \frac{1}{N(A)}(R - Q(A))$.
 - $\varepsilon = 0$: pure greedy. Can get stuck on a suboptimal arm forever.
 - $\varepsilon = 1$: pure random. Learns estimates but never uses them.
@@ -123,6 +148,8 @@ K: epsilon-greedy, exploration, greedy, incremental update
 @card w2
 I: ucb
 Q: Explain UCB. Why is it often better than epsilon-greedy?
+P: **UCB** is "optimism under uncertainty". Picture rating restaurants. A place you visited once with one good meal could be great or average, you are unsure. UCB gives that place a bonus for being uncertain and tries it, then the bonus shrinks as you learn more.
+Epsilon-greedy explores blindly, even trying places it already knows are bad. UCB explores where it is actually unsure, so it wastes fewer tries.
 A: **Upper Confidence Bound**: pick $A_t = \arg\max_a \left[ Q(a) + c\sqrt{\frac{\ln t}{N(a)}} \right]$.
 - First term: exploitation, the current estimate.
 - Second term: exploration bonus. It is large when $N(a)$ is small (uncertain arm) and grows slowly with time through $\ln t$, so neglected arms are eventually retried.
@@ -134,6 +161,8 @@ K: UCB, optimism, exploration bonus, uncertainty
 @card w2
 I: adbandit
 Q: How would you frame online advertising as a bandit?
+P: Each ad is a slot machine. Showing an ad is pulling the lever. A click is the payout.
+The website does not know which ad people like most, so it shows the popular ones most of the time but still tests the others now and then, in case tastes changed or a new ad is better.
 A: Arms: the ads. Pulling an arm: showing an ad. Reward: 1 if clicked, 0 if not (or payment amount). Each ad has an unknown click-through rate, $CTR = \text{clicks}/\text{impressions}$. Run $\varepsilon$-greedy or UCB to concentrate impressions on the best ad while still testing others. Payoff in the notes: CTR times advertiser pay.
 The AgriBot lab shows that two settings (irrigation 5 options, fertiliser 4 options) become 20 arms, one per combination.
 K: bandit, click-through rate, arms
@@ -141,6 +170,8 @@ K: bandit, click-through rate, arms
 @card w2
 I: irlhrl
 Q: What are inverse RL and hierarchical RL?
+P: **Inverse RL** works backwards. Instead of being told the score and finding the behaviour, you watch an expert and guess what score they must be chasing. Like watching a great driver and working out that they care about safety and smoothness, not just speed.
+**Hierarchical RL** breaks a big task into smaller jobs. "Make coffee" becomes "go to kitchen, boil water, pour". Each small job is learned on its own and the big plan just picks which job to do next.
 A: **Inverse RL**: given expert demonstrations, infer the **reward function** that would make that behaviour optimal. Useful when writing a reward by hand is hard, such as driving style.
 **Hierarchical RL**: split a long task into sub-tasks. **Options** are temporally extended actions, each with its own policy, an initiation set (where it can start) and a termination condition. This gives **temporal abstraction** and helps with long horizons and sparse rewards.
 K: inverse RL, hierarchical RL, options, temporal abstraction
@@ -148,6 +179,8 @@ K: inverse RL, hierarchical RL, options, temporal abstraction
 @card w3
 I: history
 Q: State the Markov property in words and in maths. Why does RL rely on it?
+P: The **Markov property** means "the present is enough". To predict tomorrow's weather from a full weather map, you do not need last month's maps. The current map already holds everything useful.
+RL relies on it because then the agent can decide based only on where it is now, instead of carrying its entire life story into every decision.
 A: Words: the future is independent of the past given the present.
 Maths: $P[S_{t+1}\mid S_t] = P[S_{t+1}\mid S_1, \dots, S_t]$.
 Why it matters: it lets values depend only on the current state, which is exactly what makes the **Bellman equation** possible. A policy can also depend only on the current state. If the property fails, values defined on states are ill-posed and bootstrapping methods like TD suffer most.
@@ -156,6 +189,8 @@ K: Markov property, Bellman equation, sufficient statistic
 @card w3
 I: mdpladder
 Q: Explain the chain Markov process, MRP, MDP. What does each add?
+P: Build it up like layers. A **Markov chain** is a board game where dice move you around, with no choices and no points. A **Markov reward process** adds points for landing on squares. A **Markov decision process** adds choices, so you pick your move and the dice still add some randomness.
+Each layer adds one thing: first randomness, then rewards, then decisions.
 A: - **Markov process (chain)** $\langle S, P\rangle$: states and transition probabilities. No reward, no actions.
 - **Markov Reward Process** $\langle S, P, R, \gamma\rangle$: adds rewards and a discount. You can now talk about returns and values, but nothing is chosen.
 - **Markov Decision Process** $\langle S, A, P, R, \gamma\rangle$: adds **actions**. Transitions and rewards now depend on the action: $P(s'\mid s,a)$, $R(s,a)$. The agent has control.
@@ -165,6 +200,8 @@ K: Markov chain, MRP, MDP, tuple
 @card w3
 I: discount
 Q: What is the return and why do we discount?
+P: The **return** is the total score from now until the end. **Discounting** means rewards later count a bit less, like money: 100 dollars today is worth more than 100 dollars in ten years.
+It also keeps the total finite when the game never ends, and it reflects that the far future is less certain. A discount close to 1 means a patient agent, close to 0 means a short-sighted one.
 A: Return $G_t = R_{t+1} + \gamma R_{t+2} + \gamma^2 R_{t+3} + \dots = \sum_{k=0}^{\infty}\gamma^k R_{t+k+1}$.
 Reasons to discount with $\gamma < 1$:
 - Keeps the sum finite in continuing tasks: $|G_t| \le R_{max}/(1-\gamma)$.
@@ -176,6 +213,8 @@ K: return, discount factor, episodic, continuing
 @card w3
 I: epcont
 Q: Episodic vs continuing tasks. Which algorithms only work for one of them?
+P: An **episodic** task has a clear finish line, like a game of chess or a maze. A **continuing** task never ends, like a thermostat running your house forever.
+Monte Carlo methods wait until the finish line to add up the score, so they cannot work if there is no finish line. TD methods learn after every step, so they work in both.
 A: **Episodic** tasks end in a terminal state (games, mazes). **Continuing** tasks run forever (temperature control, stock trading).
 - **Monte Carlo** methods need episodes to end because they wait for the full return. They cannot be used on continuing tasks.
 - **TD, SARSA, Q-learning** work in both because they update every step.
@@ -185,6 +224,8 @@ K: episodic, continuing, Monte Carlo, TD
 @card w3
 I: loop
 Q: How do you formulate a real problem as an MDP? Do one.
+P: Turning a real problem into an MDP is like writing the rules of a board game. Decide what the board shows (**states**), what moves are allowed (**actions**), how the board changes (**transitions**), and how points are scored (**rewards**).
+For a self-driving taxi: the state is location and passenger, actions are drive directions, pick up and drop off, and the reward is plus for a correct drop-off and minus for wasted time.
 A: Define the five parts and say why the state is Markov.
 Example, robot vacuum:
 - $S$: robot position, battery level, map of dirty cells.
@@ -198,6 +239,8 @@ K: MDP formulation, state, action, transition, reward, discount
 @card w3
 I: belief
 Q: What are the extensions and the limitations of MDPs?
+P: MDPs assume you can see everything, the rules never change, and there is one agent. Real life breaks these. Fog hides things (POMDP). Other drivers also learn (multi-agent). Actions can take different amounts of time (semi-MDP).
+The main limits: real state spaces are huge, the rules are usually unknown, and writing a good reward is hard.
 A: Extensions: **POMDPs** (hidden state), **finite-horizon MDPs** (fixed number of steps, deadlines), **continuous or infinite** state and action MDPs, and semi-MDPs with options.
 Limitations:
 - Assumes the Markov property.
@@ -209,6 +252,8 @@ K: POMDP, finite horizon, curse of dimensionality, limitations
 @card w4
 I: backup
 Q: Define the state-value and action-value functions and explain the intuitive difference.
+P: The **state value** $v$ answers "how good is it to be here?" Like how good a chess position is overall. The **action value** $q$ answers "how good is it to make this specific move from here?"
+$v$ rates the place, $q$ rates each option at that place. If you know $q$, picking the best move is easy: choose the highest one.
 A: $v_\pi(s) = \mathbb{E}_\pi[G_t \mid S_t = s]$: how good it is to **be** in $s$ if you then follow $\pi$.
 $q_\pi(s,a) = \mathbb{E}_\pi[G_t \mid S_t = s, A_t = a]$: how good it is to **take action** $a$ in $s$, then follow $\pi$.
 $q$ is more granular because it ranks actions. That is exactly what you need to improve a policy without a model, since $\pi'(s) = \arg\max_a q(s,a)$ needs no transition probabilities.
@@ -218,6 +263,8 @@ K: state-value function, action-value function, expected return
 @card w4
 I: backup
 Q: State the Bellman expectation equation and explain each symbol.
+P: The **Bellman equation** says: the value of where you are now equals the reward you get next plus the discounted value of where you land, averaged over what might happen.
+Like valuing a house as next year's rent plus what the house will be worth next year. You break a long future into "one step, then the rest".
 A: $$v_\pi(s) = \sum_a \pi(a\mid s) \sum_{s',r} p(s',r\mid s,a)\,[\,r + \gamma v_\pi(s')\,]$$
 - $\pi(a\mid s)$: probability the policy picks $a$.
 - $p(s',r\mid s,a)$: probability the environment moves to $s'$ with reward $r$.
@@ -229,6 +276,8 @@ K: Bellman expectation equation, policy, transition probability, recursion
 @card w4
 I: backup
 Q: How are v and q related? Write both one-step lookaheads.
+P: $v$ and $q$ point at each other. The value of a place is the average of the values of the moves your policy would make there. The value of a move is the reward it gives plus the value of the place it takes you.
+Like a restaurant's rating being the average of its dishes, and each dish's rating depending on how you feel afterwards.
 A: State to action: $v_\pi(s) = \sum_a \pi(a\mid s)\, q_\pi(s,a)$. Average the action values using the policy.
 Action to state: $q_\pi(s,a) = R(s,a) + \gamma \sum_{s'} P(s'\mid s,a)\, v_\pi(s')$. Immediate reward plus discounted expected next value.
 Substitute one into the other to get each equation in terms of itself. The optimal versions replace the policy average with a max: $v_*(s) = \max_a q_*(s,a)$.
@@ -237,6 +286,8 @@ K: v-q relationship, lookahead, backup diagram
 @card w4
 I: backup
 Q: What is the Bellman optimality equation and why can't you solve it with a matrix inverse?
+P: The **optimality** version swaps "average over my usual moves" for "take the best move". It describes perfect play.
+That "take the best" (the max) makes the equation non-linear, like a fork in a road where you always pick one branch. A matrix inverse only solves straight-line (linear) equations, so instead we solve it step by step, iterating until it settles.
 A: $$v_*(s) = \max_a \sum_{s',r} p(s',r\mid s,a)[r + \gamma v_*(s')]$$
 $$q_*(s,a) = \sum_{s',r} p(s',r\mid s,a)[r + \gamma \max_{a'} q_*(s',a')]$$
 The **max** makes it **non-linear**, so there is no closed-form $(I-\gamma P)^{-1}$ solution. You solve it iteratively: value iteration, policy iteration, Q-learning, SARSA.
@@ -246,6 +297,8 @@ K: Bellman optimality equation, non-linear, max operator, iterative methods
 @card w4
 I: grid4
 Q: What is an optimal policy? Is it unique? Does a deterministic one always exist?
+P: An **optimal policy** is a strategy that does at least as well as any other strategy from every starting point.
+There can be several, like two equally fast routes to work, but they all share the same best values. And there is always at least one that never needs to flip a coin: in every situation it just picks one best move.
 A: $\pi_*$ is optimal if $v_{\pi_*}(s) \ge v_\pi(s)$ for **every** state and every policy $\pi$.
 - For any finite MDP an optimal policy exists, and all optimal policies share the same $v_*$ and $q_*$.
 - It need not be unique: ties between equally good actions give several optimal policies.
@@ -256,6 +309,8 @@ K: optimal policy, deterministic policy, existence, uniqueness
 @card w4
 I: taxichain
 Q: How do you solve the Bellman equation for an MRP directly, and when is that a bad idea?
+P: For a small problem with no choices, you can solve all the values at once like a set of simultaneous equations from school, with one matrix inversion.
+It becomes a bad idea for big problems, because the work grows with the cube of the number of states. A thousand times more states means a billion times more work.
 A: Matrix form $\mathbf v = \mathbf R + \gamma P \mathbf v$, so $\mathbf v = (I - \gamma P)^{-1}\mathbf R$.
 Cost is $O(n^3)$ for $n$ states. Fine for a few hundred states, impossible for millions. Then use iterative methods: DP, Monte Carlo, TD.
 It also needs the model $P$ and $R$, which model-free settings do not have.
@@ -264,6 +319,8 @@ K: matrix form, direct solution, complexity
 @card w5
 I: backup
 Q: What is dynamic programming in RL, and what two properties make it work?
+P: **Dynamic programming** is solving a big problem by reusing answers to smaller ones, like working out the fastest route home by first knowing the fastest route from each neighbouring street.
+It needs two things. The problem must split into smaller copies of itself (**optimal substructure**), and the small answers must get reused many times (**overlapping subproblems**). The Bellman equation gives both. And DP needs the full rules of the game.
 A: **DP** computes optimal policies **given a perfect model** of the MDP, by turning the Bellman equations into update rules.
 - **Optimal substructure**: the optimal value of a state is built from optimal values of its successors (Bellman equation).
 - **Overlapping sub-problems**: the same states are reached by many paths, so their values are computed once and reused. The value function is the cache.
@@ -273,6 +330,8 @@ K: dynamic programming, optimal substructure, overlapping sub-problems, perfect 
 @card w5
 I: pivi
 Q: Prediction vs control. Which DP algorithm solves which?
+P: **Prediction** asks "how good is this strategy?", like grading a fixed game plan. **Control** asks "what is the best strategy?", like finding the winning plan.
+Policy evaluation does prediction. Policy iteration and value iteration do control.
 A: **Prediction**: given $\pi$, find $v_\pi$. Solved by **iterative policy evaluation**.
 **Control**: find $\pi_*$ and $v_*$. Solved by **policy iteration** or **value iteration**.
 The same split appears later: MC prediction vs MC control, TD(0) vs SARSA and Q-learning.
@@ -281,6 +340,8 @@ K: prediction, control, policy evaluation, policy iteration, value iteration
 @card w5
 I: grid4
 Q: Walk through iterative policy evaluation, including the stopping rule.
+P: **Iterative policy evaluation** is like gossip spreading through a town. Start with every state's value at zero. Each round, every state updates its value from its neighbours' values plus the reward. After many rounds the values settle.
+You stop when a full round changes nothing by more than a tiny amount, the threshold you chose.
 A: 1. Initialise $V(s)$ arbitrarily, terminal states at 0.
 2. Sweep over all states: $V(s) \leftarrow \sum_a \pi(a\mid s)\sum_{s',r} p(s',r\mid s,a)[r + \gamma V(s')]$.
 3. Track $\Delta = \max_s |v_{old} - V(s)|$.
@@ -292,6 +353,8 @@ K: policy evaluation, sweep, convergence threshold, gridworld
 @card w5
 I: grid4
 Q: Explain policy improvement and the policy improvement theorem.
+P: **Policy improvement** means: once you know how good each move is, switch to the best move in every state. Like a delivery driver who, after a week of timing routes, always takes the fastest street at each corner.
+The **policy improvement theorem** guarantees that doing this never makes things worse. You either improve or you are already optimal.
 A: Given $v_\pi$, build $\pi'(s) = \arg\max_a q_\pi(s,a)$ (greedy).
 **Theorem**: if $q_\pi(s,\pi'(s)) \ge v_\pi(s)$ for all $s$, then $v_{\pi'}(s) \ge v_\pi(s)$ for all $s$. Intuition: taking a better action once and then following $\pi$ is better, so taking it every time is at least as good.
 If greedy improvement changes nothing, then $v_\pi$ satisfies the Bellman optimality equation, so $\pi$ is already optimal. That is the stopping condition.
@@ -300,6 +363,8 @@ K: policy improvement, greedy, policy improvement theorem
 @card w5
 I: pivi
 Q: Compare policy iteration and value iteration.
+P: **Policy iteration** is "fully grade the plan, then improve it, repeat". Few rounds, but each one is slow.
+**Value iteration** is "do one quick grading pass and improve at the same time, repeat". Many cheap rounds. Both reach the same best answer, like taking a few long strides or many short steps to the same place.
 A: **Policy iteration**: evaluate the policy fully (many sweeps), then improve greedily. Repeat until the policy is stable. Few outer iterations, each expensive. Converges in a finite number of iterations because there are finitely many deterministic policies and each step strictly improves until optimal.
 **Value iteration**: one sweep of the **Bellman optimality** backup $V(s) \leftarrow \max_a \sum p[r + \gamma V(s')]$, repeated until $V$ converges, then extract the greedy policy. Each iteration cheap, many iterations.
 Value iteration is policy iteration with evaluation truncated to one sweep. Both are special cases of **GPI** and give the same optimal answer.
@@ -308,6 +373,8 @@ K: policy iteration, value iteration, GPI, Bellman optimality
 @card w5
 I: gpi
 Q: What is generalised policy iteration (GPI) and why is it the most important idea in the course?
+P: **GPI** is the dance between two partners. One partner (evaluation) asks "how good is my current plan?". The other (improvement) says "then let us change the plan to do better". They keep going until neither has anything to change.
+Almost every RL method in the course is this same dance with different steps: DP, Monte Carlo, TD, SARSA, Q-learning and actor-critic.
 A: **GPI** is the pattern of two interacting processes: **evaluation** (make the value function match the policy) and **improvement** (make the policy greedy with respect to the value function). They compete locally but converge together to $v_*$ and $\pi_*$, since the only stable point is where the policy is greedy on its own value, which is the Bellman optimality equation.
 Nearly every method is GPI with a different evaluation step: DP (full model backups), MC control (sample returns), SARSA and Q-learning (TD), actor-critic (critic evaluates, actor improves).
 K: GPI, evaluation, improvement, unifying framework
@@ -315,6 +382,7 @@ K: GPI, evaluation, improvement, unifying framework
 @card w5
 I: asyncdp
 Q: Synchronous vs asynchronous DP: what is the difference, and why use asynchronous?
+P: Synchronous is like a class where everyone hands in their test, the teacher marks them all, and only then are the grades updated. Asynchronous is like the teacher updating each grade the moment one paper is marked, so the next student's result can already use it.
 A: **Synchronous DP.** All states are updated at the same time, using the values from the previous iteration.
 $$V_{k+1}(s) = R(s) + \gamma \sum_{s'} P(s'\mid s)\,V_k(s')$$
 You compute the new value of every state, store them separately, then replace the old table once all updates are finished. Pro: easy to understand and analyse.
@@ -334,6 +402,8 @@ K: asynchronous DP, in-place updates, prioritised sweeping
 @card w5
 I: curse
 Q: Is DP efficient? What is its real limitation?
+P: DP is efficient compared with blindly trying every possible strategy, which would take forever. The real problem is that the number of states explodes. Add one more thing to track and the table can multiply by ten.
+It also needs the full rules of the world, which you rarely have in real life.
 A: In a formal sense yes. DP is **polynomial** in the number of states and actions, while searching every deterministic policy costs $|A|^{|S|}$. It also scales better than linear programming.
 The real problem is the **curse of dimensionality**: the number of states grows exponentially with the number of state variables, plus DP needs a **perfect model**. MC and TD remove the model requirement, function approximation tackles the size.
 K: polynomial time, curse of dimensionality, perfect model
@@ -341,6 +411,8 @@ K: polynomial time, curse of dimensionality, perfect model
 @card w5
 I: gambler
 Q: Briefly describe Jack's Car Rental and the Gambler's Problem. What do they show?
+P: **Jack's Car Rental** is a business owner deciding how many cars to move between two shops overnight so that neither runs out. **Gambler's Problem** is deciding how much to bet on each coin flip to reach 100 dollars.
+Both show that DP finds strategies a human would never guess, like "bet everything at 50 but only 1 dollar at 51", as long as you know the rules exactly.
 A: **Jack's Car Rental** (policy iteration): two locations, Poisson rentals and returns, move up to 5 cars overnight at 2 per car, earn 10 per rental. Policy iteration goes from "never move cars" to the optimal policy in about four improvements.
 **Gambler's Problem** (value iteration): capital 1 to 99, bet on coin flips with heads probability 0.4, reward +1 only on reaching 100. The optimal betting policy is jagged and non-obvious (bet everything at 50, not at 51).
 They show DP finds optimal policies that intuition would miss, provided you know the model.

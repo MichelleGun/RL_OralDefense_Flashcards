@@ -1,6 +1,8 @@
 @card w6
 I: unified
 Q: What are Monte Carlo methods in RL and what are their requirements?
+P: **Monte Carlo** means learning from complete experiences. Play a whole game, see the final score, then credit every move you made with that score. Do it many times and average.
+Like judging a hiking trail by walking it to the end many times and noting how long it took. It needs no map of the world, but every trip must have an end.
 A: **Monte Carlo** methods estimate values by **averaging complete sampled returns** from experience. By the law of large numbers the average converges to the expected return.
 Requirements and properties:
 - **Model-free**: needs only experience or a simulator, no $P$ or $R$.
@@ -13,6 +15,8 @@ K: Monte Carlo, sample average, model-free, episodic, no bootstrapping
 @card w6
 I: fvev
 Q: First-visit vs every-visit MC. Do the numeric example.
+P: Say you walk past the same café twice on one trip. **First-visit** only counts the first time you passed it when averaging how good that café spot is. **Every-visit** counts both times.
+Both end up with the right answer given enough trips. First-visit is the textbook default because its samples are independent of each other.
 A: Episode A, B, A, C, terminal with rewards 1, 2, 1, 5 and $\gamma=1$. Returns: from first A $G=9$, from B $G=8$, from second A $G=6$, from C $G=5$.
 - **First-visit**: only the first visit to each state counts. $V(A)=9$, $V(B)=8$, $V(C)=5$.
 - **Every-visit**: every visit counts. $V(A) = (9+6)/2 = 7.5$, $V(B)=8$, $V(C)=5$.
@@ -22,6 +26,8 @@ K: first-visit MC, every-visit MC, returns, bias
 @card w6
 I: qvsv
 Q: Why does Monte Carlo control estimate Q instead of V?
+P: Knowing how good a room is ($V$) does not tell you which door to take, unless you have a map that says where each door leads. Monte Carlo has no map.
+Knowing how good each door is ($Q$) lets you just pick the best door. No map needed. So model-free control learns $Q$.
 A: Without a model, $V$ is not enough to act. Greedy improvement from $V$ needs $\pi'(s)=\arg\max_a [R(s,a) + \gamma\sum_{s'}P(s'\mid s,a)V(s')]$, which uses $P$ and $R$.
 With $Q$, improvement is just $\pi'(s) = \arg\max_a Q(s,a)$, which is model-free. So every model-free control method (MC control, SARSA, Q-learning, DQN) learns action values.
 K: action values, model-free control, greedy improvement
@@ -29,6 +35,8 @@ K: action values, model-free control, greedy improvement
 @card w6
 I: egreedy
 Q: What is the exploration problem in MC control, and what are exploring starts and soft policies?
+P: If you always take the door that looks best, you never learn about the other doors. That is the exploration problem.
+**Exploring starts** is like being dropped into a random room and forced to take a random first door, so every option gets tried. A **soft policy** keeps a small chance of trying any door, like epsilon-greedy.
 A: If the policy is deterministic you only ever see one action per state, so you cannot compare actions.
 - **Exploring starts**: every episode begins at a random state-action pair with non-zero probability for each. Guarantees coverage, but unrealistic with real systems (you cannot start a real robot in any state you like).
 - **Soft policies**: keep $\pi(a\mid s)>0$ for all actions, for example $\varepsilon$-greedy. On-policy MC control with $\varepsilon$-soft policies converges to the best $\varepsilon$-soft policy, not the truly optimal one, unless $\varepsilon$ decays.
@@ -37,6 +45,8 @@ K: exploring starts, soft policy, epsilon-soft, coverage
 @card w6
 I: glie
 Q: What is GLIE and why do we need it?
+P: **GLIE** is a training plan for a new employee. At first they try everything, but over time they settle on the best way of working. Two rules: never completely stop trying every option (so nothing is missed), and become fully focused on the best option in the end.
+Turning down exploration slowly, like $\varepsilon = 1/k$, does both.
 A: **Greedy in the Limit with Infinite Exploration**:
 1. Every state-action pair is visited infinitely often.
 2. The policy converges to greedy.
@@ -46,6 +56,8 @@ K: GLIE, decaying epsilon, convergence
 @card w6
 I: onoff
 Q: On-policy vs off-policy. Explain with target and behaviour policies.
+P: **On-policy** is learning to drive by driving yourself, and you learn about the way you drive. **Off-policy** is learning to drive well by watching someone else's driving, maybe a learner driver, and working out what the best driver would do.
+The **behaviour policy** is the one making the moves. The **target policy** is the one you are learning about. On-policy means they are the same.
 A: **Target policy** $\pi$: the policy you want to learn about. **Behaviour policy** $b$: the policy that actually generates the data.
 - **On-policy**: $\pi = b$. You learn about the exploratory policy you are running (SARSA, MC control with $\varepsilon$-greedy).
 - **Off-policy**: $\pi \neq b$. You learn about, say, the greedy policy while acting exploratorily, or learn from someone else's data (Q-learning, off-policy MC with importance sampling, DQN).
@@ -56,6 +68,8 @@ K: on-policy, off-policy, target policy, behaviour policy, coverage
 @card w6
 I: isratio
 Q: What is importance sampling and why is it needed for off-policy MC?
+P: You want to know how a careful driver would do, but your data comes from a reckless one. **Importance sampling** re-weights each recorded trip by how likely the careful driver would have been to make the same moves.
+Trips the careful driver would also have taken count more, trips it would never take count less or zero. The catch: the weights can swing wildly and make estimates noisy.
 A: Returns collected under $b$ have expectation $v_b$, not $v_\pi$. Re-weight each return by how much more likely the trajectory is under $\pi$:
 $$\rho_{t:T-1} = \prod_{k=t}^{T-1}\frac{\pi(A_k\mid S_k)}{b(A_k\mid S_k)}$$
 The environment's transition probabilities cancel, so the ratio needs no model.
@@ -67,6 +81,8 @@ K: importance sampling, ratio, ordinary IS, weighted IS, variance
 @card w6
 I: unified
 Q: Compare Monte Carlo and Dynamic Programming.
+P: **DP** is planning with a perfect map without leaving the house. It looks at every possible next step and needs to know the rules.
+**Monte Carlo** is going out and walking the routes. No map needed, but you must finish each walk before you learn anything. DP updates from guesses of neighbours, MC updates from real finished trips.
 A: Side by side:
 - Model needed: DP yes, MC no.
 - Bootstraps: DP yes, MC no.
@@ -79,6 +95,8 @@ K: MC vs DP, bootstrapping, full backup, sample backup
 @card w7
 I: drive
 Q: What is TD learning? Write TD(0) and name its parts.
+P: **TD learning** updates your guess after every single step, using your next guess. Like a weather forecast: you do not wait for Saturday to fix Monday's forecast for Saturday. On Tuesday you already adjust it using Tuesday's forecast.
+The **TD error** is the surprise: what you got plus your new guess, minus what you expected.
 A: **TD learning** is model-free like MC but **bootstraps** like DP: it updates after every step using its current estimate of the next state.
 $$V(S_t) \leftarrow V(S_t) + \alpha\,[\,\underbrace{R_{t+1} + \gamma V(S_{t+1})}_{\text{TD target}} - V(S_t)\,]$$
 - **TD target**: $R_{t+1} + \gamma V(S_{t+1})$.
@@ -90,6 +108,8 @@ K: TD learning, TD(0), TD target, TD error, bootstrapping
 @card w7
 I: dart
 Q: Explain the bias variance trade-off between MC and TD.
+P: Monte Carlo is like asking one person to walk the full route and report the total time. Honest (no bias), but one walk can be unusually fast or slow (high variance).
+TD is like asking at each corner "how long from here?" and trusting that answer. Less noisy, but if the people at the corners are wrong, you inherit their mistake (bias).
 A: - MC target $G_t$ is an **unbiased** sample of $v_\pi(S_t)$ but has **high variance**, because it sums many random actions, transitions and rewards.
 - TD target $R_{t+1}+\gamma V(S_{t+1})$ is **biased** because $V(S_{t+1})$ is only an estimate, but has **low variance** because it depends on one random step.
 Consequences: TD usually learns faster in Markov environments and is more sensitive to initial values. MC is more robust when the Markov property fails. n-step and $\lambda$-returns sit in between.
@@ -98,6 +118,8 @@ K: bias, variance, MC, TD, n-step
 @card w7
 I: drive
 Q: Explain the driving home example.
+P: You are driving home and estimate 30 minutes. Then it starts raining and you think "this will take longer". **TD** updates your estimate right then, at each landmark.
+**Monte Carlo** waits until you arrive home and only then compares your original guess with the real total. TD learns during the trip, MC learns after it.
 A: You predict travel time while driving: leave office (30 min predicted), reach car in rain (40), exit highway (35), stuck behind a truck (40), home street (43), arrive (43).
 - **MC** waits until you arrive, then pulls every earlier prediction towards the final 43.
 - **TD** adjusts each prediction immediately towards the next prediction. When it starts raining you revise at once instead of waiting.
@@ -107,6 +129,8 @@ K: driving home, MC vs TD, online learning
 @card w7
 I: ab
 Q: The AB example: why do MC and TD give different answers from the same data?
+P: Same data, different philosophy. Monte Carlo only trusts the real totals it saw. TD trusts its own connections between states and fills gaps by linking what it knows.
+Like two detectives with the same evidence. One sticks only to direct witness reports. The other builds a chain of logic. With little data they disagree, and TD's chain often generalises better.
 A: Eight episodes: A,0,B,0 once, B,1 six times, B,0 once. Everyone agrees $V(B) = 6/8 = 0.75$.
 - **MC**: $V(A) = 0$, because the only episode through A returned 0. It minimises error on the observed returns.
 - **TD**: $V(A) = 0 + V(B) = 0.75$. It assumes Markov structure: A always went to B, and B is worth 0.75.
@@ -116,6 +140,8 @@ K: AB example, certainty equivalence, batch TD, maximum likelihood
 @card w7
 I: sarsaq
 Q: Write the SARSA update. Why is it on-policy? Where does the name come from?
+P: **SARSA** learns from what it actually did next. It uses State, Action, Reward, next State, next Action, which spells the name.
+It is **on-policy** because it learns the value of its own habits, including its occasional random moves. Like a cautious driver who knows they sometimes swerve and so stays away from the edge.
 A: $$Q(S_t,A_t) \leftarrow Q(S_t,A_t) + \alpha[R_{t+1} + \gamma Q(S_{t+1},A_{t+1}) - Q(S_t,A_t)]$$
 The name is the quintuple $(S_t, A_t, R_{t+1}, S_{t+1}, A_{t+1})$.
 It is **on-policy** because $A_{t+1}$ is the action the agent actually takes next with its $\varepsilon$-greedy policy, and that same action is then executed. It evaluates and improves the policy it follows, exploration included.
@@ -125,6 +151,8 @@ K: SARSA, on-policy, quintuple, TD control
 @card w7
 I: sarsaq
 Q: Write the Q-learning update. Why is it off-policy?
+P: **Q-learning** learns from the best possible next move, not the move it actually made. Even while exploring randomly, it imagines "if I played perfectly from here".
+That is why it is **off-policy**: the behaviour can be messy, but what it learns is the value of the perfect strategy.
 A: $$Q(S_t,A_t) \leftarrow Q(S_t,A_t) + \alpha[R_{t+1} + \gamma \max_a Q(S_{t+1},a) - Q(S_t,A_t)]$$
 It bootstraps from the **best** next action, not the one actually taken. So it learns $q_*$ (the value of the greedy target policy) whatever exploratory behaviour policy generated the data, as long as all pairs keep being visited.
 Same numbers as SARSA but next-state values 8, 11, 5: target $2 + 0.9 \times 11 = 11.9$, new $Q = 10 + 0.5(1.9) = 10.95$. One substitution, max instead of the taken action, is the entire difference.
@@ -133,6 +161,8 @@ K: Q-learning, off-policy, max operator, q-star
 @card w7
 I: onoff
 Q: Oral defense favourite: where is the hidden policy in Q-learning?
+P: The hidden policy is the "max". When Q-learning updates, it asks "what is the best next move?". Taking the best move is a policy, the **greedy policy**, even though no one wrote it down.
+So Q-learning secretly learns about the greedy strategy while it behaves with an epsilon-greedy one.
 A: There are two policies and neither is stored as a table:
 - **Behaviour policy**: $\varepsilon$-greedy with respect to $Q$. This is what actually moves the agent and collects data.
 - **Target policy**: greedy with respect to $Q$. It is hidden inside the $\max_a Q(S_{t+1},a)$ term of the update, because the max is exactly the value of acting greedily from $S_{t+1}$.
@@ -142,6 +172,8 @@ K: Q-learning, hidden policy, target policy, behaviour policy, greedy
 @card w7
 I: cliff
 Q: Cliff walking: what do SARSA and Q-learning learn, and why?
+P: Picture a path along a cliff edge. **Q-learning** learns the shortest route right along the edge, because it assumes it will play perfectly. But while exploring, it sometimes slips and falls.
+**SARSA** knows it slips sometimes, so it learns a safer route further from the edge. Q-learning finds the best route for a perfect player, SARSA the best route for the player it actually is.
 A: Reward -1 per step, -100 and back to start if you step into the cliff.
 - **Q-learning** learns the **optimal path** right along the cliff edge, because its target assumes greedy behaviour. But with $\varepsilon$-greedy exploration it occasionally falls off, so its **online reward during training is worse**.
 - **SARSA** learns the **safer path** further from the edge, because its values include the risk of its own random exploratory steps.
@@ -151,6 +183,8 @@ K: cliff walking, SARSA, Q-learning, safe exploration
 @card w7
 I: sarsaq
 Q: What is Expected SARSA and how does it relate to SARSA and Q-learning?
+P: **Expected SARSA** does not use the single next move you took. It uses the average over all the moves you might take, weighted by how likely each one is.
+Less luck involved, so it is steadier. If your policy is fully greedy, the average becomes the max, and it turns into Q-learning.
 A: Target: $R_{t+1} + \gamma \sum_a \pi(a\mid S_{t+1}) Q(S_{t+1},a)$, the expectation over the next action instead of a sample.
 - Removes the variance of sampling $A_{t+1}$, so it is more stable, especially at large $\alpha$.
 - More computation per step.
@@ -160,6 +194,8 @@ K: Expected SARSA, variance reduction, generalisation of Q-learning
 @card w7
 I: maxbias
 Q: What is maximisation bias and how does Double Q-learning fix it?
+P: If you taste ten dishes that are all equally average and pick the one that tasted best today, you will overrate it. Luck made it seem better. That is **maximisation bias**.
+**Double Q-learning** uses two separate taste testers. One picks the best-looking dish, the other gives the honest score for it. Their luck does not line up, so the overrating disappears.
 A: If several actions have true value 0 but noisy estimates, $\max_a Q(s,a)$ will usually be positive, because the max picks whichever estimate happens to be too high. Q-learning uses that max in its target, so it **overestimates**.
 **Double Q-learning** keeps $Q_1$ and $Q_2$. With probability 0.5:
 $$Q_1(S,A) \leftarrow Q_1 + \alpha[R + \gamma Q_2(S', \arg\max_a Q_1(S',a)) - Q_1(S,A)]$$
@@ -170,6 +206,8 @@ K: maximisation bias, overestimation, Double Q-learning, Double DQN
 I: unified
 I: spectrum
 Q: Unify DP, MC and TD. What are the two axes?
+P: Two questions sort them. Do you look one step ahead or all the way to the end? (**depth**: TD and DP short, MC long). Do you consider every possible outcome or just one that happened? (**width**: DP every outcome, TD and MC one sample).
+DP is wide and shallow, MC is narrow and deep, TD is narrow and shallow.
 A: Axis 1, **depth**: TD backs up one step, MC backs up to the end of the episode, n-step in between.
 Axis 2, **width**: sample backups (one sampled successor: MC, TD) vs full backups (all successors weighted by probability: DP, exhaustive search).
 - DP: full and shallow, needs a model.
@@ -181,12 +219,16 @@ K: unified view, backup depth, sample backup, full backup
 @card w7
 I: afterstate
 Q: What are afterstates and when are they useful?
+P: In tic-tac-toe, the position after your move is what matters, no matter which earlier position you came from. That board is an **afterstate**.
+Two different starting boards plus two different moves can land on the same afterstate. Learning a value for the afterstate means you learn both cases at once, like recognising that two recipes produce the same cake.
 A: An **afterstate** is the situation right after your own move but before the environment or opponent responds, like a tic-tac-toe board after you place your mark.
 Useful when the immediate effect of your action is known even if the rest of the dynamics is not. Different (position, move) pairs that lead to the same board share one value, so learning is faster. Also used in queuing problems.
 K: afterstate, post-decision state, tic-tac-toe
 
 @card w7
 Q: What conditions guarantee tabular Q-learning converges to q-star?
+P: For Q-learning to find the true best values, every option must keep being tried forever, so nothing is left unexplored. The learning rate must shrink over time, but not too fast, so it settles without stopping early.
+Like learning a new city: keep visiting every street now and then, and slowly trust your map more and your latest walk less.
 A: - Every state-action pair is visited infinitely often (the behaviour policy keeps exploring).
 - Step sizes satisfy the Robbins-Monro conditions $\sum_t \alpha_t = \infty$ and $\sum_t \alpha_t^2 < \infty$ (for example $\alpha_t = 1/N(s,a)$).
 - Finite MDP and bounded rewards.
@@ -196,6 +238,8 @@ K: convergence, Robbins-Monro, infinite exploration
 @card w8
 I: houseprice
 Q: Why do tabular methods fail on real problems?
+P: A table needs one box for every situation. Real problems, like the pixels of a video game or a robot's joint angles, have more situations than atoms in the universe.
+Even if you had the memory, you would never visit most boxes, and a table cannot guess that two nearly identical situations are worth about the same.
 A: - **Memory**: Backgammon about $10^{20}$ states, Go about $10^{170}$, helicopter control is continuous.
 - **Time and data**: every state must be visited many times before its entry is any good.
 - **No generalisation**: learning about one state teaches nothing about a similar one. If the state is an image you cannot even list the states.
@@ -205,6 +249,8 @@ K: tabular, curse of dimensionality, generalisation, function approximation
 @card w8
 I: vfa3
 Q: What is value function approximation and what are the three ways to set up the approximator?
+P: Replace the giant table with a formula that guesses values, like estimating a house price from its size and location instead of memorising every house sold.
+Three setups: give it a situation and get its value. Give it a situation plus a move and get that move's value. Or give it a situation and get the value of every move at once (what DQN does).
 A: Replace the table with $\hat v(s,\mathbf w) \approx v_\pi(s)$ or $\hat q(s,a,\mathbf w) \approx q_\pi(s,a)$, where the weight vector $\mathbf w$ is far smaller than the number of states. Train $\mathbf w$ with MC or TD targets using SGD.
 Three architectures:
 1. State in, $\hat v(s)$ out (prediction).
@@ -215,6 +261,8 @@ K: VFA, weights, architectures, generalisation
 @card w8
 I: houseprice
 Q: Which function approximators can you use, and how do you choose?
+P: Options go from simple to powerful: a straight-line formula on hand-picked features, tiles or bumps (tile coding, RBFs), decision trees, nearest-neighbour memory, and neural networks.
+Choose like picking a tool: simple ones are fast, stable and easy to understand. Neural networks handle raw images but are harder to train stably.
 A: - **Tables**: exact, no generalisation, do not scale.
 - **Linear in features** $\mathbf w^\top \mathbf x(s)$: strong convergence guarantees, cheap, but needs good hand-made features (tile coding, RBF, Fourier, polynomial).
 - **Neural networks / CNNs**: learn their own features from raw inputs like pixels, powerful, weakest theory.
@@ -225,6 +273,8 @@ K: function approximator, linear, neural network, tile coding, non-stationary
 @card w8
 I: vemu
 Q: What is the VE objective and why do we need a state weighting?
+P: With limited weights you cannot be perfect everywhere, so you must decide where errors matter. **VE** is the average squared error, weighted by how often you visit each state.
+Like a shop that cares most about stock accuracy for products people actually buy, and less about the dusty corner nobody visits.
 A: $\overline{VE}(\mathbf w) = \sum_s \mu(s)[v_\pi(s) - \hat v(s,\mathbf w)]^2$.
 With fewer weights than states, improving one state's estimate makes others worse, so you must decide which states matter. $\mu(s)$, the **on-policy distribution** (fraction of time spent in $s$), weights errors by how often you are actually there. Semi-gradient TD's convergence results depend on updating according to this distribution.
 K: VE, mean squared value error, on-policy distribution
@@ -232,6 +282,8 @@ K: VE, mean squared value error, on-policy distribution
 @card w8
 I: semigrad
 Q: Gradient MC vs semi-gradient TD. Why is TD only a semi-gradient?
+P: **Gradient MC** compares the guess with a real final score that does not depend on the guess. That is honest gradient descent.
+**Semi-gradient TD** compares the guess with "reward plus my own next guess". The target moves when the guess moves, but we pretend it is fixed. Like aiming at a target that shifts whenever you adjust your aim. It is faster but can wobble.
 A: General update: $\mathbf w \leftarrow \mathbf w + \alpha[U_t - \hat v(S_t,\mathbf w)]\nabla_{\mathbf w}\hat v(S_t,\mathbf w)$.
 - **Gradient MC**: $U_t = G_t$, unbiased and independent of $\mathbf w$. True SGD on VE. Converges to a local optimum (global for linear).
 - **Semi-gradient TD(0)**: $U_t = R_{t+1} + \gamma\hat v(S_{t+1},\mathbf w)$. The target depends on $\mathbf w$, but we ignore that dependence and differentiate only $\hat v(S_t,\mathbf w)$. So it is not the gradient of any fixed objective.
@@ -241,6 +293,8 @@ K: gradient MC, semi-gradient, TD target, SGD
 @card w8
 I: houseprice
 Q: Linear value function approximation: write it, its update, and its convergence result.
+P: **Linear approximation** says the value is a weighted sum of features, like a price being 3 dollars per square metre plus 50 dollars per bedroom. Learning adjusts each weight up or down by how wrong the guess was, times that feature.
+With this simple form, semi-gradient TD is guaranteed to settle near a good answer when learning from your own experience.
 A: $\hat v(s,\mathbf w) = \mathbf w^\top \mathbf x(s)$, so $\nabla_{\mathbf w}\hat v = \mathbf x(s)$ and the update is $\mathbf w \leftarrow \mathbf w + \alpha[U_t - \mathbf w^\top\mathbf x(S_t)]\,\mathbf x(S_t)$.
 Update equals step size times prediction error times feature value.
 - Gradient MC converges to the **global** optimum of VE (linear has one optimum).
@@ -252,6 +306,8 @@ K: linear FA, feature vector, TD fixed point, convergence
 I: coarse
 I: tile
 Q: Explain coarse coding and tile coding. Why is tile coding popular?
+P: **Coarse coding** covers the space with overlapping circles. A state is described by which circles it sits in, so nearby states share circles and share learning.
+**Tile coding** uses grids laid on top of each other, each slightly shifted. Like several transparent grid sheets stacked with small offsets. It is fast, simple and generalises well, so it is popular.
 A: **Coarse coding**: cover the state space with overlapping regions. A state's feature is 1 for each region it falls in. Two states generalise in proportion to the regions they share. Bigger regions generalise more broadly early on, but final resolution depends mostly on how many features you have.
 **Tile coding**: several offset grids (**tilings**). Each state activates exactly **one tile per tiling**, so the number of active features is constant. That makes step size easy to set ($\alpha = \frac{1}{10n}$ for $n$ tilings is a common start) and computation cheap (sum $n$ weights). Asymmetric offsets avoid diagonal artefacts. **Hashing** cuts memory.
 Classic use: Mountain Car with semi-gradient SARSA.
@@ -260,6 +316,8 @@ K: coarse coding, tile coding, tilings, hashing, Mountain Car
 @card w8
 I: rbf
 Q: What are polynomial, Fourier and RBF features?
+P: These are different ways to turn a state into features. **Polynomial** features are like $x$, $x^2$, $xy$. **Fourier** features use waves of different speeds. **RBF** features are soft bumps that are strongest at a centre and fade with distance.
+Like describing a song by its notes, its rhythm patterns, or how close it is to a few famous songs.
 A: - **Polynomial**: $(1, s_1, s_2, s_1 s_2, \dots)$. The constant allows an offset, the product captures interaction. Generalise poorly online at high order.
 - **Fourier basis**: $x_i(s) = \cos(\pi\,\mathbf c_i^\top \mathbf s)$. Different $\mathbf c$ give different frequencies and interactions. Use smaller step sizes for high frequencies.
 - **RBF**: $x_i(s) = \exp\left(-\frac{\lVert s - c_i\rVert^2}{2\sigma_i^2}\right)$, a smooth bump around centre $c_i$. Smooth and differentiable, but more costly than tile coding in high dimensions.
@@ -268,12 +326,16 @@ K: polynomial features, Fourier basis, RBF, feature construction
 @card w8
 I: stateagg
 Q: What is state aggregation and what does it look like?
+P: **State aggregation** puts similar states into the same bucket and gives each bucket one value. Like grading by age group instead of exact age.
+It is the simplest approximation. The values look like a staircase over the true curve.
 A: Group states, one shared weight per group. It is the simplest linear FA (a one-hot feature per group). On the 1000-state random walk with 10 groups, the estimate is a **staircase**: constant within groups, jumps between them, and the edge groups are pulled towards their most visited states because of $\mu$.
 K: state aggregation, staircase, random walk
 
 @card w8
 I: lstd
 Q: What is LSTD and when would you use it?
+P: Normal TD takes many small steps towards the answer, like walking downhill one step at a time. **LSTD** collects all the data and solves for the answer directly in one go, like reading the bottom of the valley off a map.
+It squeezes the most out of little data but each update is more expensive, so use it when data is precious and features are few.
 A: **Least-Squares TD** estimates the TD fixed point directly instead of creeping towards it: $\hat A = \sum_t \mathbf x_t(\mathbf x_t - \gamma\mathbf x_{t+1})^\top + \epsilon I$, $\hat{\mathbf b} = \sum_t R_{t+1}\mathbf x_t$, then $\mathbf w = \hat A^{-1}\hat{\mathbf b}$.
 - Most **data efficient** linear TD method, no step size needed.
 - Costs $O(d^2)$ per step with Sherman-Morrison updates of the inverse (vs $O(d)$ for TD).
@@ -283,6 +345,8 @@ K: LSTD, TD fixed point, data efficiency, Sherman-Morrison
 @card w8
 I: triad
 Q: What is the deadly triad?
+P: The **deadly triad** is three things that are each fine alone but can explode together: approximation (guessing with a formula), bootstrapping (learning from your own guesses), and off-policy data (learning about one strategy from another's behaviour).
+Like a rumour mill: copying from others, guessing to fill gaps, and hearing it second hand. Combined, errors feed on themselves.
 A: Combining all three of:
 1. **Function approximation**
 2. **Bootstrapping** (TD-style targets)
@@ -293,6 +357,8 @@ K: deadly triad, divergence, off-policy, bootstrapping, function approximation
 @card w8
 I: knn
 Q: What are memory-based and kernel-based methods?
+P: **Memory-based** methods just store experiences and look up similar ones when asked, like a doctor recalling past patients with similar symptoms.
+**Kernel** methods do the same with a smooth weighting: close cases count a lot, distant cases count a little. No fixed formula is learned in advance.
 A: **Memory-based (lazy)** methods store experiences and only compute when queried, for example nearest neighbour or a distance-weighted average of nearby stored targets. Nonparametric: the shape of the function is not fixed in advance and accuracy improves with data. They focus on visited regions and avoid exponential memory, but queries slow down as memory grows (k-d trees help).
 **Kernel regression**: $\hat v(s) = \sum_{s'\in D} k(s,s')\,g(s')$, where the kernel measures how strongly $s'$ generalises to $s$. Any linear method corresponds to the kernel $k(s,s') = \mathbf x(s)^\top\mathbf x(s')$ (kernel trick).
 K: memory-based, nonparametric, kernel, nearest neighbour
@@ -301,6 +367,8 @@ K: memory-based, nonparametric, kernel, nearest neighbour
 I: mountaincar
 I: tile
 Q: Describe Mountain Car and why it needs function approximation.
+P: A weak car sits in a valley and cannot drive straight up the hill. It must rock back and forth to build momentum, like pushing a swing higher.
+Position and speed are continuous numbers, so no table can hold every case. Tile coding lets similar positions and speeds share what is learned.
 A: An underpowered car in a valley must reach the top of the right hill. It must first reverse up the left slope to build momentum. State: position and velocity, both **continuous**. Actions: reverse, none, forward. Reward -1 per step.
 The continuous state rules out a table. Semi-gradient (n-step) SARSA with tile coding or RBF features learns the rocking strategy. The agent starts optimistic everywhere, which drives early exploration.
 K: Mountain Car, continuous state, semi-gradient SARSA, tile coding

@@ -1,6 +1,8 @@
 @card d
 I: dq_loop
 Q: Give the 60-second pitch of your project: what problem, what agent, what result.
+P: A tiny drone has to fly through a small foam ring, loop around the outside and come back through from the same side, as many times as it can in 90 seconds. It only sees through its own camera, and it has about 8 cm of room on each side.
+It learned in a simulator, first by copying a teacher and then by trial and error (PPO). In the simulator it now does about 5 laps per run. On the real drone it has not been proven yet.
 A: **Drone Quidditch.** A DJI Tello flies through a 30 cm foam ring hanging in a 2 x 2 x 2 m net cage, using **only its own front camera**, then flies round the outside and re-enters from the same side, as many times as possible in 90 s.
 - The drone is 14 cm wide, so there is about **8 cm of clearance** each side. That is the whole error budget.
 - We train in our own fast Tello simulator with **PPO** (Stable-Baselines3), started from a **DAgger** clone of a privileged teacher, with a **memory** of past frames and an **asymmetric critic**.
@@ -11,6 +13,8 @@ K: project pitch, task, laps per episode, Tello
 
 @card d
 Q: Walk me through the four stages the project went through and why each stage existed.
+P: Like learning to drive in stages: first a car park, then an empty road, then traffic. Stage 1 checked the drone could hover. Stage 2 checked it could reach a point. Stage 3 learned the ring task with perfect information about where everything is. Stage 4 learned it using only the camera, like the real drone.
+Each stage tests one thing at a time, so when something fails you know which part broke.
 A: A staged curriculum, each stage testing one risk before the next:
 1. **Hover** in PyBullet (`HoverAviary`, PPO). Sanity check of the whole pipeline. Solved at 160k steps, reward 474.1.
 2. **Reach a hoop point** in PyBullet. Taught us the action space lesson: position targets (`pid`) reached the hoop 0/20, velocity commands (`vel`) 9/20.
@@ -22,6 +26,8 @@ K: curriculum, stages, hover, PyBullet, onboard simulator
 @card d
 I: dq_loop
 Q: Walk through exactly what happens in one control tick on the real drone.
+P: Fifteen times a second the drone runs a tiny loop. Look (a camera frame), describe (turn the picture into 41 useful numbers, like "where is the ring" and "how big does it look"), decide (the network picks four stick movements), act (send them to the drone, with safety limits checking first).
+Like a driver glancing, thinking and steering many times a second.
 A: Fifteen times a second:
 1. **See.** The camera frame goes to an OpenCV ring detector (HSV colour mask, ellipse fit).
 2. **Describe.** `ObsBuilder` packs detector outputs and telemetry into **41 numbers** (37 features plus a 4-number ring tracker), normalised to roughly $[-1, 1]$. A history keeps the frames 0, 1, 2, 4, 8 and 16 ticks ago, so the actor sees **246 inputs**.
@@ -32,6 +38,8 @@ K: control loop, observation, actor, 15 Hz, deployment
 
 @card d
 Q: Why does the policy see 41 hand-made features instead of the camera image?
+P: Instead of giving the network a raw photo, a small helper program first measures the useful facts: where the ring is, how big, how round. Like giving a navigator coordinates instead of a painting.
+This trains fast on a laptop, works the same in the simulator and in real life, and is easy to debug. The cost is that the network only knows what the helper measured.
 A: Three reasons:
 - **Compute.** Everything trains on a laptop CPU with no GPU. A 2 x 64 MLP on features runs millions of steps overnight. A CNN on rendered frames would need rendering in the simulator and far more samples.
 - **Sim-to-real gap.** A pixel policy has to bridge the visual gap between rendered and real images. With features, the gap shrinks to "does the detector report the same numbers in both worlds".
@@ -41,6 +49,7 @@ K: feature engineering, pixels vs features, CNN, sim-to-real
 
 @card d
 Q: Name the most important observation fields and say why each one exists.
+P: Each number answers a question the drone needs answered. Can I see the ring? Where is it in the picture? How far is it? Am I looking at it straight on or from the side? How long since I last saw it, and how far have I pushed forward since? Which side of the ring am I on, and how many passes so far? What did I just ask the motors to do?
 A: - `found`: searching and approaching need opposite behaviour.
 - `cx, cy`: where the ring is in the picture, so which way to turn and climb.
 - `scale`, `range`: two distance cues, one raw, one computed from apparent size.
@@ -53,6 +62,8 @@ K: observation design, memory fields, aliasing
 
 @card d
 Q: Is your problem an MDP? Defend your answer.
+P: No, because the drone cannot see everything it needs. The ring looks the same from the front and back, and when it is out of view the drone cannot tell "just went through" from "have not found it yet".
+Like walking out of a room and forgetting whether you already locked the door. The fix was giving it memory, and only the versions with memory learned to loop.
 A: **No, it is a POMDP**, and that turned out to be the central difficulty.
 - The ring looks the same from the front and the back.
 - "Just went through, ring behind me" and "blind, about to search" produce the same camera features: ring not in view.
@@ -64,6 +75,8 @@ K: POMDP, partial observability, aliasing, belief state
 @card d
 I: dq_aac
 Q: Explain the ring tracker. Why is it a belief state and how accurate is it?
+P: The **ring tracker** is the drone's best guess of where the ring is when it cannot see it, like remembering where you put your keys after you turn around.
+When the ring is visible it measures the ring's position. When it is not, it updates the guess from its own movements (dead reckoning, like counting steps in the dark). In simulation the guess is within about 2 cm when visible and drifts to about 19 cm after 3 seconds blind.
 A: A **belief state** is a best guess of what the agent cannot see (Sutton and Barto 17.3). The tracker is written from geometry, not learned:
 - At each fresh detection, the ring's position in the drone frame comes from the camera: forward = range, right = $c_x \tan(35^\circ) \cdot$ range, up = $-c_y \tan(35^\circ) \cdot$ range.
 - While the ring is out of view, the estimate is moved by **dead reckoning**: telemetry yaw for turns, height for climbs, executed commands times nominal speed for forward and sideways.
@@ -75,6 +88,8 @@ K: ring tracker, belief state, dead reckoning, POMDP
 @card d
 I: dq_aac
 Q: Why a frame history with lags 0, 1, 2, 4, 8, 16 instead of an LSTM or stacking 16 frames?
+P: The drone looks at the present plus snapshots from 1, 2, 4, 8 and 16 ticks ago. Like glancing in the rear-view mirror at a few moments instead of watching a full replay.
+Spaced-out snapshots cover about a second with few inputs. An LSTM (a network with its own memory) would be more flexible but harder and slower to train.
 A: - **Why memory at all:** it makes "I just went through, the ring was ahead a moment ago" visible, so after-the-pass states stop looking like before-the-pass states.
 - **Why these lags:** log-spaced lags cover about 1 s (16 ticks at 15 Hz) with only 6 frames. Dense stacking of 16 frames would give 656 inputs with mostly redundant neighbours.
 - **Why not an LSTM:** a recurrent policy learns its own memory, but recurrent PPO needs more data, is harder to train stably and harder to export. The stack plus tracker writes the memory we already know we need.
@@ -85,6 +100,8 @@ K: frame stacking, history, LSTM, recurrent policy
 @card d
 I: dq_aac
 Q: Describe your network architecture precisely.
+P: Two small, separate brains. The **actor** takes the 246 numbers (41 facts times 6 moments) and outputs 4 stick movements plus how much random wobble to add while learning. The **critic** takes the same numbers plus 20 secret facts from the simulator and outputs one score: how good things look.
+Each brain has two layers of 64 units. Those sizes were default settings, not tuned.
 A: Stable-Baselines3 `ActorCriticPolicy` with **separate** actor and critic networks (no shared layers):
 - **Actor:** 246 inputs (41 features x 6 lags) through two hidden layers of 64 with **tanh**, then a linear layer to the 4 action means. A **diagonal Gaussian** policy with a learned, state-independent `log_std` per channel. No squashing: actions outside $[-1, 1]$ are clipped.
 - **Critic:** the same 246 inputs **plus 20 privileged simulator values** (266 in total), two layers of 64, tanh, linear to one value $V(s)$.
@@ -96,6 +113,8 @@ K: architecture, MLP, actor-critic, Gaussian policy, tanh
 @card d
 I: dq_aac
 Q: What is an asymmetric actor-critic and why is it legitimate?
+P: The **critic** is the coach and only works during training, so it may peek at secret simulator information like the true ring position. The **actor** is the player and only sees what the real drone sees.
+It is fair because on the real drone only the player flies. A coach with better information gives better feedback, so the player learns faster.
 A: The **critic** sees privileged simulator state (true ring position and similar, 20 values). The **actor** sees only what the real drone can measure.
 Why it is legitimate:
 - The critic only exists during training. It is used to compute advantages, never to choose actions, so the deployed policy needs nothing the drone lacks.
@@ -106,6 +125,8 @@ K: asymmetric critic, privileged information, variance reduction, baseline
 
 @card d
 Q: What is the action space, and why velocity sticks instead of position targets or motor speeds?
+P: The network moves four sticks, like a game controller: left and right, forward and back, up and down, and turn. The drone's own computer turns stick positions into speed.
+Motor speeds are not accepted by the real drone. Position targets made it tip over in tests. Sticks are capped at 30 percent for safety.
 A: 4 continuous numbers in $[-1, 1]$: lr, fb, ud, yaw. Each is scaled to a Tello remote-control stick value (x 30), which the Tello's own flight controller turns into velocity.
 - **Why not motor RPMs:** the real Tello does not accept them. The policy must output what the hardware accepts.
 - **Why not position targets:** in stage 2, position targets (`pid`) made the drone tip over within about 8 control steps every episode, 0/20 reached. Bounded velocity commands (`vel`) reached 9/20.
@@ -116,6 +137,8 @@ K: action space, continuous control, velocity commands, safety
 
 @card d
 Q: Why PPO? Why not SAC, TD3 or DQN?
+P: **PPO** handles continuous stick movements, is stable, and suits a cheap simulator that can run many copies at once. It was also easy to add the "copy the teacher" term.
+DQN cannot handle continuous actions. SAC would be the strongest rival and was never properly compared, so the honest claim is that PPO worked, not that it is the best.
 A: - **Continuous 4D actions:** rules out plain DQN (it needs a max over actions).
 - **Cheap parallel simulation:** our simulator runs many copies on a CPU, so sample efficiency matters less than stability. PPO's on-policy batches from 4 to 8 environments suit that.
 - **Stability:** the clipped objective plus our `target_kl` brake stopped the collapses we saw early on.
@@ -126,6 +149,11 @@ K: PPO, SAC, TD3, DQN, algorithm choice
 
 @card d
 Q: Summarise the PPO update in your own words, including your extra terms.
+P: 1. Fly many simulated runs with the current policy.
+2. For each move, work out how much better it went than the critic expected (the advantage).
+3. Make good moves more likely and bad moves less likely, but never change too much at once (the clip and the KL brake).
+4. Update the critic to predict better.
+5. Also nudge the actor towards what the teacher would do (the 0.3 imitation term).
 A: 1. Collect 2048 steps per environment with the current stochastic policy.
 2. Compute advantages with **GAE** ($\gamma = 0.99$, $\lambda = 0.95$): how much better each action turned out than the critic expected.
 3. Maximise the **clipped surrogate** $\mathbb{E}[\min(r_t A_t, \text{clip}(r_t, 0.8, 1.2) A_t)]$ with $r_t = \pi_\theta(a_t|s_t) / \pi_{old}(a_t|s_t)$, over 5 epochs of batches of 512.
@@ -137,6 +165,8 @@ K: PPO, GAE, clipped objective, target KL, DAPG
 
 @card d
 Q: Your hyperparameters: which did you choose deliberately, and what is the evidence for each?
+P: The settings that mattered were chosen from head-to-head tests. A gentler learning rate improved fine-tuning. A stricter limit on how much each update can change the policy stopped collapses. A longer horizon ($\gamma$ 0.995) did not help, so it stayed at 0.99.
+Others, like the network size, were just defaults. Say which is which.
 A: Current recipe (`LE`): lr **2e-5**, `target_kl` **0.01**, batch **512**, **5** epochs, $\gamma$ 0.99, $\lambda$ 0.95, `ent_coef` 0, BC coef 0.3, 4 environments.
 - **target_kl, batch 512, 5 epochs** (run C): won round 1, 0.91 single passes against 0.63 for SB3 defaults. Defaults showed approx_kl 0.016 and clip fraction 19 %, C showed 0.006 and 4 %.
 - **lr 2e-5 for fine-tuning** (run CL): every idea at the default 1e-4 came out worse than its parent. At 2e-5 the same recipe improved C9 from 2.17 to 2.58 laps per episode.
@@ -147,6 +177,8 @@ K: hyperparameters, learning rate, target KL, evidence
 
 @card d
 Q: At 15 Hz, is $\gamma = 0.99$ long enough for a lap that takes 10 to 15 seconds?
+P: A discount of 0.99 means the drone cares about roughly the next 7 seconds. A full lap takes 10 to 15 seconds, so the next lap's reward looks small from here.
+Tests with a longer horizon did not help, probably because the real problem was memory, not patience. Once the drone had memory it looped with 0.99. That longer horizon was never retested on the memory version.
 A: Effective horizon $\approx 1/(1-\gamma) = 100$ ticks $\approx 6.7$ s. A reward one lap away (about 150 to 225 ticks) is weighted $0.99^{150} \approx 0.22$ to $0.99^{225} \approx 0.10$. So the next pass is nearly invisible to the critic.
 We tested $\gamma = 0.995$ (horizon about 13 s) several times and it did not help. Plausible reasons:
 - Longer horizons raise the variance of returns and make the critic harder to fit.
@@ -158,6 +190,8 @@ K: discount factor, horizon, credit assignment
 @card d
 I: dq_mdp
 Q: Walk through the reward function of the current policy.
+P: Think of it as a points system for a driving test. Small points for moving along the right path towards the ring and through it. Small penalties for hovering, wasting time, or flying close to the rim. A big bonus for each clean pass, growing with each lap in a row. Big penalties for crashing, leaving the cage, or going back through the wrong way.
+Crashing must always be worse than carrying on, otherwise the drone learns to crash.
 A: Per tick unless stated:
 - **Path shaping** 3 per metre of progress towards a point 0.3 m in front of the ring, then 0.3 m behind it (so stopping in the opening loses reward).
 - **Axis pull** 1 x off-axis metres near the plane, **facing** 0.5, **time** $-0.02$, **dwell** $-0.05$ for loitering in the opening, **rim** up to $-0.3$ within 8 cm of the noodle.
@@ -169,6 +203,8 @@ K: reward design, shaping, streak bonus, penalties
 @card d
 I: dq_mdp
 Q: Tell the story of your MDP versions. What loophole did each version close?
+P: Every version fixed a trick the drone found. Version 2 paid for getting close, so the drone parked in front of the ring and never tried to pass. Later versions added a time budget, a flag saying a pass is allowed, then rewards for laps in a row from the same side.
+Like a teacher who keeps fixing loopholes in the marking scheme once students find them.
 A: In the full-state PyBullet task:
 - **v1** shaped reward, one pass ends the episode. Stalled near 6 % success. PPO overwrote itself every update (approx_kl near 0.9), the ring swing was invisible, wind at full strength from step 0.
 - **v2** potential-based shaping, rim $-3$. **Reward hacking:** the drone learned to **park 18 to 31 cm in front of the ring**, 0 % passes after 14.5M steps. Shaping paid about +20 for reaching the entrance, and trying a pass risked $-3$.
@@ -180,6 +216,8 @@ K: reward hacking, MDP iteration, parking, loopholes
 
 @card d
 Q: Your shaping is called potential-based. Is all of your reward shaping actually policy-invariant?
+P: Only partly. The path reward is like paying for each step closer to a target. Going in circles earns nothing overall, so it does not change what the best behaviour is.
+The other small rewards (facing the ring, staying near the axis, avoiding the rim) are hints that do change the best behaviour. They were added on purpose, and you should say so.
 A: Only part of it, and saying so is stronger than overclaiming.
 - **Ng, Harada and Russell (1999):** adding $F = \gamma \Phi(s') - \Phi(s)$ leaves the optimal policy unchanged. Our path term pays progress towards waypoints, which is of that form (strictly, the $\gamma$ should multiply $\Phi(s')$, so with $\gamma < 1$ the match is approximate). Circling or hovering earns nothing net, which is exactly why it fixed v2's parking.
 - **Not potential-based:** axis pull, facing, rim, dwell and time terms. These are ordinary per-state rewards and **can change the optimal policy**. They were added on purpose as priors, for example "line up before going in".
@@ -188,6 +226,8 @@ K: potential-based shaping, policy invariance, Ng 1999
 
 @card d
 Q: Why does touching the net end the episode with a "drain" penalty, and why does wrong-way cost so much?
+P: On the real drone, touching the net means landing, so in the simulator it must end the run too. If crashing cost too little, the drone would crash on purpose to stop paying time penalties, like quitting a game to avoid losing more points.
+The big wrong-way penalty stops the cheapest fake lap, which is flicking back and forth through the ring.
 A: - **Net ends the episode:** the real drone has to land when it hits the net, so the sim must not let it bounce and continue.
 - **Drain** (in the budget versions): with a flat small penalty, a drone that cannot pass would learn to **dive into the net** to stop paying the time cost. Draining the remaining budget makes ending early never cheaper than flying on. (The current recipe sets `drain` off and uses large fixed terminal penalties instead, $-10$.)
 - **Wrong way $-20$:** without it, the cheapest "lap" is to dither back and forth through the opening. A strong penalty forces the intended behaviour: go round the outside and re-enter from the same side.
@@ -196,6 +236,8 @@ K: termination, penalties, reward hacking, drain
 
 @card d
 Q: Why does every episode start with the drone already hovering at about 0.8 m?
+P: The real drone can only start its motors with its own take-off command, which lifts it to about 0.8 m. Then the policy takes over.
+Training the drone to take off would teach a skill it never uses. Instead, variety comes from where it starts: random height, one of 9 zones, random facing. Landing is also scripted for safety.
 A: Because that is where control is handed over on the real drone. The Tello's motors only start with the firmware `takeoff` command, which climbs to about 0.7 to 0.8 m by itself, and `fly_hoop.py` hands over to the policy after a 2 s settle.
 - Learning take-off in simulation would train a skill the real drone never uses.
 - PyBullet's Crazyflie take-off does not resemble the Tello's anyway.
@@ -205,6 +247,8 @@ K: initial state distribution, takeoff, deployment, safety
 
 @card d
 Q: What role does imitation learning play, and how did it fail at first?
+P: **Imitation learning** is copying a teacher. Copying a scripted expert failed because small mistakes led to situations the expert never showed. Copying human pilots taught "pass once, then stop".
+**DAgger** fixed this by letting the student fly and asking the teacher "what should I do here?" in the situations the student actually reaches.
 A: Three kinds of demonstrations, each with a lesson:
 - **Behaviour cloning of a scripted expert:** the expert passes 100 % in sim, but the clone scored only **6/12 against the real detector**. Classic covariate shift: small errors take it to states the expert never visited.
 - **Human keyboard flights:** they never loop. Imitating them pulled the policy towards "pass once, then stop". Removing that imitation term (run W) took laps from 0.16 to **0.45**.
@@ -214,6 +258,8 @@ K: behaviour cloning, DAgger, covariate shift, imitation learning
 
 @card d
 Q: Explain the "averaging two good choices" trap you hit with DAgger.
+P: The teacher could see where the ring was and turned left or right straight away. The student could not see it yet, so it learned the average of left and right, which is straight ahead, and flew into the net.
+Like averaging "go left" and "go right" at a fork and driving into the tree in the middle. The fix: before the ring is seen, the teacher demonstrates a search the student can copy.
 A: Each episode starts with the ring out of view. The privileged teacher knows where the ring is and turns the right way at once, sometimes left, sometimes right. The camera-only student cannot know which way, so regression on mean squared error learned the **average of left and right**: it flew straight into the net within 6 s without ever seeing the ring (4 of 6 episodes).
 Fix: **search-first labels**. Until the student's camera has seen the ring, the teacher's label is a fixed search the student can reproduce (turn clockwise and climb to ring height). The honest teacher still flies 4.1 laps per 90 s.
 General rule: a privileged teacher must not use information the student can never have, or the student learns the average over what it cannot distinguish. Same trap as the memoryless loop labels.
@@ -221,6 +267,8 @@ K: DAgger, privileged teacher, multimodal actions, MSE averaging
 
 @card d
 Q: Is your final agent really reinforcement learning, or is the teacher doing the work?
+P: Both. The teacher gave a starting point that sometimes loops. RL then took it from about 1.3 laps to about 5.3 laps, which copying alone never reached.
+Honest gap: the "copy the teacher" pull stays on forever, so it is never pure RL, and no test removed it to measure its share.
 A: Both, and the split is measurable:
 - The DAgger clone with memory gives PPO a start that **loops sometimes**. Without it, nothing looped.
 - PPO then took it from about **1.28 laps** (n8) to **5.29 laps** (LE) per episode. That improvement came from reward-driven training: slanted starts, stress-drone randomisation, loop-practice starts and a gentler learning rate.
@@ -230,6 +278,8 @@ K: DAPG, RL vs imitation, ablation, BC coefficient
 
 @card d
 Q: What does the 0.3 behaviour cloning term do to the objective theoretically?
+P: The training goal becomes "maximise reward, plus stay close to the teacher". Like a learner driver with an instructor's hand on the wheel.
+It keeps good habits from being forgotten but can hold the drone back where the teacher is wrong for a camera-only pilot. It only pulls the main action, not the random exploration.
 A: The actor now minimises $L = L_{PPO} + 0.3 \cdot \mathbb{E}_{(s, a^*) \sim \mathcal{D}} \|\mu_\theta(s) - a^*\|^2$.
 - It is an **off-policy** pull. The labels come from DAgger rounds on older student states, so they do not match the current policy's state distribution.
 - It biases the solution away from the return-maximising policy wherever the teacher is suboptimal for the camera-only agent.
@@ -239,6 +289,8 @@ K: DAPG, off-policy regularisation, KL anchor, RLHF analogy
 
 @card d
 Q: Your exploration noise collapsed. What does that mean and what did you do?
+P: The random wobble the policy uses to try new things shrank almost to nothing, so it stopped discovering new moves. Like a student who only ever answers the same way.
+Adding a curiosity bonus did not help. What did help was changing the situations it trains in: tilted starts, practice starts near the loop, and varied drone physics.
 A: The policy's Gaussian noise is $\sigma = e^{\text{log\_std}}$. In every long run `log_std` reached about $-2.3$ to $-2.8$, so $\sigma \approx 0.06$ to $0.10$ of full stick. With `ent_coef = 0`, nothing pushes back.
 Consequence: the policy can barely discover new behaviour, which fitted runs getting worse with more training.
 What we tried: an entropy bonus 0.005 plus resetting `log_std` to $-1$ (run D), and gSDE state-dependent exploration (run E). Neither beat the trust-region run C in the race.
@@ -248,6 +300,8 @@ K: exploration, entropy, log std, gSDE
 
 @card d
 Q: How did you measure and reduce the sim-to-real gap?
+P: They recorded 28 real flights and compared them with the simulator, like checking a flight simulator against a real plane. They found the turn direction was mirrored, the speed readings were useless, and the real drone turned and climbed about half as fast.
+They fixed the simulator, removed the bad input, and randomised the physics so the policy works across many possible versions of reality.
 A: We fitted the simulator to **28 real flights** (dry runs excluded) with `sim_fidelity.py`:
 - **Yaw sign was reversed** in the sim. Every policy flown before had a mirrored turn-rate input. Fixed, old models converted exactly.
 - **Tello speed readings were noise** (mean $-0.03$ with forward stick held). Old policies relied on speed: v4 dropped from 93 % to 5 % passes with it blanked. We removed speed input entirely.
@@ -258,6 +312,8 @@ K: sim-to-real, system identification, domain randomisation
 
 @card d
 Q: What happened on the real drone, and what did you change because of it?
+P: On the real drone, an older memory policy entered the ring from one corner in 2 of 3 tries but clipped the edge from the other corners. In daylight it locked onto a window.
+Changes: a test for slanted entries, slanted training starts, a harsher simulated drone, and camera settings per lighting.
 A: Real flights with the memory policy (`n8_cont2`, 1.03 laps in sim) on 2026-10-14:
 - From the **bottom-right corner** it entered **2 of 3** attempts but rarely looped.
 - From the **other three corners** it found the ring but **clipped the edge going in**.
@@ -270,6 +326,8 @@ K: real flights, sim-to-real, corners, lighting
 @card d
 I: dq_tradeoff
 Q: Laps went up four-fold but oblique entry stayed around 60 %. Explain that.
+P: The score measured two skills, laps and clean entries from awkward angles, and training improved mostly laps. Like a student who gets great at the easy questions while the hard ones stay the same.
+Pushing hard on angled entries made the drone too cautious. So the score was changed to count both equally.
 A: Our evaluation measures two different skills, and training improved mostly one.
 - Laps per episode: 1.03 (flown policy) to **5.29** (LE).
 - Oblique entry: 70 % (flown policy) to about **57 to 67 %** in most later policies.
@@ -281,6 +339,8 @@ K: trade-off, oblique entry, evaluation metric, Goodhart
 @card d
 I: dq_lineage
 Q: Explain your automated optimiser and how it decides a new best policy.
+P: An automatic tournament. Take the current champion, train two challengers from it for a bit longer, then test everyone on the exact same fixed set of test flights. A challenger only wins if it beats the champion by more than the normal noise.
+Like a sports league where every team plays the same opponents, and a narrow lucky win does not count.
 A: `loop_forever.py` repeats rounds: take the best policy so far (the parent), train two copies for 2M more steps (the parent's own recipe and one new idea), re-score everything on a fixed referee, keep the winner.
 - **Referee:** the same **72 laps episodes plus 60 slanted starts** for every candidate, score = laps per episode + 1.0 x oblique entry.
 - **Margin:** a challenger must win by **more than 0.10**, because one 36-episode evaluation wobbles by about $\pm 0.15$ laps.
@@ -291,6 +351,8 @@ K: hyperparameter search, successive halving, model selection, optimiser
 
 @card d
 Q: The examiner says: "You picked the best of many noisy runs. Your reported score is inflated." How do you respond?
+P: The examiner has a point. Picking the best of many noisy results is like picking the luckiest of many coin-flip streaks. The winner looks better than it really is.
+Defences: everyone is re-tested on the same fixed flights, and a challenger must win by a clear margin. Missing: a fresh test set used only after the final choice.
 A: Agree that the risk is real. This is **maximisation bias**, the same thing as the max in Q-learning: the maximum of noisy estimates is biased upwards (winner's curse).
 What we did against it:
 - Every candidate, including the parent, is **re-scored** on the same 72 plus 60 episodes, not taken from its own training evaluation.
@@ -301,6 +363,8 @@ K: selection bias, maximisation bias, held-out test, winner's curse
 
 @card d
 Q: How many seeds did you run, and is the result reproducible?
+P: Be honest: mostly one run per setting. Repeats of the same recipe show the spread, for example 2.35, 2.55 and 2.60.
+A strict examiner wants the final recipe trained 3 to 5 times with different seeds, shown as an average with a range, and tested on new layouts.
 A: Be direct: mostly **one seed per configuration per round**. Seeds were set per round (seed = round number) so runs differ, and the simulator, evaluation layouts and demos are seeded.
 What we have instead of seed bands:
 - **Repeated parent continuations:** each round retrains the parent's recipe with a new seed, which shows run-to-run spread (for example C9 retrained with seeds 9, 10 and 12 reached referee scores of 2.35, 2.55 and 2.60).
@@ -310,6 +374,8 @@ K: seeds, reproducibility, variance, evaluation
 
 @card d
 Q: Explain the hierarchical RL experiment and why it did not beat the flat policy.
+P: **Hierarchical RL** split the job into specialists, one for entering cleanly and one for looping, with a manager choosing who flies.
+It did not beat the all-rounder, because the specialists got about 2M steps of practice against the all-rounder's 30M. Like comparing new hires with a ten-year veteran. The manager mostly picked the veteran.
 A: **Options framework** (Sutton, Precup and Singh 1999):
 - Skills: **SE** (enter cleanly, trained on slanted starts and episodes ending at the first pass), **SL** (loop, every episode starts just before the hoop), plus the flat **C9** generalist.
 - **Manager:** PPO over the 3 options, deciding every 8 ticks (0.53 s) or at a pass. A semi-MDP with discount $0.92 \approx 0.99^8$ per decision.
@@ -320,6 +386,8 @@ K: hierarchical RL, options, semi-MDP, manager
 
 @card d
 Q: How do you guarantee that the policy evaluated in the sim is exactly the policy that flies?
+P: One loading function is used both in testing and on the real drone, so there is no second version to drift. The exported file is checked to give the same actions on 200 recorded examples.
+Like using the exact same recipe card in the test kitchen and the restaurant, then tasting both.
 A: An export pipeline with checks:
 - Policies load through `policy.load_policy`, the same loader `fly_hoop.py` uses: same yaw convention, same input width, same history stack, privileged inputs filled with zeros.
 - The sim score is computed through that loader's `policy_fn` on observations from `ObsBuilder`, the class the flight uses.
@@ -331,6 +399,8 @@ K: deployment, export, reproducibility, testing
 
 @card d
 Q: What safety design surrounds a learned policy on a real drone?
+P: The learned policy is never trusted alone. Take-off and landing are scripted. Software sets a floor, a ceiling and limits on travel, time, battery and temperature. A human can land it instantly with a key. New policies go through staged tests, from a simulation dry run up to a full flight.
+Like a learner driver in a car with dual brakes.
 A: The policy is never trusted alone:
 - **Take-off and landing are scripted**, never learned.
 - **Height window:** soft floor at 40 cm (no further descent, forced climb 10 cm lower), soft ceiling within 25 cm of the maximum, hard abort near the floor.
@@ -343,6 +413,7 @@ K: safety, deployment, robotics, override
 
 @card d
 Q: Which course topics does your project use? Map them week by week.
+P: Almost the whole course shows up. MDPs and POMDPs (the problem is partly hidden), value functions (the critic), TD learning (GAE), function approximation (the networks and features), deep RL tricks (memory and stability), policy gradients (PPO), and ideas from RLHF (keeping close to a teacher).
 A: - **W3 MDPs and W1 framing:** state, action, reward, termination design, and recognising the task is a **POMDP**.
 - **W4 Bellman / value functions:** the critic $V(s)$ and the advantage $A = Q - V$.
 - **W7 TD:** GAE bootstraps with TD errors $\delta_t = r_t + \gamma V(s_{t+1}) - V(s_t)$, blended by $\lambda$.
@@ -355,6 +426,8 @@ K: course mapping, concepts, PPO, POMDP, GAE
 
 @card d
 Q: What are the biggest limitations of your project? Name them before the examiner does.
+P: Say them first, like a good engineer listing known issues. The best results are simulator-only. Some physics like real forward speed were never measured. The close-up camera view differs between sim and reality. Angled entries stalled. Mostly one run per setting. No pure-RL comparison.
+Admitting these shows you understand your own work.
 A: 1. **Real-world evidence is thin.** The policies that loop 5+ times are simulation results. The real drone entered from one corner and clipped from the other three.
 2. **Unmeasured physics.** Forward speed per command, camera field of view and close-range detector behaviour are assumptions. The tracker and `pushed` both depend on the forward speed.
 3. **Close-range perception gap.** The real detector reports frame overflow and noisy ellipses near the ring. The simulator's detector is clean.
@@ -366,6 +439,7 @@ K: limitations, honesty, sim-to-real, statistics
 
 @card d
 Q: If you had four more weeks, what would you do, in priority order?
+P: Fly the best policy on the real drone first, because nothing else matters until that is measured. Then measure real forward speed, fix the close-up camera gap, run several seeds with a fresh test set, test removing the teacher pull, and compare against SAC.
 A: 1. **Fly the best simulation policy on the real Tello** from all four corners and report entries and laps. Everything else is secondary until this is measured.
 2. **Calibrate forward speed** with one tape-measure flight and update the tracker and `pushed` constant.
 3. **Close the close-range detector gap:** record real close approaches and add overflow and ellipse noise to the sim detector, or train with the real detector rendered in the loop.
@@ -376,6 +450,8 @@ K: future work, priorities, next steps
 
 @card d
 Q: The examiner says: "This is massively over-engineered. Why not a scripted visual-servo controller?"
+P: A hand-written controller was built and tested. It flies one straight pass well, but on the real physics its small corrections were too small for the drone to respond to, and it barely loops.
+Writing rules for searching, lining up, passing, circling and re-entering, all robust to drift and delays, is exactly the hard part RL solves. Concede that for one simple front pass, a script is enough.
 A: We built one, and it is a useful baseline.
 - The scripted expert passes **100 %** from the front runway on the typical profile and 60/60 with the real detector.
 - But on the **measured** dynamics it passes only **3 %**: its small yaw corrections fall inside the real yaw dead zone, so it never finishes lining up.
@@ -386,6 +462,8 @@ K: baseline, scripted controller, justification
 
 @card d
 Q: How did training infrastructure choices affect your results?
+P: Running tests in parallel saved time but made scores slightly noisy, which is why everything is re-tested the same way. Regular checkpoints meant crashed runs could restart. Logging every run made comparisons possible.
+Because each model continues from a previous one, results depend on the path taken, like a family recipe changed over generations.
 A: - **Parallel evaluation** cut wall-clock time (evaluation was about 60 % of it) but made evaluation numbers about $\pm 0.15$ noisy across copy counts, which is why the referee re-scores everything identically.
 - **Checkpoints** every evaluation and every 15 min, crashed runs resume from their last save. Sleep, out-of-memory and a stray Ctrl+C each killed runs before we fixed them (detached processes, memory checks).
 - **ClearML** logs every run and flight, so hyperparameters and curves can be compared.

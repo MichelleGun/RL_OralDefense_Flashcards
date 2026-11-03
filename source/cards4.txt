@@ -1,6 +1,8 @@
 @card x
 I: taxonomy
 Q: Give the big map of every method in the course in one answer.
+P: Think of the course as a family tree. If you know the rules of the world, you plan (DP, MCTS). If you do not, you learn from experience, either from whole games (Monte Carlo) or step by step (TD, SARSA, Q-learning).
+When the world is too big for tables, you swap tables for formulas (function approximation, DQN). And instead of learning values you can learn the playing style directly (policy gradients, actor-critic, PPO).
 A: Start with the question "do I know the model?"
 - **Known model, small**: DP. Policy evaluation (prediction), policy iteration and value iteration (control).
 - **Known model or simulator, huge, decide from where I am**: MCTS, AlphaZero.
@@ -15,6 +17,8 @@ K: taxonomy, model-based, model-free, GPI
 @card x
 I: unified
 Q: Explain bootstrapping vs sampling, and classify DP, MC, TD.
+P: **Bootstrapping** is updating a guess from another guess, like estimating your arrival time from the GPS's estimate at the next junction. **Sampling** is learning from what actually happened on one real trip instead of listing every possibility.
+DP bootstraps but does not sample. MC samples but does not bootstrap. TD does both.
 A: **Bootstrapping**: the target uses a current estimate (a guess), like $\gamma V(S_{t+1})$. **Sampling**: the update uses sampled experience instead of the expectation over all outcomes.
 - DP: bootstraps, does not sample (uses the model).
 - MC: samples, does not bootstrap (waits for the real $G_t$).
@@ -25,6 +29,8 @@ K: bootstrapping, sampling, DP, MC, TD
 @card x
 I: cliff
 Q: Is SARSA always safer than Q-learning? Is Q-learning always better?
+P: No. SARSA is safer only while you are still exploring, because it plans around its own slips. Once exploration stops, both learn the same best route.
+Q-learning finds the best route for perfect play, which is better if you will play perfectly later. But it can overrate moves and is less stable with neural networks. Each wins in different conditions.
 A: Neither. SARSA is safer **during learning** because it accounts for its own exploration, so it prefers paths that are robust to random mistakes. Q-learning learns the values of the **optimal greedy policy**, so its final greedy policy can be better, but its online performance while exploring can be worse (cliff walking).
 If $\varepsilon \to 0$ over time, SARSA also converges to the optimal policy. Q-learning also suffers maximisation bias and is the one that diverges most easily with function approximation.
 K: SARSA, Q-learning, safety, maximisation bias
@@ -32,6 +38,8 @@ K: SARSA, Q-learning, safety, maximisation bias
 @card x
 I: discount
 Q: How would you pick gamma, alpha and epsilon, and what goes wrong if each is badly chosen?
+P: $\gamma$ is patience: too low and the agent ignores future rewards, too high and learning gets slow and noisy. $\alpha$ is how much each new experience changes your mind: too high and you overreact, too low and you barely learn. $\varepsilon$ is curiosity: too low and you get stuck, too high and you never use what you know.
+Tune them like adjusting a recipe, one at a time while watching the results.
 A: - $\gamma$: horizon of the task. Too small makes the agent short-sighted (ignores the delayed goal). Too close to 1 in long tasks slows learning and raises variance. Rule of thumb, effective horizon $\approx 1/(1-\gamma)$.
 - $\alpha$: too large and estimates oscillate or diverge. Too small and learning crawls. Constant $\alpha$ tracks non-stationary problems, decaying $\alpha$ gives convergence.
 - $\varepsilon$: too small and you get stuck, too large and you waste reward. Start high (for example 1.0) and decay towards a floor such as 0.05, which is a practical GLIE approximation.
@@ -40,6 +48,8 @@ K: hyperparameters, discount, learning rate, epsilon decay
 @card x
 I: houseprice
 Q: What is the curse of dimensionality and which methods address it?
+P: Each new thing you track multiplies the number of situations. Ten values for one sensor is 10 cases. Six sensors is a million. Tables explode.
+Fixes: guess with formulas that generalise (function approximation, neural networks), only look at the situations you actually reach (sampling, MCTS), and pick compact features.
 A: The number of states grows exponentially with the number of state variables (10 variables with 10 values each is $10^{10}$ states). Tables and full DP sweeps become impossible.
 Responses: **function approximation** (linear features, neural networks) for generalisation, **sampling** (MC, TD, MCTS) so you only touch visited states, **asynchronous** and prioritised updates, and **policy search** that skips the value function.
 K: curse of dimensionality, function approximation, sampling
@@ -47,12 +57,16 @@ K: curse of dimensionality, function approximation, sampling
 @card x
 I: sparse
 Q: Explain the credit assignment problem and which tools address it.
+P: You win a football match. Which of the hundreds of passes deserves the credit? That is the **credit assignment problem**.
+Tools: discounting (closer moves get more credit), TD learning (credit passed back step by step), eligibility traces (a fading memory of recent moves), and advantage estimates (how much better a move was than usual).
 A: When reward arrives late, which earlier actions deserve the credit? Tools: discounted returns and value functions (propagate reward backwards through Bellman backups), TD errors (local surprise signals), n-step and $\lambda$-returns and eligibility traces (spread credit over recent steps), reward-to-go in policy gradients, and hierarchical options for long horizons.
 K: credit assignment, delayed reward, TD error, eligibility traces
 
 @card x
 I: maxbias
 Q: Why is the max in Q-learning and DQN a problem, and what are the three fixes you know?
+P: Taking the max over noisy guesses always picks the luckiest guess, so values come out too high, like always picking the friend who brags the most as the best player.
+Three fixes: **Double Q-learning or Double DQN** (one network picks, another scores), **target networks** (a frozen copy for steadier targets), and avoiding the max altogether with SARSA or Expected SARSA, or with policy methods.
 A: The max over noisy estimates is biased upwards (maximisation bias) and with function approximation feeds that error back into the target, which can blow up.
 Fixes: **Double Q-learning / Double DQN** (separate selection and evaluation), **Expected SARSA** (average instead of max), and a **target network** that slows down the feedback loop.
 K: maximisation bias, Double Q-learning, Expected SARSA, target network
@@ -60,12 +74,15 @@ K: maximisation bias, Double Q-learning, Expected SARSA, target network
 @card x
 I: loop
 Q: The examiner asks: "Explain reinforcement learning to a 10-year-old." What do you say?
+P: Say it like teaching a dog a trick with treats. Nobody explains the trick. The dog tries things, gets a treat when it does well, and slowly learns what earns treats. A computer can learn the same way, by trying, scoring points, and doing more of what scored.
 A: Keep it to one image and the four words agent, action, reward, policy. Example: "You are learning a new video game without instructions. You press buttons (actions), the score goes up or down (reward), and over many tries you figure out which buttons to press in which situation (your policy). Sometimes you try something new to see what happens (exploration) and sometimes you do what you know works (exploitation)."
 Then offer the precise definition. Showing both levels proves understanding.
 K: explanation, intuition, agent, reward
 
 @card p
 Q: If the defense is about your own assignment or project, what questions should you expect?
+P: Expect three kinds of questions. "Why did you choose this?" (algorithm, reward, features). "Does it really work?" (evidence, seeds, baselines). "What are the limits?" (what failed, what you would change).
+Like defending a recipe to a judge: why these ingredients, did it taste good every time, and what you would improve.
 A: Expect them to drill into your code and results, not textbook definitions:
 - Why did you choose this algorithm over the alternatives? (Name one rejected alternative and why.)
 - Walk me through your update line. Which variable is the TD target?
@@ -80,6 +97,8 @@ K: project defense, implementation, hyperparameters, learning curves
 @card p
 I: seedband
 Q: How do you make your RL experiments reproducible and how do you report results honestly?
+P: **Reproducible** means someone else can follow your steps and get the same result, like a recipe that works in any kitchen. Fix random seeds (for example 67), record versions and settings, and save the exact code.
+Report honestly: run several seeds, show the average and the spread, and never show only your luckiest run.
 A: Fix every random source and report several seeds:
 `env.reset(seed=67)`, `env.action_space.seed(67)`, `np.random.seed(67)`, `random.seed(67)`, `torch.manual_seed(67)`.
 Then run several seeds (for example 67, 68, 69, 70, 71) and plot the **mean with a shaded standard deviation or confidence band**. RL results vary a lot between seeds, so a single lucky run proves little. Report the evaluation protocol (greedy policy, number of evaluation episodes) separately from training reward.
@@ -88,6 +107,8 @@ K: reproducibility, seeds, evaluation, learning curves
 @card p
 I: debugflow
 Q: Your learning curve is flat or collapses. How do you debug an RL agent?
+P: Debug like fixing a car that will not start. Check the basics first: fuel (does the environment work?), the key (is the reward sign right?), then the engine (is the update correct?), then fine-tuning (learning rate, exploration).
+Test on a tiny problem where you already know the answer before blaming the algorithm.
 A: Work from simple to complex:
 1. Check the environment with a random agent and a hand-coded policy.
 2. Check the reward sign and scale, and the terminated vs truncated handling.

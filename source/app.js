@@ -91,7 +91,7 @@ window.addEventListener('resize', function () { clearTimeout(fitTimer); fitTimer
     if ((m = line.match(/^@(weak|tip) (.+)$/))) { cur = { kind: m[1], title: m[2], A: '' }; W.push(cur); field = null; return; }
     if (!cur) return;
     if ((m = line.match(/^I: ?(.*)$/))) { (cur.I = cur.I || []).push(m[1].trim()); field = null; return; }
-    if ((m = line.match(/^(Q|A|K|G|E): ?(.*)$/))) { field = m[1]; cur[field] = m[2]; return; }
+    if ((m = line.match(/^(Q|A|K|G|E|P): ?(.*)$/))) { field = m[1]; cur[field] = m[2]; return; }
     if (cur.kind === 'deriv' && (m = line.match(/^(S|W): ?(.*)$/))) {
       if (m[1] === 'S') { cur.steps.push({ s: m[2], w: '' }); field = 'S'; }
       else if (cur.steps.length) { cur.steps[cur.steps.length - 1].w = m[2]; field = 'W'; }
@@ -140,6 +140,10 @@ window.addEventListener('resize', function () { clearTimeout(fitTimer); fitTimer
     var f = sv.closest('.dg'); f.classList.toggle('zoom');
     if (f.classList.contains('zoom')) f.scrollLeft = (f.scrollWidth - f.clientWidth) / 2;
   });
+  function answerHTML(c) {
+    if (!c.P) return figs(c) + rich(c.A);
+    return '<div class="plain"><div class="plain-h">In plain words</div>' + rich(c.P) + '</div>' + figs(c) + '<div class="exam-h">Exam answer, with the keywords</div>' + rich(c.A);
+  }
   function el(html) { var t = document.createElement('template'); t.innerHTML = html.trim(); return t.content.firstChild; }
 
   /* ---------- progress store ---------- */
@@ -352,7 +356,7 @@ window.addEventListener('resize', function () { clearTimeout(fitTimer); fitTimer
     card.appendChild(el('<div class="meta">' + wkPill(c.wk) + pillFor(markOf(c.id)) + '<span class="counter">' + (cIdx + 1) + ' / ' + list.length + '</span></div>'));
     var q = el('<div class="q rich"></div>'); q.innerHTML = inline(c.Q); card.appendChild(q);
     if (cShow) {
-      var a = el('<div class="ans rich"></div>'); a.innerHTML = figs(c) + rich(c.A); card.appendChild(a);
+      var a = el('<div class="ans rich"></div>'); a.innerHTML = answerHTML(c); card.appendChild(a);
       if (c.kws.length) card.appendChild(kwRow(c));
     } else {
       card.appendChild(el('<div class="hint">Say your answer out loud first. It is an oral exam.' + (c.I && c.I.length ? ' The answer has a diagram.' : '') + '</div>'));
@@ -411,7 +415,7 @@ window.addEventListener('resize', function () { clearTimeout(fitTimer); fitTimer
       d.querySelector('.t').innerHTML = inline(c.Q);
       d.querySelector('summary span:last-child').innerHTML = pillFor(markOf(c.id));
       var inner = d.querySelector('.rich');
-      inner.innerHTML = figs(c) + rich(c.A);
+      inner.innerHTML = answerHTML(c);
       if (c.kws.length) d.appendChild(kwRow(c));
       d.appendChild(markButtons(c.id, function () {
         d.querySelector('summary span:last-child').innerHTML = pillFor(markOf(c.id));

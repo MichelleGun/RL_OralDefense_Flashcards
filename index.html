@@ -153,6 +153,10 @@ footer{color:var(--muted);font-size:13px;padding-block:24px}
 .dg figcaption{font-family:var(--f-body);font-size:15px;line-height:1.5;color:var(--muted);margin:10px 2px 0;max-width:62ch}
 .dg figcaption strong{color:var(--ink)}
 .figs{display:grid;gap:0}
+.plain{background:var(--accent-soft);border-left:4px solid var(--accent);border-radius:0 10px 10px 0;padding:10px 14px;margin:4px 0 8px}
+.plain-h,.exam-h{font-family:var(--f-mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--accent);margin-bottom:2px}
+.exam-h{color:var(--muted);margin-top:12px;padding-top:8px;border-top:1px dashed var(--line)}
+.plain p{margin:.35em 0}
 .dg .band{fill:var(--accent);fill-opacity:.16;stroke:none} .dg .bandr{fill:var(--review);fill-opacity:.16;stroke:none}
 .dg svg{cursor:zoom-in}
 .dg.zoom{overflow-x:auto}
@@ -552,6 +556,8 @@ body.pl-open{overflow:hidden}
 @card w1
 I: loop
 Q: Define reinforcement learning in one sentence, then say what makes it different from supervised learning.
+P: Think of training a puppy. Nobody gives it a list of correct answers. It tries something, gets a treat or nothing, and slowly works out which behaviour earns treats. That is reinforcement learning: learning by trial and error from rewards.
+Supervised learning is like studying with an answer key. Every example comes with the right answer. In RL there is no answer key, only a score that may come much later.
 A: **Reinforcement learning** is learning to make a good **sequence of decisions** by interacting with an **environment** and receiving **scalar reward** feedback.
 Differences from supervised learning:
 - No labels. The agent is never told the correct action, it only gets a reward that says how good its choice was.
@@ -563,6 +569,8 @@ K: reward, sequential decisions, exploration, delayed reward, credit assignment
 @card w1
 I: learnkinds
 Q: When would you choose supervised learning, unsupervised learning, imitation learning or RL?
+P: Ask two questions. Do I have the right answers written down? Then use supervised learning, like a student with a marked practice exam. Do I have no answers and just want to find groups or patterns? Then use unsupervised learning, like sorting a pile of photos into piles that look alike.
+If an expert can show you what to do, copy them (imitation learning, like learning to cook by watching a chef). If nobody knows the best move and your choices change what happens next, you have to learn by trying (RL).
 A: - **Supervised**: you have labelled data and a one-shot prediction (classify a shark image).
 - **Unsupervised**: no labels, you want structure in the data (cluster customers).
 - **Imitation learning**: you have expert **demonstrations** of good behaviour and want to copy them. Weakness: it can never be better than the demonstrations and fails in situations they never covered.
@@ -573,6 +581,8 @@ K: supervised, unsupervised, imitation learning, demonstrations
 @card w1
 I: loop
 Q: Name the components of an RL system and describe the agent environment loop.
+P: Picture a video game. You are the **agent**, the game world is the **environment**. Each moment you look at the screen (the **state**), press a button (the **action**), and the game gives you points (the **reward**) and a new screen.
+The **policy** is your playing style, the rule for which button you press on each screen. The **value function** is your gut feeling for how good the current situation is. A **model**, if you have one, is your mental picture of how the game will react.
 A: Components: **agent**, **environment**, **state**, **action**, **reward**, **policy** (and often a **value function** and a **model**).
 Loop at each time step $t$:
 1. The agent observes state $S_t$.
@@ -585,6 +595,7 @@ K: agent, environment, state, action, reward, policy
 @card w1
 I: loop
 Q: What are the key characteristics of RL problems?
+P: RL problems feel like learning a sport. Nobody tells you the correct move, you only see the score. The score can come late, so a bad pass early in the game might only cost you the match at the end. Your own moves change what you see next. And time matters, because each step depends on the one before.
 A: - **Trial and error** learning.
 - **Optimisation** over sequences of actions, not single actions.
 - **Delayed consequences**, for example saving for retirement now or starting your project in Week 1.
@@ -595,6 +606,8 @@ K: trial and error, delayed reward, exploration, exploitation, generalisation
 @card w1
 I: egreedy
 Q: What is the exploration exploitation trade-off and why can't you just exploit?
+P: Choosing where to eat tonight. **Exploiting** means going to your favourite restaurant because you know it is good. **Exploring** means trying a new place that might be even better, or might be worse.
+If you only ever exploit, you never find out about the amazing place around the corner. If you only explore, you keep eating bad meals. Good learners mix the two, exploring more at the start and less once they know the area.
 A: **Exploitation** uses current knowledge to get the best reward now. **Exploration** tries uncertain actions to learn more.
 If you only exploit, early unlucky estimates can lock you onto a worse action forever. Example from the notes: a greedy agent opens the red box once, gets 0, and never opens it again even though red might be better on average.
 If you only explore, you waste reward on bad actions you already know are bad.
@@ -604,6 +617,8 @@ K: exploration, exploitation, epsilon-greedy, UCB, GLIE
 @card w1
 I: modelbased
 Q: What is the difference between model-based and model-free RL? Give two algorithms of each.
+P: **Model-based** is like a chess player who imagines moves in their head before playing. They have a mental model of what will happen. **Model-free** is like learning to ride a bike. You never compute physics, you just try, fall, and adjust.
+Model-based learns faster from less real experience but can be wrong if the mental model is wrong. Model-free needs more practice but never gets fooled by a bad model.
 A: A **model** predicts how the environment responds: $P(s'\mid s,a)$ and $R(s,a)$.
 - **Model-based** methods use a model to plan. Examples: policy iteration, value iteration (DP), MCTS, AlphaZero.
 - **Model-free** methods learn values or policies directly from experience. Examples: Monte Carlo control, SARSA, Q-learning, DQN, REINFORCE, PPO.
@@ -613,6 +628,8 @@ K: model, model-based, model-free, planning
 @card w1
 I: termtrunc
 Q: In Gymnasium, what does step() return, and why does the difference between terminated and truncated matter for learning?
+P: Every time you press a button in the game, Gymnasium tells you five things: what the new screen looks like, how many points you got, whether the game really ended (**terminated**), whether it was just cut off by a timer (**truncated**), and some extra info.
+The difference matters. If you fell off a cliff, the future really is worth zero. If the timer simply ran out, the future still had value, you were just stopped. Mixing these up teaches the agent that running out of time is as bad as dying.
 A: `observation, reward, terminated, truncated, info = env.step(action)`.
 - **terminated**: a true terminal state (fell in the hole, reached the goal). The value of the next state is zero, so the target is just $r$.
 - **truncated**: the episode was cut off, for example by a time limit. The next state still has value, so you should still bootstrap: target $r + \gamma V(s')$.
@@ -622,6 +639,8 @@ K: Gymnasium, terminated, truncated, bootstrapping
 @card w2
 I: rewardhack
 Q: What is the reward hypothesis, and give a good and a bad reward design.
+P: The **reward hypothesis** says any goal can be turned into a single score to maximise. Like a school grade standing in for "learned the subject".
+The catch is that agents chase the score, not your intention. Reward a student only for pages written and you get long, useless essays. Reward the robot for each small step and it repeats the easy step forever instead of finishing the job.
 A: The **reward hypothesis**: every goal can be described as maximising the expected cumulative scalar reward.
 Good: a soccer robot gets positive reward for moving the ball towards the goal and negative reward for falling.
 Bad: rewarding a pizza robot +1 for each sub-step but only +10 for a packed pizza can make it farm the easy sub-steps. The agent optimises exactly what you reward, not what you meant.
@@ -630,6 +649,8 @@ K: reward hypothesis, reward design, reward hacking
 @card w2
 I: sparse
 Q: What is the problem of sparse rewards and how can it be tackled?
+P: Imagine searching for a light switch in a huge dark house where the only feedback is the light turning on. You might wander for hours without any hint. That is a **sparse reward**.
+Fixes are like adding hints: a hot and cold game that tells you when you are getting closer (**reward shaping**), starting the search near the switch first (**curriculum**), or rewarding curiosity about rooms you have not seen yet.
 A: **Sparse reward** means feedback arrives rarely, for example only at the end of a long episode. Random exploration almost never reaches the reward, so there is nothing to learn from and credit assignment is very hard. Montezuma's Revenge (DQN scored near 0) and Freeway for MCTS are the classic examples.
 Remedies: reward shaping with intermediate rewards (careful, it can be gamed), demonstrations or imitation learning, inverse RL, hierarchical RL with options, better exploration such as UCB style bonuses, and model-based planning.
 K: sparse reward, credit assignment, reward shaping, hierarchical RL
@@ -637,6 +658,8 @@ K: sparse reward, credit assignment, reward shaping, hierarchical RL
 @card w2
 I: history
 Q: What is the difference between history, environment state, agent state and a Markov state?
+P: The **history** is the full diary of everything you have seen and done. The **environment state** is the full truth about the world, which you usually cannot see, like the cards in other players' hands.
+The **agent state** is your own summary, the notes you keep from the diary. A **Markov state** is a summary good enough that reading the old diary would not help you predict anything better. In chess, the current board is Markov. You do not need to know how the pieces got there.
 A: - **History** $H_t$: everything observed so far: observations, actions, rewards.
 - **Environment state**: the environment's private representation used to produce the next observation and reward. Usually invisible to the agent.
 - **Agent state** $S^a_t = f(H_t)$: what the agent uses to choose actions.
@@ -647,6 +670,8 @@ K: history, agent state, environment state, Markov state
 @card w2
 I: belief
 Q: What is a POMDP? Give examples and how an agent handles it.
+P: A **POMDP** is playing poker. You cannot see the other hands, only clues like how people bet. You never know the true state, only what you can observe.
+So the agent keeps a **belief**, a best guess with probabilities, like "I think there is a 70 percent chance they are bluffing". A robot in fog or a doctor guessing a disease from symptoms are the same kind of problem.
 A: A **Partially Observable MDP**: the agent only sees observations that do not reveal the full state, so agent state is not equal to environment state.
 Examples: a soccer robot with a camera does not know its exact position, a trading agent sees only the price, a card player cannot see opponents' cards, a robot with noisy sensors.
 The agent builds its own state using the full history, a **belief state** (a probability distribution over true states) or a recurrent neural network. Stochastic policies also help with aliased observations.
@@ -655,6 +680,8 @@ K: POMDP, partial observability, belief state, aliasing
 @card w2
 I: egreedy
 Q: What is a multi-armed bandit and how is it different from a full RL problem?
+P: A row of slot machines (the "one-armed bandits"), each paying out at a different hidden rate. You have a fixed number of coins and want to win the most. You learn which machine is best by playing.
+It is the simplest RL problem because nothing you do changes the situation. Pulling a lever now does not move you to a new room. Full RL adds states, where your choice changes what you face next.
 A: A **bandit** is RL with a single state: pick one of $k$ arms, get an immediate reward from an unknown distribution, repeat. Goal: maximise total reward.
 Differences: actions do not change future situations, there are no delayed rewards, and there is no state transition. Only the exploration exploitation dilemma remains.
 Uses: A/B testing ads, clinical trial design, news personalisation, recommender systems.
@@ -664,6 +691,8 @@ K: multi-armed bandit, contextual bandit, exploration
 @card w2
 I: egreedy
 Q: Explain epsilon-greedy precisely. What happens with epsilon = 0 and epsilon = 1?
+P: **Epsilon-greedy** is a coin flip before every choice. Most of the time (probability $1-\varepsilon$) you pick what looks best. Once in a while (probability $\varepsilon$) you pick something at random, just to check.
+With $\varepsilon = 0$ you never check, so you can get stuck with a wrong favourite forever. With $\varepsilon = 1$ you always pick randomly and never use what you learned.
 A: With probability $\varepsilon$ choose an action **uniformly at random** (explore). With probability $1-\varepsilon$ choose $\arg\max_a Q(a)$ (exploit). After each reward update $Q(A) \leftarrow Q(A) + \frac{1}{N(A)}(R - Q(A))$.
 - $\varepsilon = 0$: pure greedy. Can get stuck on a suboptimal arm forever.
 - $\varepsilon = 1$: pure random. Learns estimates but never uses them.
@@ -674,6 +703,8 @@ K: epsilon-greedy, exploration, greedy, incremental update
 @card w2
 I: ucb
 Q: Explain UCB. Why is it often better than epsilon-greedy?
+P: **UCB** is "optimism under uncertainty". Picture rating restaurants. A place you visited once with one good meal could be great or average, you are unsure. UCB gives that place a bonus for being uncertain and tries it, then the bonus shrinks as you learn more.
+Epsilon-greedy explores blindly, even trying places it already knows are bad. UCB explores where it is actually unsure, so it wastes fewer tries.
 A: **Upper Confidence Bound**: pick $A_t = \arg\max_a \left[ Q(a) + c\sqrt{\frac{\ln t}{N(a)}} \right]$.
 - First term: exploitation, the current estimate.
 - Second term: exploration bonus. It is large when $N(a)$ is small (uncertain arm) and grows slowly with time through $\ln t$, so neglected arms are eventually retried.
@@ -685,6 +716,8 @@ K: UCB, optimism, exploration bonus, uncertainty
 @card w2
 I: adbandit
 Q: How would you frame online advertising as a bandit?
+P: Each ad is a slot machine. Showing an ad is pulling the lever. A click is the payout.
+The website does not know which ad people like most, so it shows the popular ones most of the time but still tests the others now and then, in case tastes changed or a new ad is better.
 A: Arms: the ads. Pulling an arm: showing an ad. Reward: 1 if clicked, 0 if not (or payment amount). Each ad has an unknown click-through rate, $CTR = \text{clicks}/\text{impressions}$. Run $\varepsilon$-greedy or UCB to concentrate impressions on the best ad while still testing others. Payoff in the notes: CTR times advertiser pay.
 The AgriBot lab shows that two settings (irrigation 5 options, fertiliser 4 options) become 20 arms, one per combination.
 K: bandit, click-through rate, arms
@@ -692,6 +725,8 @@ K: bandit, click-through rate, arms
 @card w2
 I: irlhrl
 Q: What are inverse RL and hierarchical RL?
+P: **Inverse RL** works backwards. Instead of being told the score and finding the behaviour, you watch an expert and guess what score they must be chasing. Like watching a great driver and working out that they care about safety and smoothness, not just speed.
+**Hierarchical RL** breaks a big task into smaller jobs. "Make coffee" becomes "go to kitchen, boil water, pour". Each small job is learned on its own and the big plan just picks which job to do next.
 A: **Inverse RL**: given expert demonstrations, infer the **reward function** that would make that behaviour optimal. Useful when writing a reward by hand is hard, such as driving style.
 **Hierarchical RL**: split a long task into sub-tasks. **Options** are temporally extended actions, each with its own policy, an initiation set (where it can start) and a termination condition. This gives **temporal abstraction** and helps with long horizons and sparse rewards.
 K: inverse RL, hierarchical RL, options, temporal abstraction
@@ -699,6 +734,8 @@ K: inverse RL, hierarchical RL, options, temporal abstraction
 @card w3
 I: history
 Q: State the Markov property in words and in maths. Why does RL rely on it?
+P: The **Markov property** means "the present is enough". To predict tomorrow's weather from a full weather map, you do not need last month's maps. The current map already holds everything useful.
+RL relies on it because then the agent can decide based only on where it is now, instead of carrying its entire life story into every decision.
 A: Words: the future is independent of the past given the present.
 Maths: $P[S_{t+1}\mid S_t] = P[S_{t+1}\mid S_1, \dots, S_t]$.
 Why it matters: it lets values depend only on the current state, which is exactly what makes the **Bellman equation** possible. A policy can also depend only on the current state. If the property fails, values defined on states are ill-posed and bootstrapping methods like TD suffer most.
@@ -707,6 +744,8 @@ K: Markov property, Bellman equation, sufficient statistic
 @card w3
 I: mdpladder
 Q: Explain the chain Markov process, MRP, MDP. What does each add?
+P: Build it up like layers. A **Markov chain** is a board game where dice move you around, with no choices and no points. A **Markov reward process** adds points for landing on squares. A **Markov decision process** adds choices, so you pick your move and the dice still add some randomness.
+Each layer adds one thing: first randomness, then rewards, then decisions.
 A: - **Markov process (chain)** $\langle S, P\rangle$: states and transition probabilities. No reward, no actions.
 - **Markov Reward Process** $\langle S, P, R, \gamma\rangle$: adds rewards and a discount. You can now talk about returns and values, but nothing is chosen.
 - **Markov Decision Process** $\langle S, A, P, R, \gamma\rangle$: adds **actions**. Transitions and rewards now depend on the action: $P(s'\mid s,a)$, $R(s,a)$. The agent has control.
@@ -716,6 +755,8 @@ K: Markov chain, MRP, MDP, tuple
 @card w3
 I: discount
 Q: What is the return and why do we discount?
+P: The **return** is the total score from now until the end. **Discounting** means rewards later count a bit less, like money: 100 dollars today is worth more than 100 dollars in ten years.
+It also keeps the total finite when the game never ends, and it reflects that the far future is less certain. A discount close to 1 means a patient agent, close to 0 means a short-sighted one.
 A: Return $G_t = R_{t+1} + \gamma R_{t+2} + \gamma^2 R_{t+3} + \dots = \sum_{k=0}^{\infty}\gamma^k R_{t+k+1}$.
 Reasons to discount with $\gamma < 1$:
 - Keeps the sum finite in continuing tasks: $|G_t| \le R_{max}/(1-\gamma)$.
@@ -727,6 +768,8 @@ K: return, discount factor, episodic, continuing
 @card w3
 I: epcont
 Q: Episodic vs continuing tasks. Which algorithms only work for one of them?
+P: An **episodic** task has a clear finish line, like a game of chess or a maze. A **continuing** task never ends, like a thermostat running your house forever.
+Monte Carlo methods wait until the finish line to add up the score, so they cannot work if there is no finish line. TD methods learn after every step, so they work in both.
 A: **Episodic** tasks end in a terminal state (games, mazes). **Continuing** tasks run forever (temperature control, stock trading).
 - **Monte Carlo** methods need episodes to end because they wait for the full return. They cannot be used on continuing tasks.
 - **TD, SARSA, Q-learning** work in both because they update every step.
@@ -736,6 +779,8 @@ K: episodic, continuing, Monte Carlo, TD
 @card w3
 I: loop
 Q: How do you formulate a real problem as an MDP? Do one.
+P: Turning a real problem into an MDP is like writing the rules of a board game. Decide what the board shows (**states**), what moves are allowed (**actions**), how the board changes (**transitions**), and how points are scored (**rewards**).
+For a self-driving taxi: the state is location and passenger, actions are drive directions, pick up and drop off, and the reward is plus for a correct drop-off and minus for wasted time.
 A: Define the five parts and say why the state is Markov.
 Example, robot vacuum:
 - $S$: robot position, battery level, map of dirty cells.
@@ -749,6 +794,8 @@ K: MDP formulation, state, action, transition, reward, discount
 @card w3
 I: belief
 Q: What are the extensions and the limitations of MDPs?
+P: MDPs assume you can see everything, the rules never change, and there is one agent. Real life breaks these. Fog hides things (POMDP). Other drivers also learn (multi-agent). Actions can take different amounts of time (semi-MDP).
+The main limits: real state spaces are huge, the rules are usually unknown, and writing a good reward is hard.
 A: Extensions: **POMDPs** (hidden state), **finite-horizon MDPs** (fixed number of steps, deadlines), **continuous or infinite** state and action MDPs, and semi-MDPs with options.
 Limitations:
 - Assumes the Markov property.
@@ -760,6 +807,8 @@ K: POMDP, finite horizon, curse of dimensionality, limitations
 @card w4
 I: backup
 Q: Define the state-value and action-value functions and explain the intuitive difference.
+P: The **state value** $v$ answers "how good is it to be here?" Like how good a chess position is overall. The **action value** $q$ answers "how good is it to make this specific move from here?"
+$v$ rates the place, $q$ rates each option at that place. If you know $q$, picking the best move is easy: choose the highest one.
 A: $v_\pi(s) = \mathbb{E}_\pi[G_t \mid S_t = s]$: how good it is to **be** in $s$ if you then follow $\pi$.
 $q_\pi(s,a) = \mathbb{E}_\pi[G_t \mid S_t = s, A_t = a]$: how good it is to **take action** $a$ in $s$, then follow $\pi$.
 $q$ is more granular because it ranks actions. That is exactly what you need to improve a policy without a model, since $\pi'(s) = \arg\max_a q(s,a)$ needs no transition probabilities.
@@ -769,6 +818,8 @@ K: state-value function, action-value function, expected return
 @card w4
 I: backup
 Q: State the Bellman expectation equation and explain each symbol.
+P: The **Bellman equation** says: the value of where you are now equals the reward you get next plus the discounted value of where you land, averaged over what might happen.
+Like valuing a house as next year's rent plus what the house will be worth next year. You break a long future into "one step, then the rest".
 A: $$v_\pi(s) = \sum_a \pi(a\mid s) \sum_{s',r} p(s',r\mid s,a)\,[\,r + \gamma v_\pi(s')\,]$$
 - $\pi(a\mid s)$: probability the policy picks $a$.
 - $p(s',r\mid s,a)$: probability the environment moves to $s'$ with reward $r$.
@@ -780,6 +831,8 @@ K: Bellman expectation equation, policy, transition probability, recursion
 @card w4
 I: backup
 Q: How are v and q related? Write both one-step lookaheads.
+P: $v$ and $q$ point at each other. The value of a place is the average of the values of the moves your policy would make there. The value of a move is the reward it gives plus the value of the place it takes you.
+Like a restaurant's rating being the average of its dishes, and each dish's rating depending on how you feel afterwards.
 A: State to action: $v_\pi(s) = \sum_a \pi(a\mid s)\, q_\pi(s,a)$. Average the action values using the policy.
 Action to state: $q_\pi(s,a) = R(s,a) + \gamma \sum_{s'} P(s'\mid s,a)\, v_\pi(s')$. Immediate reward plus discounted expected next value.
 Substitute one into the other to get each equation in terms of itself. The optimal versions replace the policy average with a max: $v_*(s) = \max_a q_*(s,a)$.
@@ -788,6 +841,8 @@ K: v-q relationship, lookahead, backup diagram
 @card w4
 I: backup
 Q: What is the Bellman optimality equation and why can't you solve it with a matrix inverse?
+P: The **optimality** version swaps "average over my usual moves" for "take the best move". It describes perfect play.
+That "take the best" (the max) makes the equation non-linear, like a fork in a road where you always pick one branch. A matrix inverse only solves straight-line (linear) equations, so instead we solve it step by step, iterating until it settles.
 A: $$v_*(s) = \max_a \sum_{s',r} p(s',r\mid s,a)[r + \gamma v_*(s')]$$
 $$q_*(s,a) = \sum_{s',r} p(s',r\mid s,a)[r + \gamma \max_{a'} q_*(s',a')]$$
 The **max** makes it **non-linear**, so there is no closed-form $(I-\gamma P)^{-1}$ solution. You solve it iteratively: value iteration, policy iteration, Q-learning, SARSA.
@@ -797,6 +852,8 @@ K: Bellman optimality equation, non-linear, max operator, iterative methods
 @card w4
 I: grid4
 Q: What is an optimal policy? Is it unique? Does a deterministic one always exist?
+P: An **optimal policy** is a strategy that does at least as well as any other strategy from every starting point.
+There can be several, like two equally fast routes to work, but they all share the same best values. And there is always at least one that never needs to flip a coin: in every situation it just picks one best move.
 A: $\pi_*$ is optimal if $v_{\pi_*}(s) \ge v_\pi(s)$ for **every** state and every policy $\pi$.
 - For any finite MDP an optimal policy exists, and all optimal policies share the same $v_*$ and $q_*$.
 - It need not be unique: ties between equally good actions give several optimal policies.
@@ -807,6 +864,8 @@ K: optimal policy, deterministic policy, existence, uniqueness
 @card w4
 I: taxichain
 Q: How do you solve the Bellman equation for an MRP directly, and when is that a bad idea?
+P: For a small problem with no choices, you can solve all the values at once like a set of simultaneous equations from school, with one matrix inversion.
+It becomes a bad idea for big problems, because the work grows with the cube of the number of states. A thousand times more states means a billion times more work.
 A: Matrix form $\mathbf v = \mathbf R + \gamma P \mathbf v$, so $\mathbf v = (I - \gamma P)^{-1}\mathbf R$.
 Cost is $O(n^3)$ for $n$ states. Fine for a few hundred states, impossible for millions. Then use iterative methods: DP, Monte Carlo, TD.
 It also needs the model $P$ and $R$, which model-free settings do not have.
@@ -815,6 +874,8 @@ K: matrix form, direct solution, complexity
 @card w5
 I: backup
 Q: What is dynamic programming in RL, and what two properties make it work?
+P: **Dynamic programming** is solving a big problem by reusing answers to smaller ones, like working out the fastest route home by first knowing the fastest route from each neighbouring street.
+It needs two things. The problem must split into smaller copies of itself (**optimal substructure**), and the small answers must get reused many times (**overlapping subproblems**). The Bellman equation gives both. And DP needs the full rules of the game.
 A: **DP** computes optimal policies **given a perfect model** of the MDP, by turning the Bellman equations into update rules.
 - **Optimal substructure**: the optimal value of a state is built from optimal values of its successors (Bellman equation).
 - **Overlapping sub-problems**: the same states are reached by many paths, so their values are computed once and reused. The value function is the cache.
@@ -824,6 +885,8 @@ K: dynamic programming, optimal substructure, overlapping sub-problems, perfect 
 @card w5
 I: pivi
 Q: Prediction vs control. Which DP algorithm solves which?
+P: **Prediction** asks "how good is this strategy?", like grading a fixed game plan. **Control** asks "what is the best strategy?", like finding the winning plan.
+Policy evaluation does prediction. Policy iteration and value iteration do control.
 A: **Prediction**: given $\pi$, find $v_\pi$. Solved by **iterative policy evaluation**.
 **Control**: find $\pi_*$ and $v_*$. Solved by **policy iteration** or **value iteration**.
 The same split appears later: MC prediction vs MC control, TD(0) vs SARSA and Q-learning.
@@ -832,6 +895,8 @@ K: prediction, control, policy evaluation, policy iteration, value iteration
 @card w5
 I: grid4
 Q: Walk through iterative policy evaluation, including the stopping rule.
+P: **Iterative policy evaluation** is like gossip spreading through a town. Start with every state's value at zero. Each round, every state updates its value from its neighbours' values plus the reward. After many rounds the values settle.
+You stop when a full round changes nothing by more than a tiny amount, the threshold you chose.
 A: 1. Initialise $V(s)$ arbitrarily, terminal states at 0.
 2. Sweep over all states: $V(s) \leftarrow \sum_a \pi(a\mid s)\sum_{s',r} p(s',r\mid s,a)[r + \gamma V(s')]$.
 3. Track $\Delta = \max_s |v_{old} - V(s)|$.
@@ -843,6 +908,8 @@ K: policy evaluation, sweep, convergence threshold, gridworld
 @card w5
 I: grid4
 Q: Explain policy improvement and the policy improvement theorem.
+P: **Policy improvement** means: once you know how good each move is, switch to the best move in every state. Like a delivery driver who, after a week of timing routes, always takes the fastest street at each corner.
+The **policy improvement theorem** guarantees that doing this never makes things worse. You either improve or you are already optimal.
 A: Given $v_\pi$, build $\pi'(s) = \arg\max_a q_\pi(s,a)$ (greedy).
 **Theorem**: if $q_\pi(s,\pi'(s)) \ge v_\pi(s)$ for all $s$, then $v_{\pi'}(s) \ge v_\pi(s)$ for all $s$. Intuition: taking a better action once and then following $\pi$ is better, so taking it every time is at least as good.
 If greedy improvement changes nothing, then $v_\pi$ satisfies the Bellman optimality equation, so $\pi$ is already optimal. That is the stopping condition.
@@ -851,6 +918,8 @@ K: policy improvement, greedy, policy improvement theorem
 @card w5
 I: pivi
 Q: Compare policy iteration and value iteration.
+P: **Policy iteration** is "fully grade the plan, then improve it, repeat". Few rounds, but each one is slow.
+**Value iteration** is "do one quick grading pass and improve at the same time, repeat". Many cheap rounds. Both reach the same best answer, like taking a few long strides or many short steps to the same place.
 A: **Policy iteration**: evaluate the policy fully (many sweeps), then improve greedily. Repeat until the policy is stable. Few outer iterations, each expensive. Converges in a finite number of iterations because there are finitely many deterministic policies and each step strictly improves until optimal.
 **Value iteration**: one sweep of the **Bellman optimality** backup $V(s) \leftarrow \max_a \sum p[r + \gamma V(s')]$, repeated until $V$ converges, then extract the greedy policy. Each iteration cheap, many iterations.
 Value iteration is policy iteration with evaluation truncated to one sweep. Both are special cases of **GPI** and give the same optimal answer.
@@ -859,6 +928,8 @@ K: policy iteration, value iteration, GPI, Bellman optimality
 @card w5
 I: gpi
 Q: What is generalised policy iteration (GPI) and why is it the most important idea in the course?
+P: **GPI** is the dance between two partners. One partner (evaluation) asks "how good is my current plan?". The other (improvement) says "then let us change the plan to do better". They keep going until neither has anything to change.
+Almost every RL method in the course is this same dance with different steps: DP, Monte Carlo, TD, SARSA, Q-learning and actor-critic.
 A: **GPI** is the pattern of two interacting processes: **evaluation** (make the value function match the policy) and **improvement** (make the policy greedy with respect to the value function). They compete locally but converge together to $v_*$ and $\pi_*$, since the only stable point is where the policy is greedy on its own value, which is the Bellman optimality equation.
 Nearly every method is GPI with a different evaluation step: DP (full model backups), MC control (sample returns), SARSA and Q-learning (TD), actor-critic (critic evaluates, actor improves).
 K: GPI, evaluation, improvement, unifying framework
@@ -866,6 +937,7 @@ K: GPI, evaluation, improvement, unifying framework
 @card w5
 I: asyncdp
 Q: Synchronous vs asynchronous DP: what is the difference, and why use asynchronous?
+P: Synchronous is like a class where everyone hands in their test, the teacher marks them all, and only then are the grades updated. Asynchronous is like the teacher updating each grade the moment one paper is marked, so the next student's result can already use it.
 A: **Synchronous DP.** All states are updated at the same time, using the values from the previous iteration.
 $$V_{k+1}(s) = R(s) + \gamma \sum_{s'} P(s'\mid s)\,V_k(s')$$
 You compute the new value of every state, store them separately, then replace the old table once all updates are finished. Pro: easy to understand and analyse.
@@ -885,6 +957,8 @@ K: asynchronous DP, in-place updates, prioritised sweeping
 @card w5
 I: curse
 Q: Is DP efficient? What is its real limitation?
+P: DP is efficient compared with blindly trying every possible strategy, which would take forever. The real problem is that the number of states explodes. Add one more thing to track and the table can multiply by ten.
+It also needs the full rules of the world, which you rarely have in real life.
 A: In a formal sense yes. DP is **polynomial** in the number of states and actions, while searching every deterministic policy costs $|A|^{|S|}$. It also scales better than linear programming.
 The real problem is the **curse of dimensionality**: the number of states grows exponentially with the number of state variables, plus DP needs a **perfect model**. MC and TD remove the model requirement, function approximation tackles the size.
 K: polynomial time, curse of dimensionality, perfect model
@@ -892,6 +966,8 @@ K: polynomial time, curse of dimensionality, perfect model
 @card w5
 I: gambler
 Q: Briefly describe Jack's Car Rental and the Gambler's Problem. What do they show?
+P: **Jack's Car Rental** is a business owner deciding how many cars to move between two shops overnight so that neither runs out. **Gambler's Problem** is deciding how much to bet on each coin flip to reach 100 dollars.
+Both show that DP finds strategies a human would never guess, like "bet everything at 50 but only 1 dollar at 51", as long as you know the rules exactly.
 A: **Jack's Car Rental** (policy iteration): two locations, Poisson rentals and returns, move up to 5 cars overnight at 2 per car, earn 10 per rental. Policy iteration goes from "never move cars" to the optimal policy in about four improvements.
 **Gambler's Problem** (value iteration): capital 1 to 99, bet on coin flips with heads probability 0.4, reward +1 only on reaching 100. The optimal betting policy is jagged and non-obvious (bet everything at 50, not at 51).
 They show DP finds optimal policies that intuition would miss, provided you know the model.
@@ -899,6 +975,8 @@ K: policy iteration, value iteration, worked examples
 @card w6
 I: unified
 Q: What are Monte Carlo methods in RL and what are their requirements?
+P: **Monte Carlo** means learning from complete experiences. Play a whole game, see the final score, then credit every move you made with that score. Do it many times and average.
+Like judging a hiking trail by walking it to the end many times and noting how long it took. It needs no map of the world, but every trip must have an end.
 A: **Monte Carlo** methods estimate values by **averaging complete sampled returns** from experience. By the law of large numbers the average converges to the expected return.
 Requirements and properties:
 - **Model-free**: needs only experience or a simulator, no $P$ or $R$.
@@ -911,6 +989,8 @@ K: Monte Carlo, sample average, model-free, episodic, no bootstrapping
 @card w6
 I: fvev
 Q: First-visit vs every-visit MC. Do the numeric example.
+P: Say you walk past the same café twice on one trip. **First-visit** only counts the first time you passed it when averaging how good that café spot is. **Every-visit** counts both times.
+Both end up with the right answer given enough trips. First-visit is the textbook default because its samples are independent of each other.
 A: Episode A, B, A, C, terminal with rewards 1, 2, 1, 5 and $\gamma=1$. Returns: from first A $G=9$, from B $G=8$, from second A $G=6$, from C $G=5$.
 - **First-visit**: only the first visit to each state counts. $V(A)=9$, $V(B)=8$, $V(C)=5$.
 - **Every-visit**: every visit counts. $V(A) = (9+6)/2 = 7.5$, $V(B)=8$, $V(C)=5$.
@@ -920,6 +1000,8 @@ K: first-visit MC, every-visit MC, returns, bias
 @card w6
 I: qvsv
 Q: Why does Monte Carlo control estimate Q instead of V?
+P: Knowing how good a room is ($V$) does not tell you which door to take, unless you have a map that says where each door leads. Monte Carlo has no map.
+Knowing how good each door is ($Q$) lets you just pick the best door. No map needed. So model-free control learns $Q$.
 A: Without a model, $V$ is not enough to act. Greedy improvement from $V$ needs $\pi'(s)=\arg\max_a [R(s,a) + \gamma\sum_{s'}P(s'\mid s,a)V(s')]$, which uses $P$ and $R$.
 With $Q$, improvement is just $\pi'(s) = \arg\max_a Q(s,a)$, which is model-free. So every model-free control method (MC control, SARSA, Q-learning, DQN) learns action values.
 K: action values, model-free control, greedy improvement
@@ -927,6 +1009,8 @@ K: action values, model-free control, greedy improvement
 @card w6
 I: egreedy
 Q: What is the exploration problem in MC control, and what are exploring starts and soft policies?
+P: If you always take the door that looks best, you never learn about the other doors. That is the exploration problem.
+**Exploring starts** is like being dropped into a random room and forced to take a random first door, so every option gets tried. A **soft policy** keeps a small chance of trying any door, like epsilon-greedy.
 A: If the policy is deterministic you only ever see one action per state, so you cannot compare actions.
 - **Exploring starts**: every episode begins at a random state-action pair with non-zero probability for each. Guarantees coverage, but unrealistic with real systems (you cannot start a real robot in any state you like).
 - **Soft policies**: keep $\pi(a\mid s)>0$ for all actions, for example $\varepsilon$-greedy. On-policy MC control with $\varepsilon$-soft policies converges to the best $\varepsilon$-soft policy, not the truly optimal one, unless $\varepsilon$ decays.
@@ -935,6 +1019,8 @@ K: exploring starts, soft policy, epsilon-soft, coverage
 @card w6
 I: glie
 Q: What is GLIE and why do we need it?
+P: **GLIE** is a training plan for a new employee. At first they try everything, but over time they settle on the best way of working. Two rules: never completely stop trying every option (so nothing is missed), and become fully focused on the best option in the end.
+Turning down exploration slowly, like $\varepsilon = 1/k$, does both.
 A: **Greedy in the Limit with Infinite Exploration**:
 1. Every state-action pair is visited infinitely often.
 2. The policy converges to greedy.
@@ -944,6 +1030,8 @@ K: GLIE, decaying epsilon, convergence
 @card w6
 I: onoff
 Q: On-policy vs off-policy. Explain with target and behaviour policies.
+P: **On-policy** is learning to drive by driving yourself, and you learn about the way you drive. **Off-policy** is learning to drive well by watching someone else's driving, maybe a learner driver, and working out what the best driver would do.
+The **behaviour policy** is the one making the moves. The **target policy** is the one you are learning about. On-policy means they are the same.
 A: **Target policy** $\pi$: the policy you want to learn about. **Behaviour policy** $b$: the policy that actually generates the data.
 - **On-policy**: $\pi = b$. You learn about the exploratory policy you are running (SARSA, MC control with $\varepsilon$-greedy).
 - **Off-policy**: $\pi \neq b$. You learn about, say, the greedy policy while acting exploratorily, or learn from someone else's data (Q-learning, off-policy MC with importance sampling, DQN).
@@ -954,6 +1042,8 @@ K: on-policy, off-policy, target policy, behaviour policy, coverage
 @card w6
 I: isratio
 Q: What is importance sampling and why is it needed for off-policy MC?
+P: You want to know how a careful driver would do, but your data comes from a reckless one. **Importance sampling** re-weights each recorded trip by how likely the careful driver would have been to make the same moves.
+Trips the careful driver would also have taken count more, trips it would never take count less or zero. The catch: the weights can swing wildly and make estimates noisy.
 A: Returns collected under $b$ have expectation $v_b$, not $v_\pi$. Re-weight each return by how much more likely the trajectory is under $\pi$:
 $$\rho_{t:T-1} = \prod_{k=t}^{T-1}\frac{\pi(A_k\mid S_k)}{b(A_k\mid S_k)}$$
 The environment's transition probabilities cancel, so the ratio needs no model.
@@ -965,6 +1055,8 @@ K: importance sampling, ratio, ordinary IS, weighted IS, variance
 @card w6
 I: unified
 Q: Compare Monte Carlo and Dynamic Programming.
+P: **DP** is planning with a perfect map without leaving the house. It looks at every possible next step and needs to know the rules.
+**Monte Carlo** is going out and walking the routes. No map needed, but you must finish each walk before you learn anything. DP updates from guesses of neighbours, MC updates from real finished trips.
 A: Side by side:
 - Model needed: DP yes, MC no.
 - Bootstraps: DP yes, MC no.
@@ -977,6 +1069,8 @@ K: MC vs DP, bootstrapping, full backup, sample backup
 @card w7
 I: drive
 Q: What is TD learning? Write TD(0) and name its parts.
+P: **TD learning** updates your guess after every single step, using your next guess. Like a weather forecast: you do not wait for Saturday to fix Monday's forecast for Saturday. On Tuesday you already adjust it using Tuesday's forecast.
+The **TD error** is the surprise: what you got plus your new guess, minus what you expected.
 A: **TD learning** is model-free like MC but **bootstraps** like DP: it updates after every step using its current estimate of the next state.
 $$V(S_t) \leftarrow V(S_t) + \alpha\,[\,\underbrace{R_{t+1} + \gamma V(S_{t+1})}_{\text{TD target}} - V(S_t)\,]$$
 - **TD target**: $R_{t+1} + \gamma V(S_{t+1})$.
@@ -988,6 +1082,8 @@ K: TD learning, TD(0), TD target, TD error, bootstrapping
 @card w7
 I: dart
 Q: Explain the bias variance trade-off between MC and TD.
+P: Monte Carlo is like asking one person to walk the full route and report the total time. Honest (no bias), but one walk can be unusually fast or slow (high variance).
+TD is like asking at each corner "how long from here?" and trusting that answer. Less noisy, but if the people at the corners are wrong, you inherit their mistake (bias).
 A: - MC target $G_t$ is an **unbiased** sample of $v_\pi(S_t)$ but has **high variance**, because it sums many random actions, transitions and rewards.
 - TD target $R_{t+1}+\gamma V(S_{t+1})$ is **biased** because $V(S_{t+1})$ is only an estimate, but has **low variance** because it depends on one random step.
 Consequences: TD usually learns faster in Markov environments and is more sensitive to initial values. MC is more robust when the Markov property fails. n-step and $\lambda$-returns sit in between.
@@ -996,6 +1092,8 @@ K: bias, variance, MC, TD, n-step
 @card w7
 I: drive
 Q: Explain the driving home example.
+P: You are driving home and estimate 30 minutes. Then it starts raining and you think "this will take longer". **TD** updates your estimate right then, at each landmark.
+**Monte Carlo** waits until you arrive home and only then compares your original guess with the real total. TD learns during the trip, MC learns after it.
 A: You predict travel time while driving: leave office (30 min predicted), reach car in rain (40), exit highway (35), stuck behind a truck (40), home street (43), arrive (43).
 - **MC** waits until you arrive, then pulls every earlier prediction towards the final 43.
 - **TD** adjusts each prediction immediately towards the next prediction. When it starts raining you revise at once instead of waiting.
@@ -1005,6 +1103,8 @@ K: driving home, MC vs TD, online learning
 @card w7
 I: ab
 Q: The AB example: why do MC and TD give different answers from the same data?
+P: Same data, different philosophy. Monte Carlo only trusts the real totals it saw. TD trusts its own connections between states and fills gaps by linking what it knows.
+Like two detectives with the same evidence. One sticks only to direct witness reports. The other builds a chain of logic. With little data they disagree, and TD's chain often generalises better.
 A: Eight episodes: A,0,B,0 once, B,1 six times, B,0 once. Everyone agrees $V(B) = 6/8 = 0.75$.
 - **MC**: $V(A) = 0$, because the only episode through A returned 0. It minimises error on the observed returns.
 - **TD**: $V(A) = 0 + V(B) = 0.75$. It assumes Markov structure: A always went to B, and B is worth 0.75.
@@ -1014,6 +1114,8 @@ K: AB example, certainty equivalence, batch TD, maximum likelihood
 @card w7
 I: sarsaq
 Q: Write the SARSA update. Why is it on-policy? Where does the name come from?
+P: **SARSA** learns from what it actually did next. It uses State, Action, Reward, next State, next Action, which spells the name.
+It is **on-policy** because it learns the value of its own habits, including its occasional random moves. Like a cautious driver who knows they sometimes swerve and so stays away from the edge.
 A: $$Q(S_t,A_t) \leftarrow Q(S_t,A_t) + \alpha[R_{t+1} + \gamma Q(S_{t+1},A_{t+1}) - Q(S_t,A_t)]$$
 The name is the quintuple $(S_t, A_t, R_{t+1}, S_{t+1}, A_{t+1})$.
 It is **on-policy** because $A_{t+1}$ is the action the agent actually takes next with its $\varepsilon$-greedy policy, and that same action is then executed. It evaluates and improves the policy it follows, exploration included.
@@ -1023,6 +1125,8 @@ K: SARSA, on-policy, quintuple, TD control
 @card w7
 I: sarsaq
 Q: Write the Q-learning update. Why is it off-policy?
+P: **Q-learning** learns from the best possible next move, not the move it actually made. Even while exploring randomly, it imagines "if I played perfectly from here".
+That is why it is **off-policy**: the behaviour can be messy, but what it learns is the value of the perfect strategy.
 A: $$Q(S_t,A_t) \leftarrow Q(S_t,A_t) + \alpha[R_{t+1} + \gamma \max_a Q(S_{t+1},a) - Q(S_t,A_t)]$$
 It bootstraps from the **best** next action, not the one actually taken. So it learns $q_*$ (the value of the greedy target policy) whatever exploratory behaviour policy generated the data, as long as all pairs keep being visited.
 Same numbers as SARSA but next-state values 8, 11, 5: target $2 + 0.9 \times 11 = 11.9$, new $Q = 10 + 0.5(1.9) = 10.95$. One substitution, max instead of the taken action, is the entire difference.
@@ -1031,6 +1135,8 @@ K: Q-learning, off-policy, max operator, q-star
 @card w7
 I: onoff
 Q: Oral defense favourite: where is the hidden policy in Q-learning?
+P: The hidden policy is the "max". When Q-learning updates, it asks "what is the best next move?". Taking the best move is a policy, the **greedy policy**, even though no one wrote it down.
+So Q-learning secretly learns about the greedy strategy while it behaves with an epsilon-greedy one.
 A: There are two policies and neither is stored as a table:
 - **Behaviour policy**: $\varepsilon$-greedy with respect to $Q$. This is what actually moves the agent and collects data.
 - **Target policy**: greedy with respect to $Q$. It is hidden inside the $\max_a Q(S_{t+1},a)$ term of the update, because the max is exactly the value of acting greedily from $S_{t+1}$.
@@ -1040,6 +1146,8 @@ K: Q-learning, hidden policy, target policy, behaviour policy, greedy
 @card w7
 I: cliff
 Q: Cliff walking: what do SARSA and Q-learning learn, and why?
+P: Picture a path along a cliff edge. **Q-learning** learns the shortest route right along the edge, because it assumes it will play perfectly. But while exploring, it sometimes slips and falls.
+**SARSA** knows it slips sometimes, so it learns a safer route further from the edge. Q-learning finds the best route for a perfect player, SARSA the best route for the player it actually is.
 A: Reward -1 per step, -100 and back to start if you step into the cliff.
 - **Q-learning** learns the **optimal path** right along the cliff edge, because its target assumes greedy behaviour. But with $\varepsilon$-greedy exploration it occasionally falls off, so its **online reward during training is worse**.
 - **SARSA** learns the **safer path** further from the edge, because its values include the risk of its own random exploratory steps.
@@ -1049,6 +1157,8 @@ K: cliff walking, SARSA, Q-learning, safe exploration
 @card w7
 I: sarsaq
 Q: What is Expected SARSA and how does it relate to SARSA and Q-learning?
+P: **Expected SARSA** does not use the single next move you took. It uses the average over all the moves you might take, weighted by how likely each one is.
+Less luck involved, so it is steadier. If your policy is fully greedy, the average becomes the max, and it turns into Q-learning.
 A: Target: $R_{t+1} + \gamma \sum_a \pi(a\mid S_{t+1}) Q(S_{t+1},a)$, the expectation over the next action instead of a sample.
 - Removes the variance of sampling $A_{t+1}$, so it is more stable, especially at large $\alpha$.
 - More computation per step.
@@ -1058,6 +1168,8 @@ K: Expected SARSA, variance reduction, generalisation of Q-learning
 @card w7
 I: maxbias
 Q: What is maximisation bias and how does Double Q-learning fix it?
+P: If you taste ten dishes that are all equally average and pick the one that tasted best today, you will overrate it. Luck made it seem better. That is **maximisation bias**.
+**Double Q-learning** uses two separate taste testers. One picks the best-looking dish, the other gives the honest score for it. Their luck does not line up, so the overrating disappears.
 A: If several actions have true value 0 but noisy estimates, $\max_a Q(s,a)$ will usually be positive, because the max picks whichever estimate happens to be too high. Q-learning uses that max in its target, so it **overestimates**.
 **Double Q-learning** keeps $Q_1$ and $Q_2$. With probability 0.5:
 $$Q_1(S,A) \leftarrow Q_1 + \alpha[R + \gamma Q_2(S', \arg\max_a Q_1(S',a)) - Q_1(S,A)]$$
@@ -1068,6 +1180,8 @@ K: maximisation bias, overestimation, Double Q-learning, Double DQN
 I: unified
 I: spectrum
 Q: Unify DP, MC and TD. What are the two axes?
+P: Two questions sort them. Do you look one step ahead or all the way to the end? (**depth**: TD and DP short, MC long). Do you consider every possible outcome or just one that happened? (**width**: DP every outcome, TD and MC one sample).
+DP is wide and shallow, MC is narrow and deep, TD is narrow and shallow.
 A: Axis 1, **depth**: TD backs up one step, MC backs up to the end of the episode, n-step in between.
 Axis 2, **width**: sample backups (one sampled successor: MC, TD) vs full backups (all successors weighted by probability: DP, exhaustive search).
 - DP: full and shallow, needs a model.
@@ -1079,12 +1193,16 @@ K: unified view, backup depth, sample backup, full backup
 @card w7
 I: afterstate
 Q: What are afterstates and when are they useful?
+P: In tic-tac-toe, the position after your move is what matters, no matter which earlier position you came from. That board is an **afterstate**.
+Two different starting boards plus two different moves can land on the same afterstate. Learning a value for the afterstate means you learn both cases at once, like recognising that two recipes produce the same cake.
 A: An **afterstate** is the situation right after your own move but before the environment or opponent responds, like a tic-tac-toe board after you place your mark.
 Useful when the immediate effect of your action is known even if the rest of the dynamics is not. Different (position, move) pairs that lead to the same board share one value, so learning is faster. Also used in queuing problems.
 K: afterstate, post-decision state, tic-tac-toe
 
 @card w7
 Q: What conditions guarantee tabular Q-learning converges to q-star?
+P: For Q-learning to find the true best values, every option must keep being tried forever, so nothing is left unexplored. The learning rate must shrink over time, but not too fast, so it settles without stopping early.
+Like learning a new city: keep visiting every street now and then, and slowly trust your map more and your latest walk less.
 A: - Every state-action pair is visited infinitely often (the behaviour policy keeps exploring).
 - Step sizes satisfy the Robbins-Monro conditions $\sum_t \alpha_t = \infty$ and $\sum_t \alpha_t^2 < \infty$ (for example $\alpha_t = 1/N(s,a)$).
 - Finite MDP and bounded rewards.
@@ -1094,6 +1212,8 @@ K: convergence, Robbins-Monro, infinite exploration
 @card w8
 I: houseprice
 Q: Why do tabular methods fail on real problems?
+P: A table needs one box for every situation. Real problems, like the pixels of a video game or a robot's joint angles, have more situations than atoms in the universe.
+Even if you had the memory, you would never visit most boxes, and a table cannot guess that two nearly identical situations are worth about the same.
 A: - **Memory**: Backgammon about $10^{20}$ states, Go about $10^{170}$, helicopter control is continuous.
 - **Time and data**: every state must be visited many times before its entry is any good.
 - **No generalisation**: learning about one state teaches nothing about a similar one. If the state is an image you cannot even list the states.
@@ -1103,6 +1223,8 @@ K: tabular, curse of dimensionality, generalisation, function approximation
 @card w8
 I: vfa3
 Q: What is value function approximation and what are the three ways to set up the approximator?
+P: Replace the giant table with a formula that guesses values, like estimating a house price from its size and location instead of memorising every house sold.
+Three setups: give it a situation and get its value. Give it a situation plus a move and get that move's value. Or give it a situation and get the value of every move at once (what DQN does).
 A: Replace the table with $\hat v(s,\mathbf w) \approx v_\pi(s)$ or $\hat q(s,a,\mathbf w) \approx q_\pi(s,a)$, where the weight vector $\mathbf w$ is far smaller than the number of states. Train $\mathbf w$ with MC or TD targets using SGD.
 Three architectures:
 1. State in, $\hat v(s)$ out (prediction).
@@ -1113,6 +1235,8 @@ K: VFA, weights, architectures, generalisation
 @card w8
 I: houseprice
 Q: Which function approximators can you use, and how do you choose?
+P: Options go from simple to powerful: a straight-line formula on hand-picked features, tiles or bumps (tile coding, RBFs), decision trees, nearest-neighbour memory, and neural networks.
+Choose like picking a tool: simple ones are fast, stable and easy to understand. Neural networks handle raw images but are harder to train stably.
 A: - **Tables**: exact, no generalisation, do not scale.
 - **Linear in features** $\mathbf w^\top \mathbf x(s)$: strong convergence guarantees, cheap, but needs good hand-made features (tile coding, RBF, Fourier, polynomial).
 - **Neural networks / CNNs**: learn their own features from raw inputs like pixels, powerful, weakest theory.
@@ -1123,6 +1247,8 @@ K: function approximator, linear, neural network, tile coding, non-stationary
 @card w8
 I: vemu
 Q: What is the VE objective and why do we need a state weighting?
+P: With limited weights you cannot be perfect everywhere, so you must decide where errors matter. **VE** is the average squared error, weighted by how often you visit each state.
+Like a shop that cares most about stock accuracy for products people actually buy, and less about the dusty corner nobody visits.
 A: $\overline{VE}(\mathbf w) = \sum_s \mu(s)[v_\pi(s) - \hat v(s,\mathbf w)]^2$.
 With fewer weights than states, improving one state's estimate makes others worse, so you must decide which states matter. $\mu(s)$, the **on-policy distribution** (fraction of time spent in $s$), weights errors by how often you are actually there. Semi-gradient TD's convergence results depend on updating according to this distribution.
 K: VE, mean squared value error, on-policy distribution
@@ -1130,6 +1256,8 @@ K: VE, mean squared value error, on-policy distribution
 @card w8
 I: semigrad
 Q: Gradient MC vs semi-gradient TD. Why is TD only a semi-gradient?
+P: **Gradient MC** compares the guess with a real final score that does not depend on the guess. That is honest gradient descent.
+**Semi-gradient TD** compares the guess with "reward plus my own next guess". The target moves when the guess moves, but we pretend it is fixed. Like aiming at a target that shifts whenever you adjust your aim. It is faster but can wobble.
 A: General update: $\mathbf w \leftarrow \mathbf w + \alpha[U_t - \hat v(S_t,\mathbf w)]\nabla_{\mathbf w}\hat v(S_t,\mathbf w)$.
 - **Gradient MC**: $U_t = G_t$, unbiased and independent of $\mathbf w$. True SGD on VE. Converges to a local optimum (global for linear).
 - **Semi-gradient TD(0)**: $U_t = R_{t+1} + \gamma\hat v(S_{t+1},\mathbf w)$. The target depends on $\mathbf w$, but we ignore that dependence and differentiate only $\hat v(S_t,\mathbf w)$. So it is not the gradient of any fixed objective.
@@ -1139,6 +1267,8 @@ K: gradient MC, semi-gradient, TD target, SGD
 @card w8
 I: houseprice
 Q: Linear value function approximation: write it, its update, and its convergence result.
+P: **Linear approximation** says the value is a weighted sum of features, like a price being 3 dollars per square metre plus 50 dollars per bedroom. Learning adjusts each weight up or down by how wrong the guess was, times that feature.
+With this simple form, semi-gradient TD is guaranteed to settle near a good answer when learning from your own experience.
 A: $\hat v(s,\mathbf w) = \mathbf w^\top \mathbf x(s)$, so $\nabla_{\mathbf w}\hat v = \mathbf x(s)$ and the update is $\mathbf w \leftarrow \mathbf w + \alpha[U_t - \mathbf w^\top\mathbf x(S_t)]\,\mathbf x(S_t)$.
 Update equals step size times prediction error times feature value.
 - Gradient MC converges to the **global** optimum of VE (linear has one optimum).
@@ -1150,6 +1280,8 @@ K: linear FA, feature vector, TD fixed point, convergence
 I: coarse
 I: tile
 Q: Explain coarse coding and tile coding. Why is tile coding popular?
+P: **Coarse coding** covers the space with overlapping circles. A state is described by which circles it sits in, so nearby states share circles and share learning.
+**Tile coding** uses grids laid on top of each other, each slightly shifted. Like several transparent grid sheets stacked with small offsets. It is fast, simple and generalises well, so it is popular.
 A: **Coarse coding**: cover the state space with overlapping regions. A state's feature is 1 for each region it falls in. Two states generalise in proportion to the regions they share. Bigger regions generalise more broadly early on, but final resolution depends mostly on how many features you have.
 **Tile coding**: several offset grids (**tilings**). Each state activates exactly **one tile per tiling**, so the number of active features is constant. That makes step size easy to set ($\alpha = \frac{1}{10n}$ for $n$ tilings is a common start) and computation cheap (sum $n$ weights). Asymmetric offsets avoid diagonal artefacts. **Hashing** cuts memory.
 Classic use: Mountain Car with semi-gradient SARSA.
@@ -1158,6 +1290,8 @@ K: coarse coding, tile coding, tilings, hashing, Mountain Car
 @card w8
 I: rbf
 Q: What are polynomial, Fourier and RBF features?
+P: These are different ways to turn a state into features. **Polynomial** features are like $x$, $x^2$, $xy$. **Fourier** features use waves of different speeds. **RBF** features are soft bumps that are strongest at a centre and fade with distance.
+Like describing a song by its notes, its rhythm patterns, or how close it is to a few famous songs.
 A: - **Polynomial**: $(1, s_1, s_2, s_1 s_2, \dots)$. The constant allows an offset, the product captures interaction. Generalise poorly online at high order.
 - **Fourier basis**: $x_i(s) = \cos(\pi\,\mathbf c_i^\top \mathbf s)$. Different $\mathbf c$ give different frequencies and interactions. Use smaller step sizes for high frequencies.
 - **RBF**: $x_i(s) = \exp\left(-\frac{\lVert s - c_i\rVert^2}{2\sigma_i^2}\right)$, a smooth bump around centre $c_i$. Smooth and differentiable, but more costly than tile coding in high dimensions.
@@ -1166,12 +1300,16 @@ K: polynomial features, Fourier basis, RBF, feature construction
 @card w8
 I: stateagg
 Q: What is state aggregation and what does it look like?
+P: **State aggregation** puts similar states into the same bucket and gives each bucket one value. Like grading by age group instead of exact age.
+It is the simplest approximation. The values look like a staircase over the true curve.
 A: Group states, one shared weight per group. It is the simplest linear FA (a one-hot feature per group). On the 1000-state random walk with 10 groups, the estimate is a **staircase**: constant within groups, jumps between them, and the edge groups are pulled towards their most visited states because of $\mu$.
 K: state aggregation, staircase, random walk
 
 @card w8
 I: lstd
 Q: What is LSTD and when would you use it?
+P: Normal TD takes many small steps towards the answer, like walking downhill one step at a time. **LSTD** collects all the data and solves for the answer directly in one go, like reading the bottom of the valley off a map.
+It squeezes the most out of little data but each update is more expensive, so use it when data is precious and features are few.
 A: **Least-Squares TD** estimates the TD fixed point directly instead of creeping towards it: $\hat A = \sum_t \mathbf x_t(\mathbf x_t - \gamma\mathbf x_{t+1})^\top + \epsilon I$, $\hat{\mathbf b} = \sum_t R_{t+1}\mathbf x_t$, then $\mathbf w = \hat A^{-1}\hat{\mathbf b}$.
 - Most **data efficient** linear TD method, no step size needed.
 - Costs $O(d^2)$ per step with Sherman-Morrison updates of the inverse (vs $O(d)$ for TD).
@@ -1181,6 +1319,8 @@ K: LSTD, TD fixed point, data efficiency, Sherman-Morrison
 @card w8
 I: triad
 Q: What is the deadly triad?
+P: The **deadly triad** is three things that are each fine alone but can explode together: approximation (guessing with a formula), bootstrapping (learning from your own guesses), and off-policy data (learning about one strategy from another's behaviour).
+Like a rumour mill: copying from others, guessing to fill gaps, and hearing it second hand. Combined, errors feed on themselves.
 A: Combining all three of:
 1. **Function approximation**
 2. **Bootstrapping** (TD-style targets)
@@ -1191,6 +1331,8 @@ K: deadly triad, divergence, off-policy, bootstrapping, function approximation
 @card w8
 I: knn
 Q: What are memory-based and kernel-based methods?
+P: **Memory-based** methods just store experiences and look up similar ones when asked, like a doctor recalling past patients with similar symptoms.
+**Kernel** methods do the same with a smooth weighting: close cases count a lot, distant cases count a little. No fixed formula is learned in advance.
 A: **Memory-based (lazy)** methods store experiences and only compute when queried, for example nearest neighbour or a distance-weighted average of nearby stored targets. Nonparametric: the shape of the function is not fixed in advance and accuracy improves with data. They focus on visited regions and avoid exponential memory, but queries slow down as memory grows (k-d trees help).
 **Kernel regression**: $\hat v(s) = \sum_{s'\in D} k(s,s')\,g(s')$, where the kernel measures how strongly $s'$ generalises to $s$. Any linear method corresponds to the kernel $k(s,s') = \mathbf x(s)^\top\mathbf x(s')$ (kernel trick).
 K: memory-based, nonparametric, kernel, nearest neighbour
@@ -1199,12 +1341,16 @@ K: memory-based, nonparametric, kernel, nearest neighbour
 I: mountaincar
 I: tile
 Q: Describe Mountain Car and why it needs function approximation.
+P: A weak car sits in a valley and cannot drive straight up the hill. It must rock back and forth to build momentum, like pushing a swing higher.
+Position and speed are continuous numbers, so no table can hold every case. Tile coding lets similar positions and speeds share what is learned.
 A: An underpowered car in a valley must reach the top of the right hill. It must first reverse up the left slope to build momentum. State: position and velocity, both **continuous**. Actions: reverse, none, forward. Reward -1 per step.
 The continuous state rules out a table. Semi-gradient (n-step) SARSA with tile coding or RBF features learns the rocking strategy. The agent starts optimistic everywhere, which drives early exploration.
 K: Mountain Car, continuous state, semi-gradient SARSA, tile coding
 @card w9
 I: gpi
 Q: How does control with function approximation work?
+P: Same improve-and-check loop as before, but the giant table of move values is replaced by a formula that guesses them. The agent guesses how good each move is, mostly picks the best, sometimes explores, then nudges the formula towards what actually happened.
+SARSA, Q-learning and Monte Carlo just differ in what "what actually happened" means.
 A: Same GPI loop with $\hat q(s,a,\mathbf w)$ instead of a table: approximate evaluation, then $\varepsilon$-greedy improvement.
 Update: $\mathbf w \leftarrow \mathbf w + \alpha[U_t - \hat q(S_t,A_t,\mathbf w)]\nabla_{\mathbf w}\hat q(S_t,A_t,\mathbf w)$ where
 - MC control: $U_t = G_t$.
@@ -1216,6 +1362,8 @@ K: control, function approximation, semi-gradient SARSA, GPI
 @card w9
 I: triad
 Q: Which algorithms converge with which representations? Give the key pattern.
+P: A rule of thumb for stability: the simpler and more "on-the-job" the method, the safer. Tables always work. Straight-line formulas work for on-policy learning. Neural networks with off-policy learning can blow up.
+Like learning to cook: a recipe card is safe, a simple formula is mostly safe, improvising with second-hand tips can go badly wrong.
 A: Prediction:
 - On-policy MC: table, linear and nonlinear all converge.
 - On-policy TD(0): table and linear converge, nonlinear can diverge.
@@ -1230,6 +1378,8 @@ K: convergence, divergence, deadly triad, chattering
 @card w9
 I: dqnloop
 Q: What are batch methods and why are they more sample efficient?
+P: Instead of learning from each experience once and throwing it away, **batch methods** keep a pile of experiences and learn from it again and again until they fit it as well as possible.
+Like studying from old exam papers several times instead of reading each one once. Same data, more learning.
 A: Incremental SGD uses each transition once and throws it away. **Batch methods** store experience $\mathcal D$ and find the best fit to all of it, for example least squares $LS(\mathbf w) = \sum_t (v_t^\pi - \hat v(s_t,\mathbf w))^2$.
 You can reach the least squares solution by repeatedly sampling pairs from $\mathcal D$ and applying SGD. That idea, store and resample, is exactly **experience replay** in DQN. LSTD solves it in closed form for linear features.
 K: batch methods, least squares, experience replay, sample efficiency
@@ -1237,6 +1387,8 @@ K: batch methods, least squares, experience replay, sample efficiency
 @card w9
 I: dqnarch
 Q: Why use deep neural networks in RL, and why CNNs for images?
+P: Neural networks can find patterns in raw data by themselves, so you do not have to hand-design features. **CNNs** are built for images. They use small sliding filters that spot edges and shapes anywhere in the picture.
+Like scanning a photo with a magnifying glass, looking for the same pattern everywhere, instead of memorising every pixel position.
 A: DNNs are universal approximators, learn features end to end from raw inputs, generalise to unseen and continuous states, and can output policies for continuous actions.
 CNNs suit images because:
 - **Local connectivity and weight sharing**: a filter detects the same feature anywhere, with far fewer weights than a fully connected layer (which overfits on images).
@@ -1248,6 +1400,8 @@ K: deep learning, CNN, weight sharing, end-to-end
 I: conv
 I: pool
 Q: Explain convolution, padding, stride and pooling with numbers.
+P: A **convolution** slides a small window (say 3 by 3) over the image and summarises each patch into one number, like stamping across the page.
+**Padding** adds a border so the edges get stamped too. **Stride** is how far the window jumps each time. **Pooling** shrinks the result by keeping the biggest number in each block, like making a thumbnail.
 A: - **Convolution**: slide an $f\times f$ filter over the input, multiply and sum. A 3x3 vertical edge filter on a 6x6 image (100s on the left, 0s on the right) gives a 4x4 map with 300 along the edge.
 - **Output size**: $\lfloor \frac{n + 2p - f}{s} \rfloor + 1$.
 - **Valid padding** ($p=0$) shrinks the image. **Same padding** $p=(f-1)/2$ keeps size: 6x6 with $p=1$ and a 3x3 filter stays 6x6.
@@ -1259,6 +1413,8 @@ K: convolution, padding, stride, pooling, output size
 @card w9
 I: triad
 Q: Why does naive Q-learning with a neural network become unstable?
+P: Two problems. Consecutive game frames look almost the same, so the network keeps learning the same lesson and forgets others. And the target it chases is built from its own changing guesses, so every update moves the goalpost.
+Like trying to hit a moving target while standing on a wobbly boat.
 A: Two reasons:
 1. **Correlated samples**: consecutive transitions come from the same trajectory, so they are highly correlated. SGD assumes roughly independent samples and overfits to recent experience.
 2. **Non-stationary (moving) targets**: the target $r + \gamma\max_{a'}\hat q(s',a',\mathbf w)$ uses the same weights you are updating, so every update moves the target. Your notes call it chasing the carrot on a stick, which is a good image.
@@ -1269,6 +1425,8 @@ K: instability, correlated samples, moving target, DQN
 @card w9
 I: dqnloop
 Q: Explain experience replay and fixed Q-targets.
+P: **Experience replay** is a notebook of past moments. The agent learns from random pages instead of only the latest one, so lessons are mixed and not repetitive.
+**Fixed Q-targets** means the target comes from a frozen copy of the network that is only updated now and then. Like a teacher who keeps the answer sheet fixed for a week instead of changing it every minute.
 A: **Experience replay**: store transitions $(s,a,r,s',\text{done})$ in a replay buffer $\mathcal D$. Train on **random mini-batches** from it.
 - Breaks temporal correlation.
 - Reuses each transition many times (sample efficiency).
@@ -1281,6 +1439,11 @@ K: experience replay, replay buffer, target network, fixed Q-targets
 @card w9
 I: dqnloop
 Q: Walk through the DQN algorithm.
+P: 1. Look at the screen and pick a move, mostly the best one, sometimes random.
+2. Write down what happened in the replay notebook.
+3. Pull a random handful of past moments from the notebook.
+4. For each, aim the network's guess at "reward plus the frozen copy's best next guess".
+5. Every so often, update the frozen copy. Repeat.
 A: 1. Initialise replay buffer $\mathcal D$, network $\mathbf w$, target $\mathbf w^- = \mathbf w$.
 2. Each step: choose $a$ $\varepsilon$-greedily from $\hat q(s,\cdot,\mathbf w)$, act, observe $r, s'$, store $(s,a,r,s')$ in $\mathcal D$.
 3. Sample a random mini-batch from $\mathcal D$.
@@ -1292,6 +1455,8 @@ K: DQN, algorithm, epsilon-greedy, mini-batch, target network
 @card w9
 I: dqnarch
 Q: Describe DQN on Atari: input, architecture, output, reward, results.
+P: DQN learned to play 49 Atari games from the screen alone, with the same settings for every game. It looked at the last 4 frames (so it can tell which way things move), used a CNN to read them, and output a score for each joystick move.
+Rewards were simplified to plus one, minus one or zero, so all games shared one scale. It matched or beat human players on many games.
 A: - Input: last **4 frames**, 84x84 greyscale, stacked (4 frames give motion, a single frame is not Markov).
 - Lecture architecture: conv 16 filters 8x8, conv 32 filters 4x4, both ReLU, then a 256-unit fully connected layer, then a linear output with **one Q value per action** (up to 18 joystick actions).
 - Reward: change in game score (clipped in the paper).
@@ -1303,6 +1468,8 @@ K: DQN, Atari, frame stacking, architecture, Montezuma's Revenge
 @card w9
 I: maxbias
 Q: What do Double DQN, Dueling DQN and prioritised replay add?
+P: **Double DQN** fixes overrating: one network picks the move, the other scores it. **Dueling DQN** splits "how good is this situation" from "how much better is this move than the others", like rating a restaurant and then each dish relative to it.
+**Prioritised replay** studies the most surprising memories more often, like revising the questions you got most wrong.
 A: - **Double DQN**: target $r + \gamma\,\hat q(s', \arg\max_{a'}\hat q(s',a',\mathbf w), \mathbf w^-)$. The online net selects, the target net evaluates. Reduces overestimation.
 - **Dueling DQN**: separate streams for $V(s)$ and advantages $A(s,a)$, combined as $Q = V + A - \text{mean}(A)$. Learns state values even when actions do not matter much.
 - **Prioritised replay**: sample transitions with large TD error more often, with importance weights to correct the bias.
@@ -1311,6 +1478,8 @@ K: Double DQN, Dueling DQN, prioritised replay
 @card w10
 I: actorcritic
 Q: Value-based vs policy-based vs actor-critic. When would you pick each?
+P: **Value-based** methods learn how good each move is, then pick the best. Good for a small list of moves. **Policy-based** methods directly learn a playing style. Good for continuous moves like steering angles.
+**Actor-critic** combines them: the actor plays, the critic scores how well. Like a player with a coach.
 A: - **Value-based** (Q-learning, DQN): learn $Q$, act greedily. Good for discrete actions, sample efficient with replay. Struggles with continuous actions and cannot represent stochastic optimal policies.
 - **Policy-based** (REINFORCE): parameterise $\pi_\theta(a\mid s)$ directly and do gradient ascent on $J(\theta)$. Handles continuous actions and stochastic policies, smoother convergence. High variance, sample inefficient, local optima.
 - **Actor-critic** (A2C, PPO): a policy (actor) plus a value function (critic) that reduces variance. Default choice for continuous control and RLHF.
@@ -1319,6 +1488,8 @@ K: value-based, policy-based, actor-critic, continuous actions
 @card w10
 I: alias
 Q: Why would you ever want a stochastic policy if a deterministic optimal policy always exists?
+P: In rock-paper-scissors, any fixed choice gets beaten. Being unpredictable is the best strategy. Also, when you cannot see everything, two situations can look identical but need different moves, and randomness is your best bet.
+Randomness also explores naturally, without a separate rule like epsilon-greedy.
 A: That existence result holds for **fully observed MDPs**. Stochastic policies are needed when:
 - **Aliased states** (partial observability): two corridor cells look identical. A deterministic policy must go the same way in both and can loop forever. Moving left or right with probability 0.5 reaches the goal.
 - **Games**: in rock-paper-scissors the only equilibrium is uniform 1/3 each. Any deterministic strategy is exploitable. Poker bluffing works the same way.
@@ -1329,6 +1500,8 @@ K: stochastic policy, aliasing, mixed strategy, partial observability
 @card w10
 I: jobj
 Q: What policy objectives J(theta) can you optimise?
+P: $J(\theta)$ is the "how well am I doing" score that we push upwards. For games with an end, it is the expected total score from the start. For tasks that never end, it is the average reward per step, or the average value over the states you visit.
+Pick the one that fits the task. They all point the improvement in the same direction.
 A: - **Episodic, start value**: $J_1(\theta) = v_{\pi_\theta}(s_1)$.
 - **Continuing, average value**: $J_{avV}(\theta) = \sum_s d^{\pi_\theta}(s)\,v_{\pi_\theta}(s)$.
 - **Continuing, average reward per step**: $J_{avR}(\theta) = \sum_s d^{\pi_\theta}(s)\sum_a \pi_\theta(a\mid s)R(s,a)$.
@@ -1338,6 +1511,8 @@ K: policy objective, start value, average reward, gradient ascent
 @card w10
 I: softmaxpush
 Q: State the policy gradient theorem and why it is so important.
+P: The **policy gradient theorem** says: to improve, make moves that turned out well more likely, and moves that turned out badly less likely, weighted by how good they were.
+The important part is that you do not need to know how the world works. You only need the moves you made and how they went.
 A: $$\nabla_\theta J(\theta) = \mathbb E_{\pi_\theta}\left[\nabla_\theta\log\pi_\theta(a\mid s)\; q_{\pi_\theta}(s,a)\right]$$
 Why it matters:
 - No derivative of the state distribution $d^{\pi}(s)$, even though changing $\theta$ changes which states you visit.
@@ -1349,6 +1524,8 @@ K: policy gradient theorem, score function, model-free
 @card w10
 I: softmaxpush
 Q: What is the score function and how does the softmax policy's score look?
+P: The **score function** tells you which way to turn the policy's dials to make a specific move more likely. For a **softmax** policy it is very intuitive: the features of the move you took minus the features of the average move.
+If the move was better than average, you push towards what made it special.
 A: Score: $\nabla_\theta\log\pi_\theta(a\mid s)$, the direction in parameter space that makes $a$ more likely.
 Softmax $\pi(a\mid s) = \frac{e^{h(s,a)}}{\sum_b e^{h(s,b)}}$ with linear preferences $h = \theta^\top\mathbf x(s,a)$:
 $$\nabla_\theta\log\pi(a\mid s) = \mathbf x(s,a) - \sum_b \pi(b\mid s)\,\mathbf x(s,b)$$
@@ -1358,6 +1535,8 @@ K: score function, softmax policy, action preferences
 @card w10
 I: baseline
 Q: Explain REINFORCE and its weaknesses.
+P: **REINFORCE** plays a full game, then makes every move in that game more likely if the game went well, and less likely if it went badly.
+Weakness: it is like grading every sentence of an essay by the final mark only. A lucky game rewards bad moves too, so learning is very noisy and slow.
 A: Monte Carlo policy gradient (Williams 1992). Run a full episode with $\pi_\theta$, then for each step
 $$\theta \leftarrow \theta + \alpha\,\gamma^t G_t\,\nabla_\theta\log\pi_\theta(A_t\mid S_t)$$
 $G_t$ is an unbiased sample of $q_\pi(S_t,A_t)$, so the update is unbiased stochastic gradient ascent.
@@ -1367,6 +1546,8 @@ K: REINFORCE, Monte Carlo policy gradient, variance
 @card w10
 I: baseline
 Q: What does a baseline do in policy gradients, and why does it not add bias?
+P: A **baseline** compares each result with what you normally get. Scoring 70 means nothing alone. If you usually score 60, that 70 was good. If you usually score 90, it was bad.
+Subtracting a baseline that does not depend on the move only changes the reference point, not which direction is better, so it adds no bias but greatly reduces the noise.
 A: Replace $G_t$ with $G_t - b(S_t)$ where $b$ does not depend on the action. Usually $b(s) = \hat v(s,\mathbf w)$.
 No bias because $\mathbb E_a[\nabla\log\pi(a\mid s)\,b(s)] = b(s)\sum_a\nabla\pi(a\mid s) = b(s)\nabla\sum_a\pi(a\mid s) = b(s)\nabla 1 = 0$.
 Effect: lower variance. Actions better than expected get pushed up, worse ones pushed down, instead of everything being pushed up by different amounts when all rewards are positive.
@@ -1376,6 +1557,8 @@ K: baseline, variance reduction, unbiased, REINFORCE with baseline
 @card w10
 I: actorcritic
 Q: Explain actor-critic and why the TD error estimates the advantage.
+P: The **actor** chooses moves, the **critic** judges them. After each step the critic asks: "was this better than I expected?" That surprise (the **TD error**) is a cheap estimate of how much better this move was than usual (the **advantage**).
+Like a coach saying "that went better than I thought it would" right after a play, instead of waiting for the final whistle.
 A: **Actor**: policy $\pi_\theta$. **Critic**: value estimate $\hat v_{\mathbf w}(s)$ trained by TD.
 One-step actor-critic, each step:
 - $\delta = R + \gamma\hat v(S',\mathbf w) - \hat v(S,\mathbf w)$
@@ -1388,6 +1571,8 @@ K: actor-critic, critic, TD error, advantage, A2C
 @card w10
 I: spectrum
 Q: What are A2C, A3C and GAE?
+P: **A2C** is actor-critic with a baseline, run in batches from several copies of the game. **A3C** runs those copies in parallel without waiting for each other, so learning is fast and less repetitive.
+**GAE** blends short-term and long-term judgements of how good a move was, with a dial $\lambda$ that sets the balance between less noise and less bias.
 A: - **A2C**: advantage actor-critic, usually with n-step returns and a shared network body with a policy head and a value head.
 - **A3C**: many asynchronous workers, each with its own environment copy, updating shared parameters. Parallel data decorrelates updates without a replay buffer.
 - **GAE**: $\hat A_t = \sum_{l\ge0}(\gamma\lambda)^l\delta_{t+l}$. $\lambda = 0$ gives the one-step TD error (low variance, more bias). $\lambda=1$ gives the MC advantage (no bias, high variance). Typical $\lambda$ 0.95 to 0.99.
@@ -1396,6 +1581,8 @@ K: A2C, A3C, GAE, n-step, lambda
 @card w10
 I: trpo
 Q: Why do policy updates need to be constrained? Explain TRPO.
+P: A big policy update can wreck everything you learned, like a chef changing the entire recipe after one bad review. **TRPO** limits how far the new policy may move from the old one each update, a "trust region" where you trust your estimate.
+It measures the distance with KL divergence, which is how different the two policies' choices are.
 A: In RL the policy generates its own data. One overly large step can produce a terrible policy (driving into a wall), and then all new data is useless and recovery is very hard. Learning rate tuning cannot guarantee safety.
 **TRPO**: maximise the surrogate $\mathbb E\left[\frac{\pi_\theta(a\mid s)}{\pi_{\theta_{old}}(a\mid s)}\hat A\right]$ subject to $\mathbb E[D_{KL}(\pi_{\theta_{old}}\Vert\pi_\theta)] \le \delta$. Stay in a trust region where the old advantage estimates are still valid. It comes with a monotonic improvement guarantee. Downside: needs second-order methods (conjugate gradient, Fisher matrix, line search), complex and expensive.
 K: trust region, TRPO, KL divergence, monotonic improvement
@@ -1403,6 +1590,8 @@ K: trust region, TRPO, KL divergence, monotonic improvement
 @card w10
 I: ppoclip
 Q: Explain PPO's clipped objective.
+P: **PPO** is the simpler version of TRPO. If an update tries to make a move much more or much less likely than before, beyond about 20 percent, PPO simply stops counting the extra change.
+Like a speed limiter on a car. You can still accelerate, just not dangerously fast. It is simple and works well, so it is widely used.
 A: Ratio $r_t(\theta) = \frac{\pi_\theta(a_t\mid s_t)}{\pi_{\theta_{old}}(a_t\mid s_t)}$.
 $$L^{CLIP}(\theta) = \mathbb E_t\left[\min\left(r_t\hat A_t,\; \text{clip}(r_t, 1-\epsilon, 1+\epsilon)\hat A_t\right)\right]$$
 - Good action ($\hat A>0$): gain stops once $r > 1+\epsilon$, so no incentive to raise its probability further.
@@ -1414,6 +1603,8 @@ K: PPO, clipped objective, probability ratio, entropy bonus
 @card w10
 I: gaussian
 Q: How do you handle continuous actions with policy gradients?
+P: For steering angles or motor speeds you cannot list every option. So the policy outputs a **Gaussian**: a most likely value (the mean) and how much to wobble around it (the standard deviation).
+Like an archer aiming at a spot with some spread. Learning moves the aim and narrows the spread as skill improves.
 A: Use a **Gaussian policy**: $a\sim\mathcal N(\mu_\theta(s),\sigma^2)$.
 Score: $\nabla_\theta\log\pi_\theta(a\mid s) = \frac{a - \mu_\theta(s)}{\sigma^2}\nabla_\theta\mu_\theta(s)$.
 Weighted by the advantage, this moves the mean towards actions that turned out better than expected. $\sigma$ can be learned too and controls exploration. REINFORCE, actor-critic and PPO all work unchanged. DQN does not, because it needs $\max_a$ over a finite action set.
@@ -1422,6 +1613,7 @@ K: Gaussian policy, continuous actions, score function
 @card w10
 I: trpo
 Q: Compare REINFORCE, actor-critic, TRPO and PPO.
+P: **REINFORCE** waits for the end and is noisy. **Actor-critic** adds a coach for faster, steadier feedback. **TRPO** adds a strict safety limit on how far each update can go, but is complicated. **PPO** gets most of TRPO's safety with a simple clip, so it is the usual default.
 A: - Value signal: MC return, TD error, surrogate advantage, clipped surrogate advantage.
 - Updates: end of episode, every step, every rollout, every rollout with K epochs.
 - Variance: high, low, low, low.
@@ -1434,6 +1626,8 @@ K: REINFORCE, actor-critic, TRPO, PPO, comparison
 @card w11
 I: modelbased
 Q: What is model-based RL, and what are its advantages and main drawback?
+P: **Model-based** RL first learns how the world works, then practises in its head. Like a pilot training in a flight simulator. It needs far less real experience.
+The drawback: if the simulator is wrong, the plan is wrong. Errors in the learned model get exploited and the agent learns tricks that fail in reality.
 A: Learn (or be given) a **model** $\langle P_\eta, R_\eta\rangle$, then **plan** with it to get values or a policy.
 Advantages: model learning is ordinary supervised learning from $(s,a)$ to $(r,s')$, the model can represent its own uncertainty, and it can generate unlimited simulated experience, so it is very data efficient.
 Main drawback: **two sources of error that compound**. An approximate model plus approximate planning, and planning on a slightly wrong model can magnify the mistake.
@@ -1442,6 +1636,8 @@ K: model-based RL, model learning, planning, compounding error
 @card w11
 I: modelbased
 Q: How do you learn a table lookup model and use it for sample-based planning?
+P: Keep a diary of what happened after each move in each state. Count it up: "from here, this move led there 70 percent of the time and gave this reward". That is a **table lookup model**.
+Then imagine new experiences by sampling from those counts, and learn from the imagined experiences as if they were real.
 A: Count visits: $\hat P(s'\mid s,a) = \frac{N(s,a,s')}{N(s,a)}$ and $\hat R(s,a) = \frac{1}{N(s,a)}\sum r$.
 **Sample-based planning**: use the model only to generate simulated transitions, then run model-free learning (MC, SARSA, Q-learning) on them.
 AB example: real MC gives $V(A)=0$ from one episode. Fit the model (A goes to B, B pays 1 with probability 0.75), sample many episodes from it, and MC on those gives $V(A)\approx 0.75$.
@@ -1450,6 +1646,8 @@ K: table lookup model, sample-based planning, AB example
 @card w11
 I: mcts
 Q: Offline vs online planning. Why does MCTS plan online?
+P: **Offline planning** makes a full plan for every possible situation in advance, like printing a complete atlas. **Online planning** plans only from where you are right now, like a GPS that recalculates at every junction.
+MCTS plans online because thinking about only the current position is far cheaper when the world is huge.
 A: **Offline** (value iteration): solve every state in advance, then act. Impossible for huge state spaces like Go.
 **Online**: plan from the current state right before acting, execute, then plan again from the new state. Effort goes only to states that can actually be reached from here. It needs only a simulator, which is often easier to write than explicit probabilities. MCTS is online and **anytime**: stop whenever the time budget runs out and take the best action so far.
 K: online planning, offline planning, simulator, anytime
@@ -1457,12 +1655,19 @@ K: online planning, offline planning, simulator, anytime
 @card w11
 I: expectimax
 Q: What is an ExpectiMax tree?
+P: An **ExpectiMax tree** is a decision tree with two kinds of points. At your points you take the best option (max). At chance points, like dice rolls, you average over the outcomes weighted by their probability (expectation).
+Like planning a trip: you choose the route, but the weather is random, so you average over it.
 A: A tree representation of an MDP. State nodes take the **max** over actions, chance nodes take the **expectation** over outcomes using $P(s'\mid s,a)$. Fully expanding it to horizon $H$ gives exact $q(s,a)$ at the root but costs about $(|S||A|)^H$. MCTS builds only the promising part of this tree.
 K: ExpectiMax, chance node, search tree
 
 @card w11
 I: mcts
 Q: Walk through the four phases of MCTS.
+P: 1. **Selection:** walk down the tree you have built so far, choosing promising moves.
+2. **Expansion:** add one new move to the tree.
+3. **Simulation:** play randomly from there to the end, like a quick imaginary game.
+4. **Backpropagation:** carry the result back up and update every move on the path.
+Repeat thousands of times and the best move becomes clear.
 A: Repeat until the budget runs out:
 1. **Selection**: from the root, follow the tree policy (UCT) down through fully expanded nodes until reaching a node with an untried action.
 2. **Expansion**: unless terminal, try one untried action and add the resulting node.
@@ -1474,6 +1679,8 @@ K: MCTS, selection, expansion, simulation, backpropagation
 @card w11
 I: ucb
 Q: What is UCT and what does each term do?
+P: **UCT** picks which branch to explore in MCTS. It adds two things: how good a branch has been so far (exploit), and a bonus for branches tried only a few times (explore).
+Like choosing a restaurant by its rating plus a curiosity bonus for places you have barely tried. The bonus shrinks the more you visit.
 A: UCT is UCB1 used for selection inside the tree:
 $$UCT(s,a) = Q(s,a) + 2C_p\sqrt{\frac{2\ln N(s)}{N(s,a)}}$$
 (the lecture uses the simpler $Q + c\sqrt{\ln N(s)/N(s,a)}$).
@@ -1487,6 +1694,8 @@ K: UCT, UCB1, exploration constant, tree policy
 I: mcts
 I: sparse
 Q: What are the advantages of MCTS and when does it struggle?
+P: Strengths: it focuses effort on the moves that matter, only needs a simulator, and can stop at any time with a decent answer. That is why it plays Go so well.
+It struggles when rewards are very rare, because random imaginary games almost never find them. Like looking for a needle in a haystack by grabbing random handfuls.
 A: Advantages: selective best-first search, evaluates states dynamically from the current position, sampling beats the curse of dimensionality, needs only a black-box simulator, anytime, principled exploration via UCT.
 Struggles: **sparse rewards** (Atari Freeway: random rollouts almost never reach the reward), long random rollouts that wander, needs a simulator, repeated expansion of the same state in vanilla form, and it gives an answer only for the current state rather than a policy for everywhere.
 Fixes: heuristic or learned rollout policies, and a pre-trained Q function or value network to guide selection.
@@ -1495,6 +1704,8 @@ K: MCTS advantages, sparse reward, rollout policy, cold start
 @card w11
 I: mcts
 Q: Value iteration vs MCTS: which and when?
+P: **Value iteration** computes values for every state, so it suits small problems with known rules where you want a complete plan.
+**MCTS** only thinks about the current position, so it suits huge problems like Go, where computing everything is impossible.
 A: - Value iteration: exhaustive over all states, higher cost, but the policy works from **any** state. Solve once, reuse many times.
 - MCTS: only explores states reachable from the current one, lower cost per decision, but must re-plan online at each new state.
 Pick VI for small MDPs with a known model that you will query from everywhere. Pick MCTS for huge state spaces with a simulator where you only need good decisions from where you are.
@@ -1503,6 +1714,8 @@ K: value iteration, MCTS, offline, online
 @card w11
 I: alphazero
 Q: How does AlphaZero combine MCTS and deep learning?
+P: AlphaZero gives MCTS intuition. A neural network looks at the board and says which moves look promising and who is likely winning. MCTS uses that to search smartly instead of randomly.
+Then the network learns from the search results. It is a loop of self-improvement through millions of games against itself.
 A: A network takes the board and outputs a **policy prior** $P(a\mid s)$ and a **value** $V(s)$ (probability of winning).
 - At each move, MCTS runs with a UCB-like rule: $Q(s,a) + c\,P(s,a)\frac{\sqrt{N(s)}}{1+N(s,a)}$. The prior boosts promising moves and its effect fades as $N(s,a)$ grows. The value network replaces long random rollouts.
 - The visit counts at the root give improved move probabilities $\pi$.
@@ -1513,6 +1726,8 @@ K: AlphaZero, self-play, policy network, value network, MCTS
 @card w11
 I: rlhf
 Q: What is RLHF and why is it needed?
+P: **RLHF** teaches an AI model what people actually want, like being helpful, honest and safe, which is hard to write as a formula.
+People compare pairs of answers and say which is better. A model learns to predict those preferences and becomes the reward, and the AI then trains to score well on it.
 A: **Reinforcement Learning from Human Feedback** fine-tunes a model, usually an LLM, to maximise a **reward model** learned from human preferences.
 Why: pre-training maximises the likelihood of internet text, which can be harmful, biased, wrong or unhelpful (the "use goto everywhere" answer). Metrics like BLEU do not capture what people want. Humans find it easier to compare two answers than to write a reward function.
 K: RLHF, alignment, reward model, human preferences
@@ -1520,6 +1735,10 @@ K: RLHF, alignment, reward model, human preferences
 @card w11
 I: rlhf
 Q: Describe the RLHF pipeline in four stages.
+P: 1. **Pre-train** on huge amounts of text, learning language in general.
+2. **Fine-tune** on example answers written by people, learning the style.
+3. **Train a reward model** from human rankings of answers.
+4. **Optimise with RL** (PPO) to score well on the reward model, while a KL penalty keeps it from drifting too far from the original.
 A: 1. **Pre-training** on a huge corpus. Output: a base model.
 2. **Supervised fine-tuning (SFT)** on human-written demonstrations. ChatGPT used about 13K conversations.
 3. **Reward model** trained on human rankings of several responses per prompt (about 33K comparisons). It outputs a scalar score.
@@ -1530,6 +1749,8 @@ K: RLHF pipeline, SFT, reward model, PPO, KL penalty
 @card w11
 I: rlhf
 Q: Benefits and challenges of RLHF?
+P: Benefits: it handles fuzzy goals like "be helpful" and makes models safer and more useful.
+Challenges: human feedback is expensive, people disagree and have biases, and the model can game the reward model, like a student who learns what the marker likes instead of the subject (**reward hacking**).
 A: Benefits: aligns models with human values, safer and more helpful outputs, handles fuzzy goals that are hard to write as a reward.
 Challenges: expensive human annotation, **human bias becomes model bias**, **reward hacking** (over-optimising a flawed reward model), hard to scale human feedback, disagreement between annotators.
 Related: Constitutional AI uses AI feedback guided by written principles to reduce the human labelling cost.
@@ -1537,6 +1758,8 @@ K: RLHF benefits, reward hacking, bias, scaling
 @card x
 I: taxonomy
 Q: Give the big map of every method in the course in one answer.
+P: Think of the course as a family tree. If you know the rules of the world, you plan (DP, MCTS). If you do not, you learn from experience, either from whole games (Monte Carlo) or step by step (TD, SARSA, Q-learning).
+When the world is too big for tables, you swap tables for formulas (function approximation, DQN). And instead of learning values you can learn the playing style directly (policy gradients, actor-critic, PPO).
 A: Start with the question "do I know the model?"
 - **Known model, small**: DP. Policy evaluation (prediction), policy iteration and value iteration (control).
 - **Known model or simulator, huge, decide from where I am**: MCTS, AlphaZero.
@@ -1551,6 +1774,8 @@ K: taxonomy, model-based, model-free, GPI
 @card x
 I: unified
 Q: Explain bootstrapping vs sampling, and classify DP, MC, TD.
+P: **Bootstrapping** is updating a guess from another guess, like estimating your arrival time from the GPS's estimate at the next junction. **Sampling** is learning from what actually happened on one real trip instead of listing every possibility.
+DP bootstraps but does not sample. MC samples but does not bootstrap. TD does both.
 A: **Bootstrapping**: the target uses a current estimate (a guess), like $\gamma V(S_{t+1})$. **Sampling**: the update uses sampled experience instead of the expectation over all outcomes.
 - DP: bootstraps, does not sample (uses the model).
 - MC: samples, does not bootstrap (waits for the real $G_t$).
@@ -1561,6 +1786,8 @@ K: bootstrapping, sampling, DP, MC, TD
 @card x
 I: cliff
 Q: Is SARSA always safer than Q-learning? Is Q-learning always better?
+P: No. SARSA is safer only while you are still exploring, because it plans around its own slips. Once exploration stops, both learn the same best route.
+Q-learning finds the best route for perfect play, which is better if you will play perfectly later. But it can overrate moves and is less stable with neural networks. Each wins in different conditions.
 A: Neither. SARSA is safer **during learning** because it accounts for its own exploration, so it prefers paths that are robust to random mistakes. Q-learning learns the values of the **optimal greedy policy**, so its final greedy policy can be better, but its online performance while exploring can be worse (cliff walking).
 If $\varepsilon \to 0$ over time, SARSA also converges to the optimal policy. Q-learning also suffers maximisation bias and is the one that diverges most easily with function approximation.
 K: SARSA, Q-learning, safety, maximisation bias
@@ -1568,6 +1795,8 @@ K: SARSA, Q-learning, safety, maximisation bias
 @card x
 I: discount
 Q: How would you pick gamma, alpha and epsilon, and what goes wrong if each is badly chosen?
+P: $\gamma$ is patience: too low and the agent ignores future rewards, too high and learning gets slow and noisy. $\alpha$ is how much each new experience changes your mind: too high and you overreact, too low and you barely learn. $\varepsilon$ is curiosity: too low and you get stuck, too high and you never use what you know.
+Tune them like adjusting a recipe, one at a time while watching the results.
 A: - $\gamma$: horizon of the task. Too small makes the agent short-sighted (ignores the delayed goal). Too close to 1 in long tasks slows learning and raises variance. Rule of thumb, effective horizon $\approx 1/(1-\gamma)$.
 - $\alpha$: too large and estimates oscillate or diverge. Too small and learning crawls. Constant $\alpha$ tracks non-stationary problems, decaying $\alpha$ gives convergence.
 - $\varepsilon$: too small and you get stuck, too large and you waste reward. Start high (for example 1.0) and decay towards a floor such as 0.05, which is a practical GLIE approximation.
@@ -1576,6 +1805,8 @@ K: hyperparameters, discount, learning rate, epsilon decay
 @card x
 I: houseprice
 Q: What is the curse of dimensionality and which methods address it?
+P: Each new thing you track multiplies the number of situations. Ten values for one sensor is 10 cases. Six sensors is a million. Tables explode.
+Fixes: guess with formulas that generalise (function approximation, neural networks), only look at the situations you actually reach (sampling, MCTS), and pick compact features.
 A: The number of states grows exponentially with the number of state variables (10 variables with 10 values each is $10^{10}$ states). Tables and full DP sweeps become impossible.
 Responses: **function approximation** (linear features, neural networks) for generalisation, **sampling** (MC, TD, MCTS) so you only touch visited states, **asynchronous** and prioritised updates, and **policy search** that skips the value function.
 K: curse of dimensionality, function approximation, sampling
@@ -1583,12 +1814,16 @@ K: curse of dimensionality, function approximation, sampling
 @card x
 I: sparse
 Q: Explain the credit assignment problem and which tools address it.
+P: You win a football match. Which of the hundreds of passes deserves the credit? That is the **credit assignment problem**.
+Tools: discounting (closer moves get more credit), TD learning (credit passed back step by step), eligibility traces (a fading memory of recent moves), and advantage estimates (how much better a move was than usual).
 A: When reward arrives late, which earlier actions deserve the credit? Tools: discounted returns and value functions (propagate reward backwards through Bellman backups), TD errors (local surprise signals), n-step and $\lambda$-returns and eligibility traces (spread credit over recent steps), reward-to-go in policy gradients, and hierarchical options for long horizons.
 K: credit assignment, delayed reward, TD error, eligibility traces
 
 @card x
 I: maxbias
 Q: Why is the max in Q-learning and DQN a problem, and what are the three fixes you know?
+P: Taking the max over noisy guesses always picks the luckiest guess, so values come out too high, like always picking the friend who brags the most as the best player.
+Three fixes: **Double Q-learning or Double DQN** (one network picks, another scores), **target networks** (a frozen copy for steadier targets), and avoiding the max altogether with SARSA or Expected SARSA, or with policy methods.
 A: The max over noisy estimates is biased upwards (maximisation bias) and with function approximation feeds that error back into the target, which can blow up.
 Fixes: **Double Q-learning / Double DQN** (separate selection and evaluation), **Expected SARSA** (average instead of max), and a **target network** that slows down the feedback loop.
 K: maximisation bias, Double Q-learning, Expected SARSA, target network
@@ -1596,12 +1831,15 @@ K: maximisation bias, Double Q-learning, Expected SARSA, target network
 @card x
 I: loop
 Q: The examiner asks: "Explain reinforcement learning to a 10-year-old." What do you say?
+P: Say it like teaching a dog a trick with treats. Nobody explains the trick. The dog tries things, gets a treat when it does well, and slowly learns what earns treats. A computer can learn the same way, by trying, scoring points, and doing more of what scored.
 A: Keep it to one image and the four words agent, action, reward, policy. Example: "You are learning a new video game without instructions. You press buttons (actions), the score goes up or down (reward), and over many tries you figure out which buttons to press in which situation (your policy). Sometimes you try something new to see what happens (exploration) and sometimes you do what you know works (exploitation)."
 Then offer the precise definition. Showing both levels proves understanding.
 K: explanation, intuition, agent, reward
 
 @card p
 Q: If the defense is about your own assignment or project, what questions should you expect?
+P: Expect three kinds of questions. "Why did you choose this?" (algorithm, reward, features). "Does it really work?" (evidence, seeds, baselines). "What are the limits?" (what failed, what you would change).
+Like defending a recipe to a judge: why these ingredients, did it taste good every time, and what you would improve.
 A: Expect them to drill into your code and results, not textbook definitions:
 - Why did you choose this algorithm over the alternatives? (Name one rejected alternative and why.)
 - Walk me through your update line. Which variable is the TD target?
@@ -1616,6 +1854,8 @@ K: project defense, implementation, hyperparameters, learning curves
 @card p
 I: seedband
 Q: How do you make your RL experiments reproducible and how do you report results honestly?
+P: **Reproducible** means someone else can follow your steps and get the same result, like a recipe that works in any kitchen. Fix random seeds (for example 67), record versions and settings, and save the exact code.
+Report honestly: run several seeds, show the average and the spread, and never show only your luckiest run.
 A: Fix every random source and report several seeds:
 `env.reset(seed=67)`, `env.action_space.seed(67)`, `np.random.seed(67)`, `random.seed(67)`, `torch.manual_seed(67)`.
 Then run several seeds (for example 67, 68, 69, 70, 71) and plot the **mean with a shaded standard deviation or confidence band**. RL results vary a lot between seeds, so a single lucky run proves little. Report the evaluation protocol (greedy policy, number of evaluation episodes) separately from training reward.
@@ -1624,6 +1864,8 @@ K: reproducibility, seeds, evaluation, learning curves
 @card p
 I: debugflow
 Q: Your learning curve is flat or collapses. How do you debug an RL agent?
+P: Debug like fixing a car that will not start. Check the basics first: fuel (does the environment work?), the key (is the reward sign right?), then the engine (is the update correct?), then fine-tuning (learning rate, exploration).
+Test on a tiny problem where you already know the answer before blaming the algorithm.
 A: Work from simple to complex:
 1. Check the environment with a random agent and a hand-coded policy.
 2. Check the reward sign and scale, and the terminated vs truncated handling.
@@ -1636,6 +1878,8 @@ K: debugging, learning curve, sanity checks
 @card d
 I: dq_loop
 Q: Give the 60-second pitch of your project: what problem, what agent, what result.
+P: A tiny drone has to fly through a small foam ring, loop around the outside and come back through from the same side, as many times as it can in 90 seconds. It only sees through its own camera, and it has about 8 cm of room on each side.
+It learned in a simulator, first by copying a teacher and then by trial and error (PPO). In the simulator it now does about 5 laps per run. On the real drone it has not been proven yet.
 A: **Drone Quidditch.** A DJI Tello flies through a 30 cm foam ring hanging in a 2 x 2 x 2 m net cage, using **only its own front camera**, then flies round the outside and re-enters from the same side, as many times as possible in 90 s.
 - The drone is 14 cm wide, so there is about **8 cm of clearance** each side. That is the whole error budget.
 - We train in our own fast Tello simulator with **PPO** (Stable-Baselines3), started from a **DAgger** clone of a privileged teacher, with a **memory** of past frames and an **asymmetric critic**.
@@ -1646,6 +1890,8 @@ K: project pitch, task, laps per episode, Tello
 
 @card d
 Q: Walk me through the four stages the project went through and why each stage existed.
+P: Like learning to drive in stages: first a car park, then an empty road, then traffic. Stage 1 checked the drone could hover. Stage 2 checked it could reach a point. Stage 3 learned the ring task with perfect information about where everything is. Stage 4 learned it using only the camera, like the real drone.
+Each stage tests one thing at a time, so when something fails you know which part broke.
 A: A staged curriculum, each stage testing one risk before the next:
 1. **Hover** in PyBullet (`HoverAviary`, PPO). Sanity check of the whole pipeline. Solved at 160k steps, reward 474.1.
 2. **Reach a hoop point** in PyBullet. Taught us the action space lesson: position targets (`pid`) reached the hoop 0/20, velocity commands (`vel`) 9/20.
@@ -1657,6 +1903,8 @@ K: curriculum, stages, hover, PyBullet, onboard simulator
 @card d
 I: dq_loop
 Q: Walk through exactly what happens in one control tick on the real drone.
+P: Fifteen times a second the drone runs a tiny loop. Look (a camera frame), describe (turn the picture into 41 useful numbers, like "where is the ring" and "how big does it look"), decide (the network picks four stick movements), act (send them to the drone, with safety limits checking first).
+Like a driver glancing, thinking and steering many times a second.
 A: Fifteen times a second:
 1. **See.** The camera frame goes to an OpenCV ring detector (HSV colour mask, ellipse fit).
 2. **Describe.** `ObsBuilder` packs detector outputs and telemetry into **41 numbers** (37 features plus a 4-number ring tracker), normalised to roughly $[-1, 1]$. A history keeps the frames 0, 1, 2, 4, 8 and 16 ticks ago, so the actor sees **246 inputs**.
@@ -1667,6 +1915,8 @@ K: control loop, observation, actor, 15 Hz, deployment
 
 @card d
 Q: Why does the policy see 41 hand-made features instead of the camera image?
+P: Instead of giving the network a raw photo, a small helper program first measures the useful facts: where the ring is, how big, how round. Like giving a navigator coordinates instead of a painting.
+This trains fast on a laptop, works the same in the simulator and in real life, and is easy to debug. The cost is that the network only knows what the helper measured.
 A: Three reasons:
 - **Compute.** Everything trains on a laptop CPU with no GPU. A 2 x 64 MLP on features runs millions of steps overnight. A CNN on rendered frames would need rendering in the simulator and far more samples.
 - **Sim-to-real gap.** A pixel policy has to bridge the visual gap between rendered and real images. With features, the gap shrinks to "does the detector report the same numbers in both worlds".
@@ -1676,6 +1926,7 @@ K: feature engineering, pixels vs features, CNN, sim-to-real
 
 @card d
 Q: Name the most important observation fields and say why each one exists.
+P: Each number answers a question the drone needs answered. Can I see the ring? Where is it in the picture? How far is it? Am I looking at it straight on or from the side? How long since I last saw it, and how far have I pushed forward since? Which side of the ring am I on, and how many passes so far? What did I just ask the motors to do?
 A: - `found`: searching and approaching need opposite behaviour.
 - `cx, cy`: where the ring is in the picture, so which way to turn and climb.
 - `scale`, `range`: two distance cues, one raw, one computed from apparent size.
@@ -1688,6 +1939,8 @@ K: observation design, memory fields, aliasing
 
 @card d
 Q: Is your problem an MDP? Defend your answer.
+P: No, because the drone cannot see everything it needs. The ring looks the same from the front and back, and when it is out of view the drone cannot tell "just went through" from "have not found it yet".
+Like walking out of a room and forgetting whether you already locked the door. The fix was giving it memory, and only the versions with memory learned to loop.
 A: **No, it is a POMDP**, and that turned out to be the central difficulty.
 - The ring looks the same from the front and the back.
 - "Just went through, ring behind me" and "blind, about to search" produce the same camera features: ring not in view.
@@ -1699,6 +1952,8 @@ K: POMDP, partial observability, aliasing, belief state
 @card d
 I: dq_aac
 Q: Explain the ring tracker. Why is it a belief state and how accurate is it?
+P: The **ring tracker** is the drone's best guess of where the ring is when it cannot see it, like remembering where you put your keys after you turn around.
+When the ring is visible it measures the ring's position. When it is not, it updates the guess from its own movements (dead reckoning, like counting steps in the dark). In simulation the guess is within about 2 cm when visible and drifts to about 19 cm after 3 seconds blind.
 A: A **belief state** is a best guess of what the agent cannot see (Sutton and Barto 17.3). The tracker is written from geometry, not learned:
 - At each fresh detection, the ring's position in the drone frame comes from the camera: forward = range, right = $c_x \tan(35^\circ) \cdot$ range, up = $-c_y \tan(35^\circ) \cdot$ range.
 - While the ring is out of view, the estimate is moved by **dead reckoning**: telemetry yaw for turns, height for climbs, executed commands times nominal speed for forward and sideways.
@@ -1710,6 +1965,8 @@ K: ring tracker, belief state, dead reckoning, POMDP
 @card d
 I: dq_aac
 Q: Why a frame history with lags 0, 1, 2, 4, 8, 16 instead of an LSTM or stacking 16 frames?
+P: The drone looks at the present plus snapshots from 1, 2, 4, 8 and 16 ticks ago. Like glancing in the rear-view mirror at a few moments instead of watching a full replay.
+Spaced-out snapshots cover about a second with few inputs. An LSTM (a network with its own memory) would be more flexible but harder and slower to train.
 A: - **Why memory at all:** it makes "I just went through, the ring was ahead a moment ago" visible, so after-the-pass states stop looking like before-the-pass states.
 - **Why these lags:** log-spaced lags cover about 1 s (16 ticks at 15 Hz) with only 6 frames. Dense stacking of 16 frames would give 656 inputs with mostly redundant neighbours.
 - **Why not an LSTM:** a recurrent policy learns its own memory, but recurrent PPO needs more data, is harder to train stably and harder to export. The stack plus tracker writes the memory we already know we need.
@@ -1720,6 +1977,8 @@ K: frame stacking, history, LSTM, recurrent policy
 @card d
 I: dq_aac
 Q: Describe your network architecture precisely.
+P: Two small, separate brains. The **actor** takes the 246 numbers (41 facts times 6 moments) and outputs 4 stick movements plus how much random wobble to add while learning. The **critic** takes the same numbers plus 20 secret facts from the simulator and outputs one score: how good things look.
+Each brain has two layers of 64 units. Those sizes were default settings, not tuned.
 A: Stable-Baselines3 `ActorCriticPolicy` with **separate** actor and critic networks (no shared layers):
 - **Actor:** 246 inputs (41 features x 6 lags) through two hidden layers of 64 with **tanh**, then a linear layer to the 4 action means. A **diagonal Gaussian** policy with a learned, state-independent `log_std` per channel. No squashing: actions outside $[-1, 1]$ are clipped.
 - **Critic:** the same 246 inputs **plus 20 privileged simulator values** (266 in total), two layers of 64, tanh, linear to one value $V(s)$.
@@ -1731,6 +1990,8 @@ K: architecture, MLP, actor-critic, Gaussian policy, tanh
 @card d
 I: dq_aac
 Q: What is an asymmetric actor-critic and why is it legitimate?
+P: The **critic** is the coach and only works during training, so it may peek at secret simulator information like the true ring position. The **actor** is the player and only sees what the real drone sees.
+It is fair because on the real drone only the player flies. A coach with better information gives better feedback, so the player learns faster.
 A: The **critic** sees privileged simulator state (true ring position and similar, 20 values). The **actor** sees only what the real drone can measure.
 Why it is legitimate:
 - The critic only exists during training. It is used to compute advantages, never to choose actions, so the deployed policy needs nothing the drone lacks.
@@ -1741,6 +2002,8 @@ K: asymmetric critic, privileged information, variance reduction, baseline
 
 @card d
 Q: What is the action space, and why velocity sticks instead of position targets or motor speeds?
+P: The network moves four sticks, like a game controller: left and right, forward and back, up and down, and turn. The drone's own computer turns stick positions into speed.
+Motor speeds are not accepted by the real drone. Position targets made it tip over in tests. Sticks are capped at 30 percent for safety.
 A: 4 continuous numbers in $[-1, 1]$: lr, fb, ud, yaw. Each is scaled to a Tello remote-control stick value (x 30), which the Tello's own flight controller turns into velocity.
 - **Why not motor RPMs:** the real Tello does not accept them. The policy must output what the hardware accepts.
 - **Why not position targets:** in stage 2, position targets (`pid`) made the drone tip over within about 8 control steps every episode, 0/20 reached. Bounded velocity commands (`vel`) reached 9/20.
@@ -1751,6 +2014,8 @@ K: action space, continuous control, velocity commands, safety
 
 @card d
 Q: Why PPO? Why not SAC, TD3 or DQN?
+P: **PPO** handles continuous stick movements, is stable, and suits a cheap simulator that can run many copies at once. It was also easy to add the "copy the teacher" term.
+DQN cannot handle continuous actions. SAC would be the strongest rival and was never properly compared, so the honest claim is that PPO worked, not that it is the best.
 A: - **Continuous 4D actions:** rules out plain DQN (it needs a max over actions).
 - **Cheap parallel simulation:** our simulator runs many copies on a CPU, so sample efficiency matters less than stability. PPO's on-policy batches from 4 to 8 environments suit that.
 - **Stability:** the clipped objective plus our `target_kl` brake stopped the collapses we saw early on.
@@ -1761,6 +2026,11 @@ K: PPO, SAC, TD3, DQN, algorithm choice
 
 @card d
 Q: Summarise the PPO update in your own words, including your extra terms.
+P: 1. Fly many simulated runs with the current policy.
+2. For each move, work out how much better it went than the critic expected (the advantage).
+3. Make good moves more likely and bad moves less likely, but never change too much at once (the clip and the KL brake).
+4. Update the critic to predict better.
+5. Also nudge the actor towards what the teacher would do (the 0.3 imitation term).
 A: 1. Collect 2048 steps per environment with the current stochastic policy.
 2. Compute advantages with **GAE** ($\gamma = 0.99$, $\lambda = 0.95$): how much better each action turned out than the critic expected.
 3. Maximise the **clipped surrogate** $\mathbb{E}[\min(r_t A_t, \text{clip}(r_t, 0.8, 1.2) A_t)]$ with $r_t = \pi_\theta(a_t|s_t) / \pi_{old}(a_t|s_t)$, over 5 epochs of batches of 512.
@@ -1772,6 +2042,8 @@ K: PPO, GAE, clipped objective, target KL, DAPG
 
 @card d
 Q: Your hyperparameters: which did you choose deliberately, and what is the evidence for each?
+P: The settings that mattered were chosen from head-to-head tests. A gentler learning rate improved fine-tuning. A stricter limit on how much each update can change the policy stopped collapses. A longer horizon ($\gamma$ 0.995) did not help, so it stayed at 0.99.
+Others, like the network size, were just defaults. Say which is which.
 A: Current recipe (`LE`): lr **2e-5**, `target_kl` **0.01**, batch **512**, **5** epochs, $\gamma$ 0.99, $\lambda$ 0.95, `ent_coef` 0, BC coef 0.3, 4 environments.
 - **target_kl, batch 512, 5 epochs** (run C): won round 1, 0.91 single passes against 0.63 for SB3 defaults. Defaults showed approx_kl 0.016 and clip fraction 19 %, C showed 0.006 and 4 %.
 - **lr 2e-5 for fine-tuning** (run CL): every idea at the default 1e-4 came out worse than its parent. At 2e-5 the same recipe improved C9 from 2.17 to 2.58 laps per episode.
@@ -1782,6 +2054,8 @@ K: hyperparameters, learning rate, target KL, evidence
 
 @card d
 Q: At 15 Hz, is $\gamma = 0.99$ long enough for a lap that takes 10 to 15 seconds?
+P: A discount of 0.99 means the drone cares about roughly the next 7 seconds. A full lap takes 10 to 15 seconds, so the next lap's reward looks small from here.
+Tests with a longer horizon did not help, probably because the real problem was memory, not patience. Once the drone had memory it looped with 0.99. That longer horizon was never retested on the memory version.
 A: Effective horizon $\approx 1/(1-\gamma) = 100$ ticks $\approx 6.7$ s. A reward one lap away (about 150 to 225 ticks) is weighted $0.99^{150} \approx 0.22$ to $0.99^{225} \approx 0.10$. So the next pass is nearly invisible to the critic.
 We tested $\gamma = 0.995$ (horizon about 13 s) several times and it did not help. Plausible reasons:
 - Longer horizons raise the variance of returns and make the critic harder to fit.
@@ -1793,6 +2067,8 @@ K: discount factor, horizon, credit assignment
 @card d
 I: dq_mdp
 Q: Walk through the reward function of the current policy.
+P: Think of it as a points system for a driving test. Small points for moving along the right path towards the ring and through it. Small penalties for hovering, wasting time, or flying close to the rim. A big bonus for each clean pass, growing with each lap in a row. Big penalties for crashing, leaving the cage, or going back through the wrong way.
+Crashing must always be worse than carrying on, otherwise the drone learns to crash.
 A: Per tick unless stated:
 - **Path shaping** 3 per metre of progress towards a point 0.3 m in front of the ring, then 0.3 m behind it (so stopping in the opening loses reward).
 - **Axis pull** 1 x off-axis metres near the plane, **facing** 0.5, **time** $-0.02$, **dwell** $-0.05$ for loitering in the opening, **rim** up to $-0.3$ within 8 cm of the noodle.
@@ -1804,6 +2080,8 @@ K: reward design, shaping, streak bonus, penalties
 @card d
 I: dq_mdp
 Q: Tell the story of your MDP versions. What loophole did each version close?
+P: Every version fixed a trick the drone found. Version 2 paid for getting close, so the drone parked in front of the ring and never tried to pass. Later versions added a time budget, a flag saying a pass is allowed, then rewards for laps in a row from the same side.
+Like a teacher who keeps fixing loopholes in the marking scheme once students find them.
 A: In the full-state PyBullet task:
 - **v1** shaped reward, one pass ends the episode. Stalled near 6 % success. PPO overwrote itself every update (approx_kl near 0.9), the ring swing was invisible, wind at full strength from step 0.
 - **v2** potential-based shaping, rim $-3$. **Reward hacking:** the drone learned to **park 18 to 31 cm in front of the ring**, 0 % passes after 14.5M steps. Shaping paid about +20 for reaching the entrance, and trying a pass risked $-3$.
@@ -1815,6 +2093,8 @@ K: reward hacking, MDP iteration, parking, loopholes
 
 @card d
 Q: Your shaping is called potential-based. Is all of your reward shaping actually policy-invariant?
+P: Only partly. The path reward is like paying for each step closer to a target. Going in circles earns nothing overall, so it does not change what the best behaviour is.
+The other small rewards (facing the ring, staying near the axis, avoiding the rim) are hints that do change the best behaviour. They were added on purpose, and you should say so.
 A: Only part of it, and saying so is stronger than overclaiming.
 - **Ng, Harada and Russell (1999):** adding $F = \gamma \Phi(s') - \Phi(s)$ leaves the optimal policy unchanged. Our path term pays progress towards waypoints, which is of that form (strictly, the $\gamma$ should multiply $\Phi(s')$, so with $\gamma < 1$ the match is approximate). Circling or hovering earns nothing net, which is exactly why it fixed v2's parking.
 - **Not potential-based:** axis pull, facing, rim, dwell and time terms. These are ordinary per-state rewards and **can change the optimal policy**. They were added on purpose as priors, for example "line up before going in".
@@ -1823,6 +2103,8 @@ K: potential-based shaping, policy invariance, Ng 1999
 
 @card d
 Q: Why does touching the net end the episode with a "drain" penalty, and why does wrong-way cost so much?
+P: On the real drone, touching the net means landing, so in the simulator it must end the run too. If crashing cost too little, the drone would crash on purpose to stop paying time penalties, like quitting a game to avoid losing more points.
+The big wrong-way penalty stops the cheapest fake lap, which is flicking back and forth through the ring.
 A: - **Net ends the episode:** the real drone has to land when it hits the net, so the sim must not let it bounce and continue.
 - **Drain** (in the budget versions): with a flat small penalty, a drone that cannot pass would learn to **dive into the net** to stop paying the time cost. Draining the remaining budget makes ending early never cheaper than flying on. (The current recipe sets `drain` off and uses large fixed terminal penalties instead, $-10$.)
 - **Wrong way $-20$:** without it, the cheapest "lap" is to dither back and forth through the opening. A strong penalty forces the intended behaviour: go round the outside and re-enter from the same side.
@@ -1831,6 +2113,8 @@ K: termination, penalties, reward hacking, drain
 
 @card d
 Q: Why does every episode start with the drone already hovering at about 0.8 m?
+P: The real drone can only start its motors with its own take-off command, which lifts it to about 0.8 m. Then the policy takes over.
+Training the drone to take off would teach a skill it never uses. Instead, variety comes from where it starts: random height, one of 9 zones, random facing. Landing is also scripted for safety.
 A: Because that is where control is handed over on the real drone. The Tello's motors only start with the firmware `takeoff` command, which climbs to about 0.7 to 0.8 m by itself, and `fly_hoop.py` hands over to the policy after a 2 s settle.
 - Learning take-off in simulation would train a skill the real drone never uses.
 - PyBullet's Crazyflie take-off does not resemble the Tello's anyway.
@@ -1840,6 +2124,8 @@ K: initial state distribution, takeoff, deployment, safety
 
 @card d
 Q: What role does imitation learning play, and how did it fail at first?
+P: **Imitation learning** is copying a teacher. Copying a scripted expert failed because small mistakes led to situations the expert never showed. Copying human pilots taught "pass once, then stop".
+**DAgger** fixed this by letting the student fly and asking the teacher "what should I do here?" in the situations the student actually reaches.
 A: Three kinds of demonstrations, each with a lesson:
 - **Behaviour cloning of a scripted expert:** the expert passes 100 % in sim, but the clone scored only **6/12 against the real detector**. Classic covariate shift: small errors take it to states the expert never visited.
 - **Human keyboard flights:** they never loop. Imitating them pulled the policy towards "pass once, then stop". Removing that imitation term (run W) took laps from 0.16 to **0.45**.
@@ -1849,6 +2135,8 @@ K: behaviour cloning, DAgger, covariate shift, imitation learning
 
 @card d
 Q: Explain the "averaging two good choices" trap you hit with DAgger.
+P: The teacher could see where the ring was and turned left or right straight away. The student could not see it yet, so it learned the average of left and right, which is straight ahead, and flew into the net.
+Like averaging "go left" and "go right" at a fork and driving into the tree in the middle. The fix: before the ring is seen, the teacher demonstrates a search the student can copy.
 A: Each episode starts with the ring out of view. The privileged teacher knows where the ring is and turns the right way at once, sometimes left, sometimes right. The camera-only student cannot know which way, so regression on mean squared error learned the **average of left and right**: it flew straight into the net within 6 s without ever seeing the ring (4 of 6 episodes).
 Fix: **search-first labels**. Until the student's camera has seen the ring, the teacher's label is a fixed search the student can reproduce (turn clockwise and climb to ring height). The honest teacher still flies 4.1 laps per 90 s.
 General rule: a privileged teacher must not use information the student can never have, or the student learns the average over what it cannot distinguish. Same trap as the memoryless loop labels.
@@ -1856,6 +2144,8 @@ K: DAgger, privileged teacher, multimodal actions, MSE averaging
 
 @card d
 Q: Is your final agent really reinforcement learning, or is the teacher doing the work?
+P: Both. The teacher gave a starting point that sometimes loops. RL then took it from about 1.3 laps to about 5.3 laps, which copying alone never reached.
+Honest gap: the "copy the teacher" pull stays on forever, so it is never pure RL, and no test removed it to measure its share.
 A: Both, and the split is measurable:
 - The DAgger clone with memory gives PPO a start that **loops sometimes**. Without it, nothing looped.
 - PPO then took it from about **1.28 laps** (n8) to **5.29 laps** (LE) per episode. That improvement came from reward-driven training: slanted starts, stress-drone randomisation, loop-practice starts and a gentler learning rate.
@@ -1865,6 +2155,8 @@ K: DAPG, RL vs imitation, ablation, BC coefficient
 
 @card d
 Q: What does the 0.3 behaviour cloning term do to the objective theoretically?
+P: The training goal becomes "maximise reward, plus stay close to the teacher". Like a learner driver with an instructor's hand on the wheel.
+It keeps good habits from being forgotten but can hold the drone back where the teacher is wrong for a camera-only pilot. It only pulls the main action, not the random exploration.
 A: The actor now minimises $L = L_{PPO} + 0.3 \cdot \mathbb{E}_{(s, a^*) \sim \mathcal{D}} \|\mu_\theta(s) - a^*\|^2$.
 - It is an **off-policy** pull. The labels come from DAgger rounds on older student states, so they do not match the current policy's state distribution.
 - It biases the solution away from the return-maximising policy wherever the teacher is suboptimal for the camera-only agent.
@@ -1874,6 +2166,8 @@ K: DAPG, off-policy regularisation, KL anchor, RLHF analogy
 
 @card d
 Q: Your exploration noise collapsed. What does that mean and what did you do?
+P: The random wobble the policy uses to try new things shrank almost to nothing, so it stopped discovering new moves. Like a student who only ever answers the same way.
+Adding a curiosity bonus did not help. What did help was changing the situations it trains in: tilted starts, practice starts near the loop, and varied drone physics.
 A: The policy's Gaussian noise is $\sigma = e^{\text{log\_std}}$. In every long run `log_std` reached about $-2.3$ to $-2.8$, so $\sigma \approx 0.06$ to $0.10$ of full stick. With `ent_coef = 0`, nothing pushes back.
 Consequence: the policy can barely discover new behaviour, which fitted runs getting worse with more training.
 What we tried: an entropy bonus 0.005 plus resetting `log_std` to $-1$ (run D), and gSDE state-dependent exploration (run E). Neither beat the trust-region run C in the race.
@@ -1883,6 +2177,8 @@ K: exploration, entropy, log std, gSDE
 
 @card d
 Q: How did you measure and reduce the sim-to-real gap?
+P: They recorded 28 real flights and compared them with the simulator, like checking a flight simulator against a real plane. They found the turn direction was mirrored, the speed readings were useless, and the real drone turned and climbed about half as fast.
+They fixed the simulator, removed the bad input, and randomised the physics so the policy works across many possible versions of reality.
 A: We fitted the simulator to **28 real flights** (dry runs excluded) with `sim_fidelity.py`:
 - **Yaw sign was reversed** in the sim. Every policy flown before had a mirrored turn-rate input. Fixed, old models converted exactly.
 - **Tello speed readings were noise** (mean $-0.03$ with forward stick held). Old policies relied on speed: v4 dropped from 93 % to 5 % passes with it blanked. We removed speed input entirely.
@@ -1893,6 +2189,8 @@ K: sim-to-real, system identification, domain randomisation
 
 @card d
 Q: What happened on the real drone, and what did you change because of it?
+P: On the real drone, an older memory policy entered the ring from one corner in 2 of 3 tries but clipped the edge from the other corners. In daylight it locked onto a window.
+Changes: a test for slanted entries, slanted training starts, a harsher simulated drone, and camera settings per lighting.
 A: Real flights with the memory policy (`n8_cont2`, 1.03 laps in sim) on 2026-10-14:
 - From the **bottom-right corner** it entered **2 of 3** attempts but rarely looped.
 - From the **other three corners** it found the ring but **clipped the edge going in**.
@@ -1905,6 +2203,8 @@ K: real flights, sim-to-real, corners, lighting
 @card d
 I: dq_tradeoff
 Q: Laps went up four-fold but oblique entry stayed around 60 %. Explain that.
+P: The score measured two skills, laps and clean entries from awkward angles, and training improved mostly laps. Like a student who gets great at the easy questions while the hard ones stay the same.
+Pushing hard on angled entries made the drone too cautious. So the score was changed to count both equally.
 A: Our evaluation measures two different skills, and training improved mostly one.
 - Laps per episode: 1.03 (flown policy) to **5.29** (LE).
 - Oblique entry: 70 % (flown policy) to about **57 to 67 %** in most later policies.
@@ -1916,6 +2216,8 @@ K: trade-off, oblique entry, evaluation metric, Goodhart
 @card d
 I: dq_lineage
 Q: Explain your automated optimiser and how it decides a new best policy.
+P: An automatic tournament. Take the current champion, train two challengers from it for a bit longer, then test everyone on the exact same fixed set of test flights. A challenger only wins if it beats the champion by more than the normal noise.
+Like a sports league where every team plays the same opponents, and a narrow lucky win does not count.
 A: `loop_forever.py` repeats rounds: take the best policy so far (the parent), train two copies for 2M more steps (the parent's own recipe and one new idea), re-score everything on a fixed referee, keep the winner.
 - **Referee:** the same **72 laps episodes plus 60 slanted starts** for every candidate, score = laps per episode + 1.0 x oblique entry.
 - **Margin:** a challenger must win by **more than 0.10**, because one 36-episode evaluation wobbles by about $\pm 0.15$ laps.
@@ -1926,6 +2228,8 @@ K: hyperparameter search, successive halving, model selection, optimiser
 
 @card d
 Q: The examiner says: "You picked the best of many noisy runs. Your reported score is inflated." How do you respond?
+P: The examiner has a point. Picking the best of many noisy results is like picking the luckiest of many coin-flip streaks. The winner looks better than it really is.
+Defences: everyone is re-tested on the same fixed flights, and a challenger must win by a clear margin. Missing: a fresh test set used only after the final choice.
 A: Agree that the risk is real. This is **maximisation bias**, the same thing as the max in Q-learning: the maximum of noisy estimates is biased upwards (winner's curse).
 What we did against it:
 - Every candidate, including the parent, is **re-scored** on the same 72 plus 60 episodes, not taken from its own training evaluation.
@@ -1936,6 +2240,8 @@ K: selection bias, maximisation bias, held-out test, winner's curse
 
 @card d
 Q: How many seeds did you run, and is the result reproducible?
+P: Be honest: mostly one run per setting. Repeats of the same recipe show the spread, for example 2.35, 2.55 and 2.60.
+A strict examiner wants the final recipe trained 3 to 5 times with different seeds, shown as an average with a range, and tested on new layouts.
 A: Be direct: mostly **one seed per configuration per round**. Seeds were set per round (seed = round number) so runs differ, and the simulator, evaluation layouts and demos are seeded.
 What we have instead of seed bands:
 - **Repeated parent continuations:** each round retrains the parent's recipe with a new seed, which shows run-to-run spread (for example C9 retrained with seeds 9, 10 and 12 reached referee scores of 2.35, 2.55 and 2.60).
@@ -1945,6 +2251,8 @@ K: seeds, reproducibility, variance, evaluation
 
 @card d
 Q: Explain the hierarchical RL experiment and why it did not beat the flat policy.
+P: **Hierarchical RL** split the job into specialists, one for entering cleanly and one for looping, with a manager choosing who flies.
+It did not beat the all-rounder, because the specialists got about 2M steps of practice against the all-rounder's 30M. Like comparing new hires with a ten-year veteran. The manager mostly picked the veteran.
 A: **Options framework** (Sutton, Precup and Singh 1999):
 - Skills: **SE** (enter cleanly, trained on slanted starts and episodes ending at the first pass), **SL** (loop, every episode starts just before the hoop), plus the flat **C9** generalist.
 - **Manager:** PPO over the 3 options, deciding every 8 ticks (0.53 s) or at a pass. A semi-MDP with discount $0.92 \approx 0.99^8$ per decision.
@@ -1955,6 +2263,8 @@ K: hierarchical RL, options, semi-MDP, manager
 
 @card d
 Q: How do you guarantee that the policy evaluated in the sim is exactly the policy that flies?
+P: One loading function is used both in testing and on the real drone, so there is no second version to drift. The exported file is checked to give the same actions on 200 recorded examples.
+Like using the exact same recipe card in the test kitchen and the restaurant, then tasting both.
 A: An export pipeline with checks:
 - Policies load through `policy.load_policy`, the same loader `fly_hoop.py` uses: same yaw convention, same input width, same history stack, privileged inputs filled with zeros.
 - The sim score is computed through that loader's `policy_fn` on observations from `ObsBuilder`, the class the flight uses.
@@ -1966,6 +2276,8 @@ K: deployment, export, reproducibility, testing
 
 @card d
 Q: What safety design surrounds a learned policy on a real drone?
+P: The learned policy is never trusted alone. Take-off and landing are scripted. Software sets a floor, a ceiling and limits on travel, time, battery and temperature. A human can land it instantly with a key. New policies go through staged tests, from a simulation dry run up to a full flight.
+Like a learner driver in a car with dual brakes.
 A: The policy is never trusted alone:
 - **Take-off and landing are scripted**, never learned.
 - **Height window:** soft floor at 40 cm (no further descent, forced climb 10 cm lower), soft ceiling within 25 cm of the maximum, hard abort near the floor.
@@ -1978,6 +2290,7 @@ K: safety, deployment, robotics, override
 
 @card d
 Q: Which course topics does your project use? Map them week by week.
+P: Almost the whole course shows up. MDPs and POMDPs (the problem is partly hidden), value functions (the critic), TD learning (GAE), function approximation (the networks and features), deep RL tricks (memory and stability), policy gradients (PPO), and ideas from RLHF (keeping close to a teacher).
 A: - **W3 MDPs and W1 framing:** state, action, reward, termination design, and recognising the task is a **POMDP**.
 - **W4 Bellman / value functions:** the critic $V(s)$ and the advantage $A = Q - V$.
 - **W7 TD:** GAE bootstraps with TD errors $\delta_t = r_t + \gamma V(s_{t+1}) - V(s_t)$, blended by $\lambda$.
@@ -1990,6 +2303,8 @@ K: course mapping, concepts, PPO, POMDP, GAE
 
 @card d
 Q: What are the biggest limitations of your project? Name them before the examiner does.
+P: Say them first, like a good engineer listing known issues. The best results are simulator-only. Some physics like real forward speed were never measured. The close-up camera view differs between sim and reality. Angled entries stalled. Mostly one run per setting. No pure-RL comparison.
+Admitting these shows you understand your own work.
 A: 1. **Real-world evidence is thin.** The policies that loop 5+ times are simulation results. The real drone entered from one corner and clipped from the other three.
 2. **Unmeasured physics.** Forward speed per command, camera field of view and close-range detector behaviour are assumptions. The tracker and `pushed` both depend on the forward speed.
 3. **Close-range perception gap.** The real detector reports frame overflow and noisy ellipses near the ring. The simulator's detector is clean.
@@ -2001,6 +2316,7 @@ K: limitations, honesty, sim-to-real, statistics
 
 @card d
 Q: If you had four more weeks, what would you do, in priority order?
+P: Fly the best policy on the real drone first, because nothing else matters until that is measured. Then measure real forward speed, fix the close-up camera gap, run several seeds with a fresh test set, test removing the teacher pull, and compare against SAC.
 A: 1. **Fly the best simulation policy on the real Tello** from all four corners and report entries and laps. Everything else is secondary until this is measured.
 2. **Calibrate forward speed** with one tape-measure flight and update the tracker and `pushed` constant.
 3. **Close the close-range detector gap:** record real close approaches and add overflow and ellipse noise to the sim detector, or train with the real detector rendered in the loop.
@@ -2011,6 +2327,8 @@ K: future work, priorities, next steps
 
 @card d
 Q: The examiner says: "This is massively over-engineered. Why not a scripted visual-servo controller?"
+P: A hand-written controller was built and tested. It flies one straight pass well, but on the real physics its small corrections were too small for the drone to respond to, and it barely loops.
+Writing rules for searching, lining up, passing, circling and re-entering, all robust to drift and delays, is exactly the hard part RL solves. Concede that for one simple front pass, a script is enough.
 A: We built one, and it is a useful baseline.
 - The scripted expert passes **100 %** from the front runway on the typical profile and 60/60 with the real detector.
 - But on the **measured** dynamics it passes only **3 %**: its small yaw corrections fall inside the real yaw dead zone, so it never finishes lining up.
@@ -2021,6 +2339,8 @@ K: baseline, scripted controller, justification
 
 @card d
 Q: How did training infrastructure choices affect your results?
+P: Running tests in parallel saved time but made scores slightly noisy, which is why everything is re-tested the same way. Regular checkpoints meant crashed runs could restart. Logging every run made comparisons possible.
+Because each model continues from a previous one, results depend on the path taken, like a family recipe changed over generations.
 A: - **Parallel evaluation** cut wall-clock time (evaluation was about 60 % of it) but made evaluation numbers about $\pm 0.15$ noisy across copy counts, which is why the referee re-scores everything identically.
 - **Checkpoints** every evaluation and every 15 min, crashed runs resume from their last save. Sleep, out-of-memory and a stray Ctrl+C each killed runs before we fixed them (detached processes, memory checks).
 - **ClearML** logs every run and flight, so hyperparameters and curves can be compared.
@@ -3672,7 +3992,7 @@ window.addEventListener('resize', function () { clearTimeout(fitTimer); fitTimer
     if ((m = line.match(/^@(weak|tip) (.+)$/))) { cur = { kind: m[1], title: m[2], A: '' }; W.push(cur); field = null; return; }
     if (!cur) return;
     if ((m = line.match(/^I: ?(.*)$/))) { (cur.I = cur.I || []).push(m[1].trim()); field = null; return; }
-    if ((m = line.match(/^(Q|A|K|G|E): ?(.*)$/))) { field = m[1]; cur[field] = m[2]; return; }
+    if ((m = line.match(/^(Q|A|K|G|E|P): ?(.*)$/))) { field = m[1]; cur[field] = m[2]; return; }
     if (cur.kind === 'deriv' && (m = line.match(/^(S|W): ?(.*)$/))) {
       if (m[1] === 'S') { cur.steps.push({ s: m[2], w: '' }); field = 'S'; }
       else if (cur.steps.length) { cur.steps[cur.steps.length - 1].w = m[2]; field = 'W'; }
@@ -3721,6 +4041,10 @@ window.addEventListener('resize', function () { clearTimeout(fitTimer); fitTimer
     var f = sv.closest('.dg'); f.classList.toggle('zoom');
     if (f.classList.contains('zoom')) f.scrollLeft = (f.scrollWidth - f.clientWidth) / 2;
   });
+  function answerHTML(c) {
+    if (!c.P) return figs(c) + rich(c.A);
+    return '<div class="plain"><div class="plain-h">In plain words</div>' + rich(c.P) + '</div>' + figs(c) + '<div class="exam-h">Exam answer, with the keywords</div>' + rich(c.A);
+  }
   function el(html) { var t = document.createElement('template'); t.innerHTML = html.trim(); return t.content.firstChild; }
 
   /* ---------- progress store ---------- */
@@ -3933,7 +4257,7 @@ window.addEventListener('resize', function () { clearTimeout(fitTimer); fitTimer
     card.appendChild(el('<div class="meta">' + wkPill(c.wk) + pillFor(markOf(c.id)) + '<span class="counter">' + (cIdx + 1) + ' / ' + list.length + '</span></div>'));
     var q = el('<div class="q rich"></div>'); q.innerHTML = inline(c.Q); card.appendChild(q);
     if (cShow) {
-      var a = el('<div class="ans rich"></div>'); a.innerHTML = figs(c) + rich(c.A); card.appendChild(a);
+      var a = el('<div class="ans rich"></div>'); a.innerHTML = answerHTML(c); card.appendChild(a);
       if (c.kws.length) card.appendChild(kwRow(c));
     } else {
       card.appendChild(el('<div class="hint">Say your answer out loud first. It is an oral exam.' + (c.I && c.I.length ? ' The answer has a diagram.' : '') + '</div>'));
@@ -3992,7 +4316,7 @@ window.addEventListener('resize', function () { clearTimeout(fitTimer); fitTimer
       d.querySelector('.t').innerHTML = inline(c.Q);
       d.querySelector('summary span:last-child').innerHTML = pillFor(markOf(c.id));
       var inner = d.querySelector('.rich');
-      inner.innerHTML = figs(c) + rich(c.A);
+      inner.innerHTML = answerHTML(c);
       if (c.kws.length) d.appendChild(kwRow(c));
       d.appendChild(markButtons(c.id, function () {
         d.querySelector('summary span:last-child').innerHTML = pillFor(markOf(c.id));
