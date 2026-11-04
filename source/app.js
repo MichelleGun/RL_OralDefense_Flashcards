@@ -138,9 +138,76 @@ window.addEventListener('resize', function () { clearTimeout(fitTimer); fitTimer
     function close() { if (list) { out.push('<' + list.t + '>' + list.items.map(function (i) { return '<li>' + inline(i) + '</li>'; }).join('') + '</' + list.t + '>'); list = null; } }
     return out.join('');
   }
+  /* ---------- course map (clickable tree) ---------- */
+  function cmGet(path) { var n = window.CMAP; path.split('.').slice(1).forEach(function (i) { n = n.k[+i]; }); return n; }
+  function cmNodeHTML(n, path) {
+    var kids = n.k && n.k.length, wc = n.wk ? wkVar(n.wk) : 'var(--muted)';
+    var h = '<li class="cm-li' + (n.edge ? ' cm-has-edge' : '') + '">';
+    if (n.edge) h += '<div class="cm-edge">' + inline(n.edge) + '</div>';
+    h += '<div class="cm-row">' + (kids ? '<button type="button" class="cm-tog" aria-expanded="true" aria-label="Collapse branch"></button>' : '<span class="cm-leaf"></span>');
+    h += '<button type="button" class="cm-node' + (n.q ? ' cm-q' : '') + '" data-cm="' + path + '" aria-expanded="false" style="--wc:' + wc + '"><span class="cm-t">' + inline(n.t) + '</span>';
+    if (n.f && n.f !== n.t) h += '<span class="cm-f">' + esc(n.f) + '</span>';
+    h += '</button></div>';
+    if (kids) h += '<ul class="cm-ul">' + n.k.map(function (c, i) { return cmNodeHTML(c, path + '.' + i); }).join('') + '</ul>';
+    return h + '</li>';
+  }
+  function cmapHTML() {
+    if (!window.CMAP) return '';
+    return '<div class="cmap"><div class="cm-bar"><span class="muted">Tap any box for its full name, meaning and key equation.</span><span class="cm-btns"><button type="button" class="cm-all" data-open="1">Expand all</button><button type="button" class="cm-all" data-open="0">Collapse all</button></span></div><ul class="cm-ul cm-root">' + cmNodeHTML(window.CMAP, 'r') + '</ul></div>';
+  }
+  function cmDetail(n) {
+    var h = '<div class="cm-dh">' + (n.wk ? wkPill(n.wk) : '') + (n.f ? '<strong>' + esc(n.f) + '</strong>' : '') + '</div>';
+    h += '<div class="rich">' + rich(n.d || '') + '</div>';
+    if (n.e) h += '<div class="cm-eq">$$' + esc(n.e) + '$$</div>';
+    if (n.u) h += '<div class="cm-use rich"><span class="cm-uh">' + (n.q ? 'Why it matters' : 'When to use, exam tip') + '</span>' + rich(n.u) + '</div>';
+    var hit = n.g && G.find(function (g) { return g.term.toLowerCase().indexOf(n.g) >= 0; });
+    if (hit) h += '<button type="button" class="cm-gl" data-g="' + esc(n.g) + '">Open in glossary</button>';
+    return h;
+  }
+  var cmSheet = null, cmActive = null;
+  function cmClose() { if (cmSheet) cmSheet.hidden = true; if (cmActive) cmActive.setAttribute('aria-expanded', 'false'); cmActive = null; }
+  function cmOpen(btn) {
+    if (!cmSheet) {
+      cmSheet = el('<div class="cm-sheet" role="dialog" aria-label="Term details" hidden><button type="button" class="cm-x" aria-label="Close details">Close</button><div class="cm-sbody"></div></div>');
+      document.body.appendChild(cmSheet);
+      cmSheet.querySelector('.cm-x').addEventListener('click', cmClose);
+    }
+    if (cmActive) cmActive.setAttribute('aria-expanded', 'false');
+    cmActive = btn; btn.setAttribute('aria-expanded', 'true');
+    var body = cmSheet.querySelector('.cm-sbody');
+    body.innerHTML = cmDetail(cmGet(btn.getAttribute('data-cm')));
+    cmSheet.hidden = false; cmSheet.scrollTop = 0;
+    typeset(body);
+    var tries = 0;
+    (function fit() {
+      var eq = body.querySelector('.cm-eq'); if (!eq) return;
+      if (!eq.querySelector('mjx-container')) { if (++tries < 40) setTimeout(fit, 100); return; }
+      var fs = 14; while (eq.scrollWidth > eq.clientWidth + 1 && fs > 9) { fs -= 0.5; eq.style.fontSize = fs + 'px'; }
+    })();
+  }
+  document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && cmSheet && !cmSheet.hidden) cmClose(); });
+  document.addEventListener('click', function (e) {
+    var t = e.target.closest && e.target.closest('.cm-node,.cm-tog,.cm-gl,.cm-all'); if (!t) return;
+    if (t.classList.contains('cm-gl')) { var g = t.getAttribute('data-g'); cmClose(); lookup(g); return; }
+    if (t.classList.contains('cm-all')) {
+      var open = t.getAttribute('data-open') === '1', root = t.closest('.cmap');
+      root.querySelectorAll('.cm-li').forEach(function (li) { if (li.querySelector(':scope>.cm-ul')) li.classList.toggle('cm-closed', !open); });
+      root.querySelectorAll('.cm-tog').forEach(function (b) { b.setAttribute('aria-expanded', String(open)); b.setAttribute('aria-label', open ? 'Collapse branch' : 'Expand branch'); });
+      if (!open) { root.querySelector('.cm-root>.cm-li').classList.remove('cm-closed'); root.querySelector('.cm-root>.cm-li .cm-tog').setAttribute('aria-expanded', 'true'); }
+      return;
+    }
+    if (t.classList.contains('cm-tog')) {
+      var li = t.closest('.cm-li'), closed = li.classList.toggle('cm-closed');
+      t.setAttribute('aria-expanded', String(!closed)); t.setAttribute('aria-label', closed ? 'Expand branch' : 'Collapse branch');
+      return;
+    }
+    if (cmActive === t) cmClose(); else cmOpen(t);
+  });
+  window.addEventListener('hashchange', cmClose);
   function figs(item) {
     var DG = window.DIAG || {};
-    return (item.I || []).filter(function (n) { return DG[n]; }).map(function (n) {
+    return (item.I || []).filter(function (n) { return DG[n] || n === 'coursemap'; }).map(function (n) {
+      if (n === 'coursemap') return '<div class="cmap-fig">' + cmapHTML() + '</div>';
       return '<figure class="dg">' + DG[n].svg + '<button type="button" class="dg-replay" aria-label="Replay the diagram animation">Replay</button><div class="zoom-hint">Tap the diagram to zoom, tap again to fit.</div><figcaption class="rich">' + inline(DG[n].cap) + '</figcaption></figure>';
     }).join('');
   }
@@ -301,6 +368,8 @@ window.addEventListener('resize', function () { clearTimeout(fitTimer); fitTimer
     document.querySelectorAll('#g-mode button').forEach(function (b) { b.setAttribute('aria-pressed', String(b.getAttribute('data-gm') === m)); });
     document.getElementById('g-terms').hidden = m !== 'terms';
     var c = document.getElementById('g-compare'); c.hidden = m !== 'compare';
+    var mp = document.getElementById('g-map'); mp.hidden = m !== 'map';
+    if (m === 'map' && !mp.innerHTML) { mp.innerHTML = cmapHTML(); typeset(mp); }
     if (m === 'compare' && !cmpDone) { cmpDone = true; typeset(c); }
   }
   document.querySelectorAll('#g-mode button').forEach(function (b) { b.addEventListener('click', function () { setGMode(b.getAttribute('data-gm')); }); });

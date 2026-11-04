@@ -21,6 +21,7 @@
   <section class="view" id="v-glossary">
     <div class="toolbar"><span class="label">View</span><div class="chips" id="g-mode">
       <button type="button" data-gm="terms" aria-pressed="true">Terms</button>
+      <button type="button" data-gm="map" aria-pressed="false">Course map</button>
       <button type="button" data-gm="compare" aria-pressed="false">Comparison tables</button>
     </div></div>
     <div id="g-terms" class="gsub">
@@ -29,6 +30,7 @@
     <div class="toolbar"><span class="label">Week</span><div class="chips" id="g-weeks"></div></div>
     <div class="panel"><div class="gloss" id="g-list"></div></div>
     </div>
+    <div id="g-map" class="gsub" hidden></div>
     <div id="g-compare" class="gsub cmpview" hidden>
 <!-- comparison tables: generated from compare tables content -->
 <p class="intro" style="display:block">The concepts examiners love to mix up, side by side. Swipe a table sideways on a phone, the first column stays put. Cells marked <b>Corrected</b> differ from the version that circulates, and the box at the bottom says why.</p>

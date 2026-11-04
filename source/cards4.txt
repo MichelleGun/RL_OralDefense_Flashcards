@@ -1,5 +1,5 @@
 @card x
-I: taxonomy
+I: coursemap
 Q: Give the big map of every method in the course in one answer.
 P: Think of the course as a family tree. If you know the rules of the world, you plan (DP, MCTS). If you do not, you learn from experience, either from whole games (Monte Carlo) or step by step (TD, SARSA, Q-learning).
 When the world is too big for tables, you swap tables for formulas (function approximation, DQN). And instead of learning values you can learn the playing style directly (policy gradients, actor-critic, PPO).
